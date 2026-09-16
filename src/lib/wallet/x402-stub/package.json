@@ -1,0 +1,10 @@
+{
+  "name": "@x402/evm",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./exact/client": "./exact/client.ts",
+    "./upto/client": "./upto/client.ts"
+  }
+}

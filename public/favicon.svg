@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="MetricMotive">
+  <rect width="32" height="32" rx="7" fill="#171816"/>
+  <path d="M9 25 C11.5 18 11.5 12 10 6" fill="none" stroke="#D79A2B" stroke-width="3.25" stroke-linecap="round"/>
+  <path d="M9 25 C16 19 21 13 25 7" fill="none" stroke="#74866A" stroke-width="3.25" stroke-linecap="round"/>
+</svg>

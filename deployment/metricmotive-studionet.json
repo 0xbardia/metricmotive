@@ -1,0 +1,109 @@
+{
+  "contractAddress": "0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d",
+  "chainId": 61999,
+  "network": "Studionet",
+  "rpcUrl": "https://studio.genlayer.com/api",
+  "readCertified": true,
+  "certified": false,
+  "realWalletCertification": "PENDING HUMAN TEST",
+  "sourceSha256": "0e5f3cc0103e5f785fe12b34ecd478dfc909014a40d803ccf98227bb77a7cee1",
+  "readMethods": [
+    "get_contract_info",
+    "get_guard_count",
+    "get_guard_summary",
+    "get_guard_status",
+    "get_guard_definition",
+    "get_guard_lineage",
+    "get_guard_evidence",
+    "get_guard_findings",
+    "get_guard_verdict",
+    "get_guard",
+    "get_guards_by_owner"
+  ],
+  "writeMethods": [
+    "create_guard",
+    "update_draft",
+    "arm_guard",
+    "submit_evidence",
+    "evaluate_guard",
+    "create_version"
+  ],
+  "previousDeployment": {
+    "network": "studionet",
+    "chainId": 61999,
+    "rpcUrl": "https://studio.genlayer.com/api",
+    "studioUrl": "https://studio.genlayer.com/contracts",
+    "contractAddress": "0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8d7C",
+    "deployTx": "0xb7cde061b32726e6abfafb2a83868b8d4993028769dc5c5f6fa6e90d89f7ffda",
+    "deployer": "0xEb2C34eBD96739338427807BE9b70d4278D6A5ec",
+    "contractVersion": "1.0.0",
+    "certified": true,
+    "certifiedAt": "2026-09-12T07:46:34Z",
+    "execution": "SUCCESS",
+    "validatorsAgreed": 4,
+    "source": "contracts/metric-motive/src/metric_motive.py",
+    "sourceSha256": "0e5f3cc0103e5f785fe12b34ecd478dfc909014a40d803ccf98227bb77a7cee1",
+    "sourceBytes": 24683,
+    "superseded": [
+      {
+        "contractAddress": "0x41C3A675c4dd1Bc7C502e4Bfe5086D9F2E996937",
+        "deployTx": "0x24d786021839daa721d7bbff907a26534762fb37a1ffbca993f4e0412da7a01e",
+        "reason": "Superseded by recertified 1.0.0 deployment 0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8d7C"
+      }
+    ],
+    "readMethodsVerified": true,
+    "readPass": true,
+    "readMethods": [
+      "get_contract_info",
+      "get_guard_count",
+      "get_guard_summary",
+      "get_guard_status",
+      "get_guard_definition",
+      "get_guard_lineage",
+      "get_guard_evidence",
+      "get_guard_findings",
+      "get_guard_verdict",
+      "get_guard",
+      "get_guards_by_owner"
+    ],
+    "writeMethods": [
+      "create_guard",
+      "update_draft",
+      "arm_guard",
+      "submit_evidence",
+      "evaluate_guard",
+      "create_version"
+    ],
+    "note": "Final V1 candidate. Address published after Studio deploy, validator agreement, and Read Method verification. Guard 1 write lifecycle on this address: create → arm → Motive Lock (edit-after-arm rejected) → evidence → evaluate FAITHFUL_SUCCESS → duplicate evaluate rejected.",
+    "writeLifecycle": {
+      "create_guard": {
+        "ok": true,
+        "tx": "0x09c3302bc9e504a914372afea9b239395dfdba833c8098c0905599d182cdf293"
+      },
+      "arm_guard": {
+        "ok": true,
+        "tx": "0xbff9eeed778b11c0617b4500ee0669268f820d012684fa988f8429e16f8d1520"
+      },
+      "update_draft_after_arm": {
+        "ok": true,
+        "expected": "reject",
+        "tx": "0x44fe14a22ac870cdfd220339298a15b3b30cc175cc607f4966941f61c4450c74"
+      },
+      "submit_evidence": {
+        "ok": true,
+        "tx": "0x471e6244b2aaf5ed86896e8f0d0c78dfc6138d03fedbb6856b1ef2dddadfcd5a"
+      },
+      "evaluate_guard": {
+        "ok": true,
+        "tx": "0xf97f6524166b7ca6cd6e5fc431270b2f061dcd8305d04bc71315efa7a8a2328e",
+        "verdict": "FAITHFUL_SUCCESS",
+        "guardId": "1"
+      },
+      "duplicate_evaluate": {
+        "ok": true,
+        "expected": "reject",
+        "tx": "0x5978d902dc4f245045de94bf89eb72bbafea70236c7dee67c4daf33e54553d8a"
+      }
+    }
+  }
+}

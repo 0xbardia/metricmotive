@@ -1,0 +1,10 @@
+{
+  "agent": "sales-agent",
+  "path": "Agent → SDK → Run Recorder → Evidence Manifest → (optional) GenLayer",
+  "runId": "run_787ca94525b041b3",
+  "eventCount": 6,
+  "manifestHash": "0cc7ce4b2ebe0df93bbefa4f4aecc49a3bebc214a06388daac0523dd44fb2feb",
+  "authority": "local-memory",
+  "onchainRequested": false,
+  "chain": null
+}

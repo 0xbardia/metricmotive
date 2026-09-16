@@ -1,0 +1,38 @@
+.env
+.env.*
+!.env.example
+
+node_modules/
+coverage/
+*.log
+*.dump
+*.sqlite
+*.sqlite3
+
+backups/
+artifacts/
+screenshots/
+recordings/
+.playwright-cli/
+
+.project_id
+.node_modules.lock
+
+# TypeScript / build outputs
+dist/
+.output
+.vercel
+.nitro
+.next
+
+# SDK build
+packages/sdk/dist
+
+# Runtime
+tmp/
+.cache
+*.tsbuildinfo
+.grok/
+
+# Attachments
+attachments/

@@ -1,0 +1,65 @@
+import { lightTheme, type Theme } from "@rainbow-me/rainbowkit";
+
+const base = lightTheme({
+  accentColor: "#d79a2b",
+  accentColorForeground: "#171816",
+  borderRadius: "medium",
+  fontStack: "system",
+  overlayBlur: "small",
+});
+
+/** Forensic editorial overlay on RainbowKit. Not the default rainbow chrome. */
+export const metricMotiveWalletTheme: Theme = {
+  ...base,
+  fonts: {
+    body: '"Source Sans 3", "Segoe UI", system-ui, sans-serif',
+  },
+  colors: {
+    ...base.colors,
+    accentColor: "#d79a2b",
+    accentColorForeground: "#171816",
+    connectButtonBackground: "#171816",
+    connectButtonText: "#f3f0e6",
+    connectButtonInnerBackground: "#faf8f1",
+    connectButtonBackgroundError: "#a85645",
+    connectButtonTextError: "#f3f0e6",
+    modalBackground: "#faf8f1",
+    modalBorder: "#d4d0c4",
+    modalText: "#171816",
+    modalTextDim: "#5e5f59",
+    modalTextSecondary: "#5e5f59",
+    modalBackdrop: "rgba(23, 24, 22, 0.48)",
+    generalBorder: "#d4d0c4",
+    generalBorderDim: "#e8e4d6",
+    actionButtonBorder: "#d4d0c4",
+    actionButtonBorderMobile: "#d4d0c4",
+    actionButtonSecondaryBackground: "#e8e4d6",
+    closeButton: "#171816",
+    closeButtonBackground: "#e8e4d6",
+    menuItemBackground: "#f3e4c4",
+    profileForeground: "#faf8f1",
+    profileAction: "#e8e4d6",
+    profileActionHover: "#f3e4c4",
+    selectedOptionBorder: "#d79a2b",
+    connectionIndicator: "#74866a",
+    error: "#a85645",
+    standby: "#d79a2b",
+  },
+  radii: {
+    ...base.radii,
+    actionButton: "8px",
+    connectButton: "8px",
+    menuButton: "8px",
+    modal: "12px",
+    modalMobile: "12px",
+  },
+  shadows: {
+    ...base.shadows,
+    connectButton: "0 0 0 1px rgba(23,24,22,0.08)",
+    dialog: "0 12px 40px rgba(23,24,22,0.16)",
+    profileDetailsAction: "0 0 0 1px rgba(23,24,22,0.08)",
+    selectedOption: "0 0 0 1px #d79a2b",
+    selectedWallet: "0 0 0 1px #d79a2b",
+    walletLogo: "0 0 0 1px rgba(23,24,22,0.08)",
+  },
+};
