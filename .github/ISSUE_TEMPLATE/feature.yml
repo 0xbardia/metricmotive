@@ -1,0 +1,19 @@
+name: Feature
+description: Propose a product change
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or expensive today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The smallest change that would help. Do not request fabricated GenLayer verdicts.
+    validations:
+      required: true

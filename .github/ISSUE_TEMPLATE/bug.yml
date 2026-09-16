@@ -1,0 +1,38 @@
+name: Bug
+description: Report a product, contract, or docs defect
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What should happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: What happened instead. Include route, Guard id, or tx hash if relevant.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Contract
+        - Web app
+        - API
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: authority
+    attributes:
+      label: Authority
+      options:
+        - label: This report does not treat an advisory/local result as a GenLayer verdict
+          required: true
