@@ -144,6 +144,8 @@ export const recordTransactionRequestSchema = z.object({
 export const reconcileTransactionRequestSchema = z.object({
   id: idField,
   operation: chainOperationSchema,
+  txHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).optional(),
+  reservationToken: z.string().trim().min(1).max(128).optional(),
 }).strict();
 export const actionAuditRequestSchema = z.object({
   actionName: z.string().trim().min(1).max(80),

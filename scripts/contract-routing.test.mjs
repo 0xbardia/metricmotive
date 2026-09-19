@@ -96,6 +96,127 @@ test("persisted deployment routes RPC, reconciles colliding Guard IDs, and prese
     assert.equal(calls.at(-1).address, DEPLOYMENT.contractAddress);
     await sql.query("update guard_transactions set contract_address=$1 where guard_id=$2", [addresses[1], guards[0].id]);
     await assert.rejects(reconcileTransaction(guards[0].id, "create_guard", wallet), /deployment/);
+
+    const recoveredGuard = await repo.insertGuard({
+      ownerAddress: wallet,
+      parentId: null,
+      version: 1,
+      motive: "Recover the submitted operation",
+      metric: "Keep one transaction identity",
+      guardrails: [],
+    });
+    await sql.query("update guards set onchain_id=$1 where id=$2", ["11", recoveredGuard.id]);
+    const armHash = `0x${"c".repeat(64)}`;
+    transaction = {
+      hash: armHash,
+      sender: wallet,
+      recipient: DEPLOYMENT.contractAddress,
+      statusName: "FINALIZED",
+      txDataDecoded: { callData: new Map([["method", "arm_guard"], ["args", [11]]]) },
+      consensus_data: { leader_receipt: [{ execution_result: "SUCCESS" }] },
+    };
+    chainGuard = { ...chainGuard, id: "11", owner: wallet, motive: recoveredGuard.motive, metric: recoveredGuard.metric, definition_hash: recoveredGuard.definitionHash, status: "ARMED" };
+    const recovered = await reconcileTransaction(recoveredGuard.id, "arm_guard", wallet, { txHash: armHash });
+    assert.equal(recovered.state, "reconciled");
+    assert.equal(recovered.guard.status, "ARMED");
+    assert.equal(recovered.guard.txArm, armHash);
+    const repeated = await reconcileTransaction(recoveredGuard.id, "arm_guard", wallet, { txHash: armHash });
+    assert.equal(repeated.state, "reconciled");
+    const recoveredRows = await sql.query("select tx_hash, reconciled_at from guard_transactions where guard_id=$1 and operation='arm_guard'", [recoveredGuard.id]);
+    assert.equal(recoveredRows.length, 1);
+    assert.equal(recoveredRows[0].tx_hash, armHash);
+    await assert.rejects(
+      reconcileTransaction(recoveredGuard.id, "arm_guard", wallet, { txHash: `0x${"a".repeat(64)}` }),
+      /different transaction|recorded operation/i,
+    );
+    assert.equal(calls.filter((call) => call.functionName === "writeContract").length, 0);
+
+    const legacyGuard = await repo.insertGuard({
+      ownerAddress: wallet,
+      parentId: null,
+      version: 1,
+      motive: "Recover legacy provenance",
+      metric: "Keep the operation recoverable",
+      guardrails: [],
+    });
+    const legacyArmHash = `0x${"d".repeat(64)}`;
+    await sql.query("update guards set onchain_id=$1, tx_arm=$2 where id=$3", ["12", legacyArmHash, legacyGuard.id]);
+    transaction = {
+      hash: legacyArmHash,
+      sender: wallet,
+      recipient: DEPLOYMENT.contractAddress,
+      statusName: "FINALIZED",
+      txDataDecoded: { callData: new Map([["method", "arm_guard"], ["args", [12]]]) },
+      consensus_data: { leader_receipt: [{ execution_result: "SUCCESS" }] },
+    };
+    chainGuard = { ...chainGuard, id: "12", owner: wallet, motive: legacyGuard.motive, metric: legacyGuard.metric, definition_hash: legacyGuard.definitionHash, status: "ARMED" };
+    const legacyRecovered = await reconcileTransaction(legacyGuard.id, "arm_guard", wallet);
+    assert.equal(legacyRecovered.state, "reconciled");
+    assert.equal((await sql.query("select count(*)::int as n from guard_transactions where guard_id=$1 and operation='arm_guard'", [legacyGuard.id]))[0].n, 1);
+
+    const concurrentGuard = await repo.insertGuard({
+      ownerAddress: wallet,
+      parentId: null,
+      version: 1,
+      motive: "Recover concurrently",
+      metric: "Keep one ledger row",
+      guardrails: [],
+    });
+    await sql.query("update guards set onchain_id=$1 where id=$2", ["15", concurrentGuard.id]);
+    const concurrentHash = `0x${"b".repeat(64)}`;
+    transaction = {
+      hash: concurrentHash,
+      sender: wallet,
+      recipient: DEPLOYMENT.contractAddress,
+      statusName: "FINALIZED",
+      txDataDecoded: { callData: new Map([["method", "arm_guard"], ["args", [15]]]) },
+      consensus_data: { leader_receipt: [{ execution_result: "SUCCESS" }] },
+    };
+    chainGuard = { ...chainGuard, id: "15", owner: wallet, motive: concurrentGuard.motive, metric: concurrentGuard.metric, definition_hash: concurrentGuard.definitionHash, status: "ARMED" };
+    const concurrent = await Promise.all([
+      reconcileTransaction(concurrentGuard.id, "arm_guard", wallet, { txHash: concurrentHash }),
+      reconcileTransaction(concurrentGuard.id, "arm_guard", wallet, { txHash: concurrentHash }),
+    ]);
+    assert.deepEqual(concurrent.map((result) => result.state), ["reconciled", "reconciled"]);
+    assert.equal((await sql.query("select count(*)::int as n from guard_transactions where guard_id=$1 and operation='arm_guard'", [concurrentGuard.id]))[0].n, 1);
+
+    const revertedGuard = await repo.insertGuard({
+      ownerAddress: wallet,
+      parentId: null,
+      version: 1,
+      motive: "Reject a reverted operation",
+      metric: "Keep the local state unchanged",
+      guardrails: [],
+    });
+    await sql.query("update guards set onchain_id=$1 where id=$2", ["13", revertedGuard.id]);
+    const revertedHash = `0x${"e".repeat(64)}`;
+    transaction = {
+      hash: revertedHash,
+      sender: wallet,
+      recipient: DEPLOYMENT.contractAddress,
+      statusName: "FINALIZED",
+      txDataDecoded: { callData: new Map([["method", "arm_guard"], ["args", [13]]]) },
+      consensus_data: { leader_receipt: [{ execution_result: "REVERTED" }] },
+    };
+    chainGuard = { ...chainGuard, id: "13", owner: wallet, motive: revertedGuard.motive, metric: revertedGuard.metric, definition_hash: revertedGuard.definitionHash, status: "DRAFT" };
+    const reverted = await reconcileTransaction(revertedGuard.id, "arm_guard", wallet, { txHash: revertedHash });
+    assert.equal(reverted.state, "mismatch");
+    assert.equal((await repo.getGuard(revertedGuard.id)).status, "DRAFT");
+
+    const unknownGuard = await repo.insertGuard({
+      ownerAddress: wallet,
+      parentId: null,
+      version: 1,
+      motive: "Reject an unknown operation",
+      metric: "Never infer finality",
+      guardrails: [],
+    });
+    await sql.query("update guards set onchain_id=$1 where id=$2", ["14", unknownGuard.id]);
+    const unknownHash = `0x${"f".repeat(64)}`;
+    transaction = null;
+    const unknown = await reconcileTransaction(unknownGuard.id, "arm_guard", wallet, { txHash: unknownHash });
+    assert.equal(unknown.state, "mismatch");
+    assert.equal((await repo.getGuard(unknownGuard.id)).status, "DRAFT");
   } finally {
     await server.close();
     await database.close();

@@ -22,6 +22,7 @@ import {
   getChainTransaction,
   getGuard,
   markChainTransactionReconciled,
+  recordChainTransaction,
   requireOwnedGuard,
   requireOwnedRun,
   resolveRunEvidenceSnapshot,
@@ -322,16 +323,52 @@ async function runReconciliation(
   return applyReconciled(local, verifiedTransaction, decoded, actorAddress);
 }
 
+async function recoverTransactionRecord(
+  local: Guard,
+  operation: ChainOperation,
+  actorAddress: string,
+  recovery?: { txHash?: string; reservationToken?: string },
+): Promise<ChainTransaction | null> {
+  const recorded = await getChainTransaction(local.id, operation);
+  const legacy = recorded ? null : legacyTransaction(local, operation);
+  const known = recorded ?? legacy;
+  const submittedHash = recovery?.txHash;
+
+  if (known && submittedHash && known.txHash.toLowerCase() !== submittedHash.toLowerCase()) {
+    throw mismatch("The submitted recovery hash does not match the recorded operation.");
+  }
+  if (recorded) return recorded;
+
+  const txHash = submittedHash ?? legacy?.txHash;
+  if (!txHash) return null;
+
+  const deployment = guardDeployment(local);
+  await recordChainTransaction(local.id, {
+    operation,
+    txHash,
+    originatingWallet: legacy?.originatingWallet ?? actorAddress,
+    chainId: deployment.chainId,
+    contractAddress: deployment.contractAddress,
+    expectedGuardId: local.onchainId,
+    expectedEvidenceHash: operation === "submit_evidence" ? local.evidenceHash || null : null,
+    submittedAt: legacy?.submittedAt ?? local.updatedAt,
+    reservationToken: recovery?.reservationToken,
+  }, actorAddress);
+
+  return (await getChainTransaction(local.id, operation)) ?? legacyTransaction(local, operation);
+}
+
 export async function reconcileTransaction(
   id: string,
   operation: ChainOperation,
   actorAddress: string,
+  recovery?: { txHash?: string; reservationToken?: string },
 ): Promise<TransactionReconciliation> {
   if (!CHAIN_OPERATIONS.includes(operation)) {
     throw new AppError("VALIDATION", "Unsupported chain operation", 400);
   }
   const local = await requireOwnedGuard(id, actorAddress);
-  const transaction = (await getChainTransaction(id, operation)) ?? legacyTransaction(local, operation);
+  const transaction = await recoverTransactionRecord(local, operation, actorAddress, recovery);
   if (!transaction) throw new AppError("INVALID_STATE", `This Guard has no submitted ${operation} transaction`, 409);
   const deployment = guardDeployment(local);
   if (transaction.chainId !== deployment.chainId || transaction.contractAddress.toLowerCase() !== deployment.contractAddress.toLowerCase()) {

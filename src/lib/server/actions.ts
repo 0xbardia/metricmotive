@@ -657,7 +657,10 @@ export const reconcileTransactionFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => parseInput(reconcileTransactionRequestSchema, input, "Transaction reconciliation request is invalid"))
   .handler(async ({ data }) => {
     const ownerAddress = await requireWalletAddress();
-    return reconcileTransaction(data.id, data.operation as ChainOperation, ownerAddress);
+    return reconcileTransaction(data.id, data.operation as ChainOperation, ownerAddress, {
+      txHash: data.txHash,
+      reservationToken: data.reservationToken,
+    });
   });
 
 export const reconcileCreateFn = createServerFn({ method: "POST" })

@@ -175,7 +175,14 @@ function useTransactionReconciliation({
     const task = (async () => {
       setReconcileBusy(true);
       try {
-        const result = await reconcileTransactionFn({ data: { id: guardId, operation } });
+        const result = await reconcileTransactionFn({
+          data: {
+            id: guardId,
+            operation,
+            txHash: hash ?? undefined,
+            reservationToken: operation === "create_guard" ? loadCreateReservationToken(guardId) : undefined,
+          },
+        });
         const resultHash = result.txHash || hash;
         if (result.state === "reconciled") {
           completedRef.current = true;
