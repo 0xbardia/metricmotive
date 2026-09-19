@@ -2,9 +2,24 @@
 
 **Your agent hit the metric. Did it honor the motive?**
 
-MetricMotive verifies whether autonomous agents honored the user's real objective, or gamed the metric they were optimizing.
+MetricMotive verifies whether autonomous agents achieved the user's real objective or merely gamed the metric they were optimizing.
 
-It is not a generic AI judge, escrow, reputation system, or chat wrapper. It is a Motive Guard: specify, stress-test, capture evidence, and verify with GenLayer consensus.
+It is not a generic AI judge, escrow, reputation system, or chat wrapper. It is a Motive Guard. The core lifecycle is:
+
+**Define → Lock → Run → Review Evidence → Verify → Verdict**
+
+## Active Deployment
+
+- Network: GenLayer Studio Dev
+- Chain ID: 61997
+- Contract: `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`
+- Explorer: https://explorer-studio-dev.genlayer.com/address/0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703
+- App: https://metricmotive.xyz
+- SDK: `genlayer-js@2.0.0-rc.1`
+
+Studio Dev is a development network, not mainnet. It does not carry permanent state guarantees.
+
+Historical Studionet (61999) receipts preserve their original chain and contract provenance.
 
 ## Architecture
 
@@ -85,20 +100,19 @@ is rejected. The API caps request bodies at 32 KiB, event data at 2,000 UTF-8
 bytes, and a run at 80 events. See `/api/v1/openapi.json` and
 `packages/sdk/README.md` for schemas, errors, and HMAC headers.
 
-## Studio Dev E2E certification (61997)
+## Studio Dev E2E Certification
 
-Certified on `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`. Not mainnet.
+Network: GenLayer Studio Dev
+Chain: 61997
+Guard: #1
+Verdict: `METRIC_GAMING`
+Pattern: `CONSTRAINT_BYPASS`
 
-- Local Guard `grd_6bf7a408ce5c883c` / on-chain Guard `1`
-- Run `run_82a3826bf23f3ab7`
-- Receipt `rct_14804bf62424284e`
-- create `0x1a24c92ea8beab437d4abb21e9ff646f8aec9d62273a60dbbc541dc069284eb5`
-- arm `0x65ce7e772d68e673c63a26ed9e44debf7030a9fc56265cd2c5390c48e4202933`
-- submit_evidence `0xf8901f18657b0c612d4f148c89fb3786bb2d4b389a31d623439321649aceaa4b`
-- evaluate `0x33bdfa268b36a59eb230f3a7f2dbfcff31caa40ee793b2e7345326d1ce151245`
-- Verdict `METRIC_GAMING` / `CONSTRAINT_BYPASS`
+Lifecycle: **Create → Arm → Evidence → GenLayer Evaluation → Verdict → Receipt**
 
-Failed ETH-layer attempts such as `0xed292a6e940460c43c38f07dea7da3368c514c23af2989bdaaac60e5768e4986` are not successful GenLayer lifecycle transactions.
+The verdict was produced by the deployed Intelligent Contract and the deterministic findings mapping. Validators decide semantic findings; the contract maps those findings to a verdict.
+
+Public receipt: https://metricmotive.xyz/verify/rct_14804bf62424284e
 
 ## Historical certification cases (previous Studionet deployment)
 
