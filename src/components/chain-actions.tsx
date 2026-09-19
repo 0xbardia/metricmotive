@@ -58,6 +58,7 @@ function useWriteGate() {
 }
 
 type ReconciliationResult = Awaited<ReturnType<typeof reconcileTransactionFn>>;
+type OnUpdated = () => void | Promise<void>;
 
 function transactionState(
   operation: ChainOperation,
@@ -86,7 +87,7 @@ function useTransactionReconciliation({
   operation: ChainOperation;
   txHash: string | null;
   onchainId: string | null;
-  onUpdated: () => void;
+  onUpdated: OnUpdated;
 }) {
   const gate = useWriteGate();
   const [tx, setTxState] = useState<TxState>(IDLE_TX);
@@ -186,7 +187,7 @@ function useTransactionReconciliation({
             originAddress: gate.address,
             originChainId: ACTIVE_CHAIN_ID,
           });
-          onUpdatedRef.current();
+          await onUpdatedRef.current();
         } else if (result.state === "mismatch") {
           setTx({
             ...transactionState(operation, resultHash, gate.address, result.message ?? "Transaction reconciliation stopped."),
@@ -323,7 +324,7 @@ async function runWrite(opts: {
   resourceId?: string;
   idempotencyKey?: string;
   persistHash?: (hash: `0x${string}`) => Promise<void>;
-  onSubmitted?: () => void;
+  onSubmitted?: OnUpdated;
   confirm: (hash: `0x${string}`) => Promise<void>;
 }): Promise<boolean> {
   const { gate, setTx } = opts;
@@ -391,7 +392,7 @@ async function runWrite(opts: {
         submittedHash = hash;
         setWriteState({ phase: "pending", action: opts.action, hash, error: null });
         await opts.persistHash?.(hash);
-        opts.onSubmitted?.();
+        await opts.onSubmitted?.();
       },
     });
     submittedHash = result.hash;
@@ -501,7 +502,7 @@ export function CreateAndLock({
   txArm: string | null;
   /** The Guard is already finalized as locked; no lock action may be offered. */
   locked?: boolean;
-  onUpdated: () => void;
+  onUpdated: OnUpdated;
 }) {
   const historical = useHistoricalReadOnly(guardId);
   const gate = useWriteGate();
@@ -544,7 +545,7 @@ export function CreateAndLock({
             gate.address,
             reservation.message ?? "Transaction submitted. Confirmation can resume without another create.",
           ));
-          onUpdated();
+          await onUpdated();
         } else {
           createRecovery.setTx({
             phase: "failed",
@@ -573,7 +574,7 @@ export function CreateAndLock({
         onSubmitted: onUpdated,
         confirm: async () => {
           await requireReconciled(guardId, "create_guard");
-          onUpdated();
+          await onUpdated();
         },
       });
     } catch (err) {
@@ -621,7 +622,7 @@ export function CreateAndLock({
       onSubmitted: onUpdated,
       confirm: async () => {
         await requireReconciled(guardId, "arm_guard");
-        onUpdated();
+        await onUpdated();
       },
     });
     if (!submitted) armIntentRef.current = false;
@@ -760,7 +761,7 @@ export function SubmitEvidenceChain({
   runId: string;
   onchainId: string | null;
   txEvidence: string | null;
-  onUpdated: () => void;
+  onUpdated: OnUpdated;
 }) {
   const historical = useHistoricalReadOnly(guardId);
   const gate = useWriteGate();
@@ -851,7 +852,7 @@ export function SubmitEvidenceChain({
       onSubmitted: onUpdated,
       confirm: async () => {
         await requireReconciled(guardId, "submit_evidence");
-        onUpdated();
+        await onUpdated();
       },
     });
     if (!submitted) submitIntentRef.current = false;
@@ -963,7 +964,7 @@ export function VerifyWithGenLayer({
   guardId: string;
   onchainId: string | null;
   txEvaluate: string | null;
-  onUpdated: () => void;
+  onUpdated: OnUpdated;
 }) {
   const historical = useHistoricalReadOnly(guardId);
   const gate = useWriteGate();
@@ -1007,7 +1008,7 @@ export function VerifyWithGenLayer({
       onSubmitted: onUpdated,
       confirm: async () => {
         await requireReconciled(guardId, "evaluate_guard");
-        onUpdated();
+        await onUpdated();
       },
     });
     if (!submitted) verifyIntentRef.current = false;

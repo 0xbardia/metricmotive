@@ -120,6 +120,7 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     // Explicit ?guardId= recovery may open the canonical Guard page.
     assert.match(source, /persistedGuardQuery/);
     assert.match(source, /persistedGuardQuery\.data\?\.guard\.id/);
+    assert.match(source, /if \(draft\.guardId\) \{[\s\S]*setId\(draft\.guardId\);[\s\S]*setStep\(1\);/);
     // First Save Definition must not leave the builder before Protect.
     const persistFn = source.slice(source.indexOf("const persist = useMutation"), source.indexOf("async function goNext()"));
     assert.doesNotMatch(persistFn, /to:\s*"\/app\/guards\/\$id"/);
@@ -141,6 +142,14 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     const append = source.slice(source.indexOf("const append = useMutation"), source.indexOf("const finish = useMutation"));
     assert.match(append, /onSuccess: async/);
     assert.match(append, /await qc\.invalidateQueries\(\{ queryKey: \["run", id\] \}\)/);
+  });
+
+  it("waits for Guard state to refetch after a chain action", async () => {
+    const source = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/chain-actions.tsx", "utf8"),
+    );
+    assert.match(source, /await opts\.onSubmitted\?\.\(\)/);
+    assert.match(source, /await onUpdatedRef\.current\(\)/);
   });
 
   it("keeps the active network visible in the mobile wallet menu", async () => {

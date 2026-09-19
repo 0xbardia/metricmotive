@@ -171,6 +171,10 @@ function NewGuardContent() {
       if (draft.motive) setMotive(draft.motive);
       if (draft.metric) setMetric(draft.metric);
       if (Array.isArray(draft.guardrails)) setGuardrails(draft.guardrails);
+      if (draft.guardId) {
+        setId(draft.guardId);
+        setStep(1);
+      }
     } catch {
       // A corrupt local draft must never block the builder.
     }
@@ -596,7 +600,7 @@ function NewGuardContent() {
               </p>
               <div className="mt-7">
                 {id && guardQ.isLoading ? <p className="text-sm text-graphite">Loading the saved definition…</p> : null}
-                {id && !guardQ.isLoading ? <CreateAndLock guardId={id} motive={motive} metric={metric} guardrails={guardrails} onchainId={guardQ.data?.guard.onchainId ?? null} txCreate={guardQ.data?.guard.txCreate ?? null} txArm={guardQ.data?.guard.txArm ?? null} locked={guardQ.data?.guard.status === "ARMED" || guardQ.data?.guard.status === "EVIDENCE_SUBMITTED" || guardQ.data?.guard.status === "RESOLVED"} onUpdated={() => void guardQ.refetch()} /> : null}
+                {id && !guardQ.isLoading ? <CreateAndLock guardId={id} motive={motive} metric={metric} guardrails={guardrails} onchainId={guardQ.data?.guard.onchainId ?? null} txCreate={guardQ.data?.guard.txCreate ?? null} txArm={guardQ.data?.guard.txArm ?? null} locked={guardQ.data?.guard.status === "ARMED" || guardQ.data?.guard.status === "EVIDENCE_SUBMITTED" || guardQ.data?.guard.status === "RESOLVED"} onUpdated={async () => { await guardQ.refetch(); }} /> : null}
                 {!id ? <p className="text-sm text-graphite">Save the definition before publishing.</p> : null}
               </div>
 

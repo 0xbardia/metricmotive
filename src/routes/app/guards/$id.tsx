@@ -180,7 +180,7 @@ function GuardPageContent() {
 
         <div className="mt-8">
           <NextActionCard lifecycle={lifecycle}>
-            {nextAction({ guard, data, start, lifecycleKind: lifecycle.nextAction.kind, onUpdated: () => void q.refetch() })}
+            {nextAction({ guard, data, start, lifecycleKind: lifecycle.nextAction.kind, onUpdated: async () => { await q.refetch(); } })}
           </NextActionCard>
         </div>
 
@@ -257,7 +257,7 @@ function nextAction({
     mutateAsync: () => Promise<{ run: { id: string } }>;
   };
   lifecycleKind: string;
-  onUpdated: () => void;
+  onUpdated: () => void | Promise<void>;
 }) {
   if (lifecycleKind === "publish-and-lock") return <CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onUpdated={onUpdated} />;
   if (lifecycleKind === "start-run") return <div className="flex flex-wrap items-center gap-3"><Button loading={start.isPending} loadingLabel="Starting Run…" disabled={start.isPending} onClick={async () => { const result = await start.mutateAsync(); window.location.href = `/app/runs/${result.run.id}`; }}><Play className="size-4" />{CTA.startRun}</Button></div>;
