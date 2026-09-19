@@ -120,10 +120,10 @@ function RunPageContent() {
       }
       return appendEventFn({ data: { runId: id, event } });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       resetEventForm();
       setError(null);
-      qc.invalidateQueries({ queryKey: ["run", id] });
+      await qc.invalidateQueries({ queryKey: ["run", id] });
     },
     onError: (err) => setError(err instanceof Error ? err.message : "Could not record evidence."),
   });

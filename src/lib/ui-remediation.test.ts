@@ -134,6 +134,15 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.match(source, /<SubmitEvidenceChain/);
   });
 
+  it("waits for the Run evidence count to reconcile after Add evidence", async () => {
+    const source = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/routes/app/runs/$id.tsx", "utf8"),
+    );
+    const append = source.slice(source.indexOf("const append = useMutation"), source.indexOf("const finish = useMutation"));
+    assert.match(append, /onSuccess: async/);
+    assert.match(append, /await qc\.invalidateQueries\(\{ queryKey: \["run", id\] \}\)/);
+  });
+
   it("keeps the active network visible in the mobile wallet menu", async () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/components/wallet-control.tsx", "utf8"),
