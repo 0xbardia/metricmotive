@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0
+
+- Active deployment migrated to GenLayer Studio Dev (chain 61997), contract `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`
+- Client SDK pinned to `genlayer-js@2.0.0-rc.1`
+- Deployment-aware historical provenance: Studionet 61999 contracts remain first-class and read-only
+- Dual-network explorer and wallet routing (Studio Dev active; Studionet historical)
+- GenLayer v2 fee-aware lifecycle writes (`estimateTransactionFeesForWrite` + `fees.{distribution,feeValue}`)
+- Real Studio Dev end-to-end certification: Guard 1 `METRIC_GAMING` / `CONSTRAINT_BYPASS`
+- Historical 61999 receipts and Guards are preserved; this is not mainnet
+
 ## 1.0.3
 
 - Wallet nonce/signature sessions and server-side owner enforcement for private mutations

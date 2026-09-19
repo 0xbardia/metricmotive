@@ -16,7 +16,7 @@ export function DefineSection() {
         <div className="define-comparison mt-12 border-t border-rule pt-10">
           <Reveal as="article" className="define-column define-column-motive">
             <div className="define-column-top">
-              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-sage">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-[var(--color-sage-text)]">
                 Motive
               </p>
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-graphite">
@@ -36,7 +36,7 @@ export function DefineSection() {
           </div>
           <Reveal delay={80} as="article" className="define-column define-column-metric">
             <div className="define-column-top">
-              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ochre">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-[var(--color-brand-text)]">
                 Metric
               </p>
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-graphite">
@@ -52,7 +52,7 @@ export function DefineSection() {
           </Reveal>
         </div>
         <Reveal delay={120}>
-          <p className="mt-12 font-display text-2xl text-brick sm:text-3xl">
+          <p className="mt-12 font-display text-2xl text-[var(--color-danger-text)] sm:text-3xl">
             Those are not the same thing.
           </p>
         </Reveal>

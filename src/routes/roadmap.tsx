@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteFooter, SiteHeader } from "@/components/chrome";
+import { MarketingShell } from "@/components/marketing-shell";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/roadmap")({ component: RoadmapPage });
@@ -59,8 +59,7 @@ const PHASES: {
 
 function RoadmapPage() {
   return (
-    <div className="min-h-dvh bg-bone">
-      <SiteHeader />
+    <MarketingShell>
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <h1 className="font-display text-4xl tracking-tight">Roadmap</h1>
         <p className="mt-3 text-graphite">
@@ -89,7 +88,6 @@ function RoadmapPage() {
           ))}
         </ol>
       </main>
-      <SiteFooter />
-    </div>
+    </MarketingShell>
   );
 }

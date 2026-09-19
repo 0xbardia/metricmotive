@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DEPLOYMENT } from "@/lib/contract";
+import { DEPLOYMENT, getActiveDeployment } from "@/lib/contract";
 import { getSql } from "@/lib/db";
 import { requestId } from "@/lib/errors";
+import { guardProvenanceSchemaReady } from "@/lib/server/schema";
 
 export const Route = createFileRoute("/api/v1/ready")({
   server: {
@@ -13,7 +14,17 @@ export const Route = createFileRoute("/api/v1/ready")({
         );
         try {
           const sql = await getSql();
-          await sql`select 1 as ok`;
+          const result = await sql<{ column_name: string }>`
+            select
+              column_name
+            from information_schema.columns
+            where table_schema = current_schema()
+              and table_name = 'guards'
+              and column_name in ('contract_address', 'chain_id', 'network')
+          `;
+          if (!guardProvenanceSchemaReady(result)) {
+            throw new Error("Guard provenance schema is missing");
+          }
         } catch {
           return Response.json(
             {
@@ -30,7 +41,7 @@ export const Route = createFileRoute("/api/v1/ready")({
             {
               error: {
                 code: "NOT_READY",
-                message: "Studionet contract is not configured",
+                message: "Active Studio Dev contract is not configured",
               },
               requestId: id,
               db: true,
@@ -44,7 +55,9 @@ export const Route = createFileRoute("/api/v1/ready")({
           requestId: id,
           db: true,
           contractConfigured: true,
-          chainId: DEPLOYMENT.chainId,
+          chainId: getActiveDeployment().chainId,
+          network: getActiveDeployment().networkName,
+          contractAddress: getActiveDeployment().contractAddress,
         });
       },
     },

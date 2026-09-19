@@ -1,6 +1,6 @@
 import { useAccount, useChainId, useDisconnect, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { GENLAYER } from "@/lib/domain";
+import { ACTIVE_CHAIN_ID } from "./chain";
 
 export function useWalletSession() {
   const { address, connector, isConnecting, isReconnecting, status } = useAccount();
@@ -9,7 +9,7 @@ export function useWalletSession() {
   const { switchChain, switchChainAsync, isPending: switching } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
 
-  const onStudionet = chainId === GENLAYER.chainId;
+  const onActiveChain = chainId === ACTIVE_CHAIN_ID;
   const connected = Boolean(address);
 
   return {
@@ -21,15 +21,16 @@ export function useWalletSession() {
     status,
     error: null as string | null,
     connected,
-    onStudionet,
-    ready: connected && onStudionet,
+    onStudionet: onActiveChain,
+    onActiveChain,
+    ready: connected && onActiveChain,
     connect: () => {
       openConnectModal?.();
     },
     disconnect: () => disconnect(),
     switchNetwork: async () => {
-      await switchChainAsync({ chainId: GENLAYER.chainId }).catch(() => {
-        switchChain({ chainId: GENLAYER.chainId });
+      await switchChainAsync({ chainId: ACTIVE_CHAIN_ID }).catch(() => {
+        switchChain({ chainId: ACTIVE_CHAIN_ID });
       });
     },
   };

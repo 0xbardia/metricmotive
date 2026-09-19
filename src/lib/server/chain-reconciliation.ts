@@ -1,7 +1,5 @@
-import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
 import { guardDeployment } from "@/lib/contract";
-import { buildEvidenceManifest, evidenceCommitmentHash, evidenceManifestPreimage } from "@/lib/evidence";
+import { getReadClientForProvenance, transactionIdentity } from "./chain-client";
 import {
   CONFIRMATION_UNAVAILABLE_MESSAGE,
   CHAIN_OPERATIONS,
@@ -26,6 +24,7 @@ import {
   markChainTransactionReconciled,
   requireOwnedGuard,
   requireOwnedRun,
+  resolveRunEvidenceSnapshot,
   type ChainTransaction,
 } from "./repo";
 import { asPattern, asStatus, asVerdict, parseFindings, readChainGuard } from "./chain-read";
@@ -62,7 +61,7 @@ const inFlight =
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Studionet confirmation timed out")), ms);
+    const timer = setTimeout(() => reject(new Error("Chain confirmation timed out")), ms);
     promise.then(
       (value) => {
         clearTimeout(timer);
@@ -124,10 +123,11 @@ function allowedStatuses(operation: ChainOperation): string[] {
 async function verifyChainDefinition(local: Guard, onchainId: string, ownerAddress: string, operation: ChainOperation) {
   let chain: Awaited<ReturnType<typeof readChainGuard>>;
   try {
-    chain = await readChainGuard(onchainId, guardDeployment(local).contractAddress);
+    const deployment = guardDeployment(local);
+    chain = await readChainGuard(onchainId, deployment.contractAddress, deployment.chainId);
   } catch (error) {
     if (error instanceof AppError && error.code === "NOT_FOUND") {
-      throw mismatch("The finalized transaction returned a Guard that does not exist on Studionet.");
+      throw mismatch("The finalized transaction returned a Guard that does not exist on the recorded deployment.");
     }
     throw error;
   }
@@ -168,11 +168,11 @@ async function applyReconciled(
       }, actorAddress);
       break;
     case "arm_guard":
-      if (asStatus(chain.status) === "DRAFT") throw mismatch("Studionet has not confirmed ARMED for this Guard.");
+      if (asStatus(chain.status) === "DRAFT") throw mismatch("The recorded network has not confirmed ARMED for this Guard.");
       guard = await applyChainArm(local.id, transaction.txHash, actorAddress);
       break;
     case "submit_evidence":
-      if (!chain.evidence_hash) throw mismatch("Studionet has not confirmed an evidence commitment.");
+      if (!chain.evidence_hash) throw mismatch("The recorded network has not confirmed an evidence commitment.");
       if (transaction.expectedEvidenceHash && transaction.expectedEvidenceHash !== chain.evidence_hash) {
         throw mismatch("The committed evidence hash does not match this transaction.");
       }
@@ -183,7 +183,7 @@ async function applyReconciled(
       }, actorAddress);
       break;
     case "evaluate_guard": {
-      if (asStatus(chain.status) !== "RESOLVED") throw mismatch("Studionet has not finalized a verdict for this Guard.");
+      if (asStatus(chain.status) !== "RESOLVED") throw mismatch("The recorded network has not finalized a verdict for this Guard.");
       findings = parseFindings(chain.findings_json) ?? undefined;
       if (!findings) throw new ReconciliationError("MALFORMED", "Studionet returned no valid semantic findings.");
       verdict = asVerdict(chain.verdict);
@@ -225,7 +225,7 @@ async function applyReconciled(
     onchainId,
     findings,
     verdict,
-    message: "Transaction finalized. Guard reconciled on Studionet.",
+    message: "Transaction finalized. Guard reconciled on the recorded deployment.",
   };
 }
 
@@ -248,7 +248,10 @@ async function runReconciliation(
     throw mismatch("The stored transaction targets a different on-chain Guard.");
   }
 
-  const client = createClient({ chain: studionet });
+  const { client } = getReadClientForProvenance({
+    chainId: transaction.chainId,
+    contractAddress: transaction.contractAddress,
+  });
   const raw = await withTimeout(
     client.getTransaction({ hash: transaction.txHash as never }),
     MAX_RPC_WAIT_MS,
@@ -276,13 +279,21 @@ async function runReconciliation(
     if (submittedManifest.guardId !== expectedOnchainId) {
       throw mismatch("The submitted evidence targets a different on-chain Guard.");
     }
-    const expectedManifest = await buildEvidenceManifest({ guardId: expectedOnchainId, run });
-    if (evidenceManifestPreimage(submittedManifest) !== evidenceManifestPreimage(expectedManifest)) {
-      throw mismatch("The submitted evidence does not match the persisted Run snapshot.");
-    }
+    // Compare against the snapshot pinned at Finish Run — the exact bytes the
+    // wallet submitted. Rebuilding from Run columns is what produced the
+    // phantom mismatch (mutable timestamps, mutable event order).
+    const snapshot = await resolveRunEvidenceSnapshot(run, submittedManifest);
+    // The pinned snapshot IS the submission of record: `resolveRunEvidenceSnapshot`
+    // has just proven it is canonically identical to the on-chain argument, so
+    // its commitment is the authoritative expectation. A `guard_transactions`
+    // row written before the serializer was fixed holds a digest derived from a
+    // Date-corrupted rebuild; it is a local cache, and it is corrected here to
+    // the proven value. A genuinely different manifest still fails the preimage
+    // check above, and a contract that stored something else still fails the
+    // `chain.evidence_hash` comparison in applyReconciled.
     verifiedTransaction = {
       ...transaction,
-      expectedEvidenceHash: await evidenceCommitmentHash(submittedManifest),
+      expectedEvidenceHash: snapshot.commitmentHash,
     };
   }
   const decoded = await verifyTransaction(raw, {
@@ -305,7 +316,7 @@ async function runReconciliation(
       guard: local,
       txHash: transaction.txHash,
       status: decoded.status,
-      message: "Transaction submitted. Waiting for Studionet finalization.",
+      message: "Transaction submitted. Waiting for finalization on the recorded network.",
     };
   }
   return applyReconciled(local, verifiedTransaction, decoded, actorAddress);
@@ -336,10 +347,14 @@ export async function reconcileTransaction(
       status: local.status,
       findings: local.findings ?? undefined,
       verdict: local.verdict ?? undefined,
-      message: "Transaction is already reconciled on Studionet.",
+      message: "Transaction is already reconciled on the recorded deployment.",
     };
   }
-  const key = `${deployment.chainId}:${deployment.contractAddress.toLowerCase()}:${id}:${operation}:${transaction.txHash.toLowerCase()}`;
+  const key = `${transactionIdentity({
+    chainId: transaction.chainId,
+    contractAddress: transaction.contractAddress,
+    txHash: transaction.txHash,
+  })}:${id}:${operation}`;
   const existing = inFlight.get(key);
   if (existing) return existing;
   const task = runReconciliation(local, transaction, actorAddress).catch(async (error: unknown) => {

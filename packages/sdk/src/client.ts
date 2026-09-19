@@ -1,5 +1,6 @@
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { genLayerChainForDeployment, deploymentForContractAddress } from "./chain-preset.ts";
+import { getActiveDeployment } from "./deployment.ts";
 import { TransactionStatus } from "genlayer-js/types";
 import type { CalldataEncodable } from "genlayer-js/types";
 import { MetricMotiveError, asError } from "./errors.ts";
@@ -61,8 +62,9 @@ export class MetricMotiveClient {
   }
 
   private chainClient() {
+    const deployment = deploymentForContractAddress(this.contractAddress);
     return createClient({
-      chain: studionet,
+      chain: genLayerChainForDeployment(deployment),
       account: this.account as never,
     });
   }
@@ -83,6 +85,14 @@ export class MetricMotiveClient {
     wait: "accepted" | "finalized",
   ): Promise<`0x${string}`> {
     this.requireAccount();
+    const deployment = deploymentForContractAddress(this.contractAddress);
+    if (deployment.status !== "active" || deployment.contractAddress.toLowerCase() !== getActiveDeployment().contractAddress.toLowerCase()) {
+      throw new MetricMotiveError(
+        "HISTORICAL_DEPLOYMENT_READ_ONLY",
+        "Historical deployments are readable only. New writes must target the active Studio Dev contract.",
+        "chain",
+      );
+    }
     const client = this.chainClient();
     let hash: `0x${string}`;
     try {

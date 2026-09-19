@@ -6,8 +6,8 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
-import { GENLAYER } from "@/lib/domain";
-import { studionetChain } from "./chain";
+import { getActiveDeployment } from "../contract.ts";
+import { studioDevChain } from "./chain";
 
 function readWalletConnectProjectId(): string {
   const fromEnv =
@@ -25,7 +25,7 @@ const walletFactories = walletConnectProjectId
 const connectors = connectorsForWallets(
   [
     {
-      groupName: "Studionet",
+      groupName: getActiveDeployment().networkName,
       wallets: walletFactories,
     },
   ],
@@ -37,9 +37,9 @@ const connectors = connectorsForWallets(
 
 export const wagmiConfig = createConfig({
   connectors,
-  chains: [studionetChain],
+  chains: [studioDevChain],
   transports: {
-    [studionetChain.id]: http(GENLAYER.rpcUrl),
+    [studioDevChain.id]: http(getActiveDeployment().rpcUrl),
   },
   ssr: true,
   multiInjectedProviderDiscovery: true,

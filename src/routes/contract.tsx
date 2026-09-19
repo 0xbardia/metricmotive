@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteFooter, SiteHeader } from "@/components/chrome";
+import { MarketingShell } from "@/components/marketing-shell";
 import { Reveal } from "@/components/motion";
 import { Badge } from "@/components/ui/badge";
+import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { Button } from "@/components/ui/button";
-import { DEPLOYMENT, LEGACY_DEPLOYMENT } from "@/lib/contract";
+import { DEPLOYMENT, HISTORICAL_DEPLOYMENT, LEGACY_DEPLOYMENT } from "@/lib/contract";
 import { CERTIFIED_CASES } from "@/lib/cert-cases";
 import { GENLAYER } from "@/lib/domain";
 import { probeContractReadsFn } from "@/lib/server/actions";
@@ -20,8 +21,7 @@ function ContractPage() {
   });
 
   return (
-    <div className="min-h-dvh bg-bone">
-      <SiteHeader />
+    <MarketingShell>
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">
           Intelligent Contract
@@ -29,9 +29,9 @@ function ContractPage() {
         <h1 className="mt-2 font-display text-4xl tracking-tight">MetricMotive</h1>
         <div className="mt-4 flex flex-wrap gap-2">
           {DEPLOYMENT.certified ? (
-            <Badge tone="sage">Certified on Studionet</Badge>
+            <Badge tone="success">Certified on GenLayer Studio Dev</Badge>
           ) : (
-            <Badge tone="ochre">Read interface verified · real-wallet test pending</Badge>
+            <Badge tone="warning">Read interface verified · real-wallet test pending</Badge>
           )}
           <Badge tone="ink">v{DEPLOYMENT.contractVersion}</Badge>
         </div>
@@ -40,21 +40,33 @@ function ContractPage() {
           <Row k="Chain ID" v={String(GENLAYER.chainId)} />
           <Row k="RPC" v={GENLAYER.rpcUrl} />
           <Row k="Address" v={DEPLOYMENT.contractAddress} />
-          <Row k="Previous deployment · legacy" v={LEGACY_DEPLOYMENT.contractAddress} />
+          <Row k="Explorer" v={GENLAYER.explorerUrl} />
+          <Row
+            k="Studio import"
+            v={`${GENLAYER.studioUrl}/?import-contract=${DEPLOYMENT.contractAddress}`}
+          />
           <Row k="Deploy tx" v={DEPLOYMENT.deployTx} />
           <Row k="Deployer" v={DEPLOYMENT.deployer} />
           <Row k="Source" v={DEPLOYMENT.source} />
           <Row k="Source SHA-256" v={DEPLOYMENT.sourceSha256} />
-          <Row k="Studio" v={GENLAYER.studioUrl} />
           <Row
             k="Consensus"
             v={`${DEPLOYMENT.validatorsAgreed} validators agreed · ${DEPLOYMENT.execution}`}
           />
         </dl>
+        <h2 className="mt-10 font-display text-2xl">Historical deployments</h2>
+        <p className="mt-2 text-sm text-graphite">
+          These contracts remain first-class provenance. Existing Guards and receipts keep their original chain and address. They are read-only.
+        </p>
+        <dl className="mt-6 space-y-3 text-sm">
+          <Row k="Previous · Studionet · 61999" v={HISTORICAL_DEPLOYMENT.contractAddress} />
+          <Row k="Older legacy · Studionet · 61999" v={LEGACY_DEPLOYMENT.contractAddress} />
+          <Row k="Historical explorer" v={HISTORICAL_DEPLOYMENT.explorerUrl} />
+        </dl>
         <h2 className="mt-10 font-display text-2xl">Read methods</h2>
         <p className="mt-2 text-sm text-graphite">
-          Verified on Studionet after deploy. Missing IDs return found:false
-          instead of crashing. Run live reads to probe the certified address now.
+          Verified against the active Studio Dev contract interface. Missing IDs return found:false
+          instead of crashing. Run live reads to probe the active address now.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button
@@ -66,25 +78,25 @@ function ContractPage() {
             {probe.isFetching ? "Reading…" : "Run live reads"}
           </Button>
           {probe.data ? (
-            <Badge tone={probe.data.allPass ? "sage" : "brick"}>
+            <Badge tone={probe.data.allPass ? "success" : "danger"}>
               {probe.data.allPass
                 ? `${probe.data.rows.length} PASS`
                 : "Read failure"}
             </Badge>
           ) : (
-            <Badge tone="sage">Read-only interface verified</Badge>
+            <Badge tone="success">Read-only interface verified</Badge>
           )}
         </div>
         <ul className="mt-4 space-y-1 font-mono text-sm">
           {DEPLOYMENT.readMethods.map((name) => {
             const live = probe.data?.rows.find((r) => r.functionName === name);
             const tone = probe.isFetching
-              ? "graphite"
+              ? "neutral"
               : live
                 ? live.ok
-                  ? "sage"
-                  : "brick"
-                : "sage";
+                  ? "success"
+                  : "danger"
+                : "success";
             const label = probe.isFetching
               ? "Reading"
               : live
@@ -122,7 +134,9 @@ function ContractPage() {
           {CERTIFIED_CASES.map((c) => (
             <li key={c.onchainId} className="paper-panel p-5">
               <p className="font-mono text-xs text-ochre">{c.label}</p>
-              <p className="mt-2 font-display text-2xl">{c.verdict}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <VerdictBadge verdict={c.verdict} size="lg" />
+              </div>
               <p className="mt-1 text-sm text-graphite">
                 Guard {c.onchainId} · {c.primaryPattern}
               </p>
@@ -141,8 +155,7 @@ function ContractPage() {
           ))}
         </ul>
       </main>
-      <SiteFooter />
-    </div>
+    </MarketingShell>
   );
 }
 

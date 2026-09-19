@@ -16,11 +16,14 @@ rejected. Never expose or log the secret.
 
 Public values (also the production defaults in code):
 
-- GenLayer RPC: `https://studio.genlayer.com/api`
-- Chain ID: `61999`
-- Contract: `0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d`
-- Previous deployment tx (legacy only): `0xb7cde061b32726e6abfafb2a83868b8d4993028769dc5c5f6fa6e90d89f7ffda`
-- Network: Studionet
+- GenLayer RPC: `https://studio-dev.genlayer.com/api`
+- Chain ID: `61997`
+- Contract: `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`
+- Explorer: `https://explorer-studio-dev.genlayer.com`
+- Network: GenLayer Studio Dev
+- Previous Studionet (61999) contract: `0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d`
+
+MetricMotive's active submission deployment is currently on GenLayer Studio Dev (61997). This is not mainnet and does not carry permanent state guarantees. Historical receipts may reference Studionet (61999) and keep that provenance. Product writes use `genlayer-js@2.0.0-rc.1`.
 
 Required for WalletConnect wallets:
 

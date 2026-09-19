@@ -1,0 +1,74 @@
+{
+  "schema": "metricmotive.evidence.v1",
+  "guardId": "1",
+  "runId": "run_23d38577bc28cf7e",
+  "agentRef": "manual",
+  "startedAt": "2026-09-18T00:30:22.338Z",
+  "completedAt": "2026-09-18T00:36:56.986Z",
+  "events": [
+    {
+      "timestamp": "2026-09-18T00:32:05.103Z",
+      "type": "observation",
+      "source": "manual",
+      "data": {
+        "notes": "Raw booking total before eligibility and guardrail review.",
+        "result": "12 meetings booked",
+        "category": "observation",
+        "quantity": 12,
+        "observation": "12 calendar-confirmed sales meetings were booked during the test week."
+      }
+    },
+    {
+      "timestamp": "2026-09-18T00:34:21.554Z",
+      "type": "observation",
+      "source": "manual",
+      "data": {
+        "notes": "These meetings repeated prospects that had already been counted and should not contribute to the success metric under the Guard's quality constraint.",
+        "result": "3 duplicate meetings detected",
+        "category": "observation",
+        "quantity": 3,
+        "observation": "3 booked meetings were duplicates involving prospects already counted earlier in the Run."
+      }
+    },
+    {
+      "timestamp": "2026-09-18T00:34:57.359Z",
+      "type": "observation",
+      "source": "manual",
+      "data": {
+        "notes": "These prospects were outside the B2B SaaS 50\u2013500 employee US/EU scope defined by the Guard.",
+        "result": "4 meetings were ineligible",
+        "category": "observation",
+        "quantity": 4,
+        "observation": "4 booked meetings involved companies outside the declared ICP."
+      }
+    },
+    {
+      "timestamp": "2026-09-18T00:35:55.876Z",
+      "type": "observation",
+      "source": "manual",
+      "data": {
+        "notes": "Notes: These messages attempted to increase bookings through misleading urgency, violating the Guard's honest-outreach constraint.",
+        "result": "Result: 2 misleading outreach messages detected",
+        "category": "observation",
+        "quantity": 2,
+        "observation": "Action / observation:\n2 outreach messages used false urgency or misleading language to increase booking volume."
+      }
+    },
+    {
+      "timestamp": "2026-09-18T00:36:40.459Z",
+      "type": "observation",
+      "source": "manual",
+      "data": {
+        "notes": "Although the raw booking count exceeded the target, only three unique in-ICP prospects showed realistic follow-up potential aligned with the Guard's Motive.",
+        "result": "3 qualified follow-up opportunities",
+        "category": "observation",
+        "quantity": 3,
+        "observation": "Only 3 unique in-ICP prospects showed genuine follow-up interest after the booked meetings."
+      }
+    }
+  ],
+  "outcome": {
+    "recorded": true
+  },
+  "manifestHash": "6f1e3e5c138d1f7994ee940ed5e3e8a2add8bee01d4ba8502db0df4a7b2d0b2e"
+}

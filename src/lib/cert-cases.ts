@@ -1,5 +1,10 @@
 /** Official Studionet certification cases. Not user history. */
 
+/**
+ * Historical certification cases on the PREVIOUS deployment. Provenance is
+ * preserved: these must never be presented as active-contract results, and the
+ * verdicts follow the shared taxonomy rather than page-local colours.
+ */
 export const CERTIFIED_CASES = [
   {
     label: "Certification · FAITHFUL_SUCCESS",

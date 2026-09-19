@@ -7,9 +7,8 @@
  * exact Guard, and only then binds the local row.
  */
 import pg from "pg";
-import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
 import { guardDeployment } from "../src/lib/contract.ts";
+import { getReadClientForProvenance } from "../src/lib/server/chain-client.ts";
 import { GENLAYER, parseGuardrails } from "../src/lib/domain.ts";
 import {
   verifyCreateChainGuard,
@@ -74,7 +73,10 @@ try {
     guardrails: parseGuardrails(row.guardrails_json || "[]"),
     definitionHash: row.definition_hash,
   };
-  const client = createClient({ chain: studionet });
+  const { client } = getReadClientForProvenance({
+    chainId: deployment.chainId,
+    contractAddress: deployment.contractAddress,
+  });
   const transaction = await client.getTransaction({ hash: txHash });
   const decoded = await verifyCreateTransaction(transaction, {
     ...local,

@@ -123,16 +123,16 @@ export function txLabel(state: TxState): string {
   }[state.action] ?? "Transaction";
   switch (state.phase) {
     case "need-wallet":
-      return "Connect a wallet on Studionet to continue.";
+      return "Connect a wallet on GenLayer Studio Dev to continue.";
     case "wrong-network":
-      return "Switch the wallet to GenLayer Studionet (chain 61999).";
+      return "Switch to GenLayer Studio Dev";
     case "request":
       return `${action}. Approve this step in your wallet.`;
     case "rejected":
       return "Wallet request was rejected. Nothing was sent.";
     case "pending":
       return state.hash
-        ? `${action} submitted. Waiting for Studionet confirmation.`
+        ? `${action} submitted. Waiting for Studio Dev confirmation.`
         : `${action}. Waiting for the wallet to submit the transaction.`;
     case "confirming":
       return state.hash
@@ -141,7 +141,7 @@ export function txLabel(state: TxState): string {
     case "failed":
       return state.error ?? "Transaction failed.";
     case "success":
-      return `${action} confirmed on Studionet.`;
+      return `${action} confirmed on GenLayer Studio Dev.`;
     default:
       return "";
   }

@@ -27,6 +27,13 @@ export function errorBody(err: unknown, requestId: string): ApiErrorBody {
       requestId,
     };
   }
+  if (err instanceof Error && /relation .* does not exist|column .* does not exist/i.test(err.message)) {
+    console.error(`[schema] ${requestId}:`, err.message);
+    return {
+      error: { code: "SCHEMA_NOT_READY", message: "MetricMotive couldn’t save this draft. Please retry." },
+      requestId,
+    };
+  }
   return {
     error: { code: "INTERNAL", message: "Unexpected error" },
     requestId,

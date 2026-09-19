@@ -3,7 +3,8 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
-import { studionetChain } from "./chain";
+import { getActiveDeployment } from "../contract.ts";
+import { studioDevChain } from "./chain";
 import { wagmiConfig } from "./config";
 import { metricMotiveWalletTheme } from "./theme";
 
@@ -20,10 +21,10 @@ export function WalletProviders({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={metricMotiveWalletTheme}
-          initialChain={studionetChain}
+          initialChain={studioDevChain}
           appInfo={{
             appName: "MetricMotive",
-            learnMoreUrl: "https://studio.genlayer.com/contracts",
+            learnMoreUrl: getActiveDeployment().studioUrl,
           }}
         >
           {children}

@@ -26,15 +26,49 @@ without initializing write infrastructure.
 TypeScript SDK: `packages/sdk` (`@metricmotive/sdk` 1.0.0, not published to npm).
 Sales-agent example: `examples/sales-agent`.
 
+## Evidence commitment invariants
+
+A finished Run is immutable for evidence purposes.
+
+- **Finish Run** builds the canonical evidence manifest once and persists it
+  verbatim (`runs.evidence_snapshot_json`) with both digests: the inner
+  `manifestHash` (canonical manifest excluding that field) and the contract
+  commitment `evidence_commitment_hash` (canonical full manifest, which is what
+  the contract stores as `evidence_hash`).
+- **Submission** (`prepareEvidenceFn`) and **reconciliation** replay those
+  exact persisted bytes. Neither rebuilds a manifest from the mutable Run
+  columns; a refresh can no longer change what is being compared.
+- Reconciliation compares the on-chain argument to the pinned snapshot by
+  canonical preimage. A difference is a hard `MISMATCH` — never a fuzzy match.
+- Runs finished before snapshots existed are recovered by proving the submitted
+  manifest is canonically identical to the persisted Run, then pinning the
+  SUBMITTED bytes (the transaction is the submission of record). A mismatched
+  transaction fails closed.
+- Timestamps are normalized to ISO-8601 UTC at the DB boundary, and the
+  canonical serializer renders a `Date` as its ISO string. Both were required:
+  a driver-parsed `Date` previously canonicalized to `{}`, which made the same
+  Run hash differently between submission and confirmation.
+
+A submitted-but-unconfirmed transaction is a delay, not a failure: the hash is
+preserved and the only offered action re-reads it ("Check again"). It never
+resubmits.
+
 ```
 
 Contract source: `contracts/metric-motive/src/metric_motive.py`
 
-Active Studionet deployment (read-certified; real-wallet test pending):
+Active deployment: GenLayer Studio Dev (not mainnet; not a permanent-state guarantee):
 
-- Address: `0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d`
-- Chain ID: 61999
-- Previous deployment tx (legacy only): `0xb7cde061b32726e6abfafb2a83868b8d4993028769dc5c5f6fa6e90d89f7ffda`
+- Address: `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`
+- Chain ID: 61997
+- RPC: `https://studio-dev.genlayer.com/api`
+- Explorer: `https://explorer-studio-dev.genlayer.com`
+- SDK: `genlayer-js@2.0.0-rc.1`
+
+Historical Studionet (61999) remains first-class and read-only:
+
+- Previous: `0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d`
+- Legacy: `0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8D7C`
 
 ## Deployment routing
 

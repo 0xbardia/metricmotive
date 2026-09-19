@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/motion";
 import { CopyValue } from "@/components/landing/copy-value";
 import { HOSTED_GAMING } from "@/components/landing/cert-case";
-import { Badge, VerdictStamp } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { LEGACY_DEPLOYMENT } from "@/lib/contract";
 
 export function ReceiptSection() {
@@ -23,14 +24,14 @@ export function ReceiptSection() {
           >
             Guard #{HOSTED_GAMING.guardId}
             <br />
-            Resolved on Studionet
+            Resolved on GenLayer
           </Reveal>
         </div>
         <Reveal delay={80}>
           <article className="receipt-sheet mt-10">
             <div className="receipt-layout">
               <aside className="receipt-index">
-                <Badge tone="ochre">Certification receipt</Badge>
+                <Badge tone="brand">Certification receipt</Badge>
                 <p className="receipt-index-number mt-8 font-display">02</p>
                 <p className="mt-2 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-graphite">
                   Hosted case
@@ -44,7 +45,7 @@ export function ReceiptSection() {
                   <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-graphite">
                     Adjudication complete
                   </p>
-                  <VerdictStamp verdict={HOSTED_GAMING.verdict} />
+                  <VerdictBadge verdict={HOSTED_GAMING.verdict} />
                 </header>
                 <dl className="mt-6 grid gap-6 sm:grid-cols-2">
                   <div>
@@ -67,8 +68,8 @@ export function ReceiptSection() {
                   <div>
                     <dt>What did GenLayer find?</dt>
                     <dd className="mt-2 text-sm leading-relaxed">
-                      {HOSTED_GAMING.primaryPattern}. Metric satisfied. Goal not advanced. Material
-                      violation.
+  {HOSTED_GAMING.primaryPattern}. The metric was satisfied; the motive did not
+                      advance and a material guardrail violation was found.
                     </dd>
                   </div>
                 </dl>
@@ -77,13 +78,15 @@ export function ReceiptSection() {
                     Findings
                   </p>
                   <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[0.68rem] uppercase tracking-[0.08em]">
-                    <li className="text-sage">metric_satisfied</li>
-                    <li className="text-brick">goal_not_advanced</li>
-                    <li className="text-brick">material_violation</li>
-                    <li className="text-brick">constraint_bypass</li>
+                    <li className="text-[var(--color-sage-text)]">Metric target reached: Yes</li>
+                    <li className="text-[var(--color-danger-text)]">Motive advanced: No</li>
+                    <li className="text-[var(--color-danger-text)]">Material guardrail violation: Detected</li>
+                    <li className="text-[var(--color-danger-text)]">Primary pattern: Constraint bypass</li>
                   </ul>
                 </div>
-                <p className="mt-7 font-display text-3xl text-brick">{HOSTED_GAMING.verdict}</p>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <VerdictBadge verdict={HOSTED_GAMING.verdict} size="lg" />
+                </div>
               </div>
             </div>
             <div className="receipt-proof mt-8 grid gap-3 border-t border-rule pt-4 font-mono text-xs">
@@ -109,7 +112,7 @@ export function ReceiptSection() {
               params={{ receiptId: "rct_example_sales" }}
               className="mt-6 inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
             >
-              Open the public receipt
+              View receipt
             </Link>
           </article>
         </Reveal>

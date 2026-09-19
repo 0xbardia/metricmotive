@@ -1,55 +1,9 @@
 import type { CSSProperties } from "react";
 import { useId, useState } from "react";
-import { HOSTED_GAMING } from "@/components/landing/cert-case";
+import { HOSTED_GAMING, TRAJECTORY_MARKERS } from "@/components/landing/cert-case";
 import { cn } from "@/lib/cn";
 
-const MARKERS = [
-  {
-    id: "meetings",
-    x: 34,
-    y: 43,
-    tone: "metric" as const,
-    label: "83 meetings",
-    detail: "Metric satisfied. 83 booked against a target of 80.",
-    mobile: true,
-  },
-  {
-    id: "qualified",
-    x: 53,
-    y: 75,
-    tone: "motive" as const,
-    label: "9 qualified",
-    detail: "Motive advanced for nine prospects that matched ICP and were unique.",
-    mobile: true,
-  },
-  {
-    id: "dupes",
-    x: 60,
-    y: 53,
-    tone: "fault" as const,
-    label: "17 duplicates",
-    detail: "Same companies rebooked as new meetings.",
-    mobile: false,
-  },
-  {
-    id: "icp",
-    x: 71,
-    y: 34,
-    tone: "fault" as const,
-    label: "41 outside ICP",
-    detail: "Leads outside the declared 50–500 B2B SaaS ICP.",
-    mobile: true,
-  },
-  {
-    id: "mislead",
-    x: 84,
-    y: 23,
-    tone: "fault" as const,
-    label: "12 misleading",
-    detail: "Outreach that misstated the meeting purpose.",
-    mobile: false,
-  },
-];
+const MARKERS = TRAJECTORY_MARKERS;
 
 const STAGES = ["Evidence sufficient", "Constraint bypass detected", "Goal not advanced"] as const;
 
@@ -62,9 +16,15 @@ export function TrajectoryViz() {
   return (
     <figure className="control-room" aria-labelledby={captionId}>
       <figcaption id={captionId} className="sr-only">
-        Two trajectories start together after Motive Lock. The metric path climbs to 83 meetings.
-        The motive path stalls as duplicates, out-of-ICP bookings, and misleading outreach arrive.
-        Guard 2 resolves to METRIC_GAMING. Hosted certification case, not live user activity.
+        Chart of two trajectories over one run, from Motive Lock to adjudication. The vertical axis is
+        count of records; the horizontal axis is time through the run. The ochre metric line climbs
+        past the dashed target line of {HOSTED_GAMING.target} booked meetings. The sage motive line
+        stalls near {HOSTED_GAMING.counts.qualified}. Fault marks sit on the metric line where
+        evidence recorded {HOSTED_GAMING.counts.duplicates} duplicates,
+        {HOSTED_GAMING.counts.outsideIcp} bookings outside the declared ICP, and
+        {HOSTED_GAMING.counts.misleading} misleading outreach events. Guard
+        {HOSTED_GAMING.guardId} resolves to METRIC_GAMING. Hosted certification case, not live user
+        activity.
       </figcaption>
 
       <header className="control-room-header flex items-start justify-between gap-4">
@@ -85,20 +45,22 @@ export function TrajectoryViz() {
 
       <div className="control-room-readouts mt-6 grid grid-cols-2 gap-4 border-y border-bone/10 py-3">
         <div>
-          <p className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-bone/45">Metric</p>
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-bone/62">Metric</p>
           <p className="mt-1 font-mono text-lg text-ochre">
-            83 <span className="text-sm text-bone/45">/ 80</span>
+            {HOSTED_GAMING.counts.meetings}{" "}
+            <span className="text-sm text-bone/62">/ {HOSTED_GAMING.target}</span>
           </p>
-          <p className="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-bone/45">
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-bone/62">
             target crossed
           </p>
         </div>
         <div className="border-l border-bone/10 pl-4">
-          <p className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-bone/45">Motive</p>
-          <p className="mt-1 font-mono text-lg text-sage">
-            9 <span className="text-sm text-bone/45">qualified</span>
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-bone/62">Motive</p>
+          <p className="mt-1 font-mono text-lg text-[var(--color-sage-on-dark)]">
+            {HOSTED_GAMING.counts.qualified}{" "}
+            <span className="text-sm text-bone/62">qualified</span>
           </p>
-          <p className="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-bone/45">
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-bone/62">
             of 83 booked
           </p>
         </div>
@@ -140,11 +102,24 @@ export function TrajectoryViz() {
           <text className="trajectory-text trajectory-text-axis" x="10" y="76">
             lock
           </text>
+          <text className="trajectory-text trajectory-text-axis" x="86" y="76">
+            adjudicated
+          </text>
           <text className="trajectory-text trajectory-text-metric" x="78" y="11">
             metric
           </text>
           <text className="trajectory-text trajectory-text-motive" x="78" y="62">
             motive
+          </text>
+          {/* Axis meaning + the target the metric had to reach. */}
+          <text className="trajectory-text trajectory-text-axis" x="2" y="14">
+            count
+          </text>
+          <text className="trajectory-text trajectory-text-axis" x="2" y="70">
+            0
+          </text>
+          <text className="trajectory-text trajectory-text-target" x="24" y="40">
+            target {HOSTED_GAMING.target}
           </text>
         </svg>
 
@@ -174,6 +149,13 @@ export function TrajectoryViz() {
         ))}
       </div>
 
+      <ul className="trajectory-legend mt-4 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[0.62rem] uppercase tracking-[0.12em]">
+        <li className="is-metric">Metric trajectory — measurable count</li>
+        <li className="is-motive">Motive trajectory — eligible outcomes</li>
+        <li className="is-target">Dashed line — declared target</li>
+        <li className="is-fault">Fault marks — recorded evidence</li>
+      </ul>
+
       <div className="control-room-detail-region mt-4 min-h-16" aria-live="polite">
         {selected ? (
           <p
@@ -202,6 +184,15 @@ export function TrajectoryViz() {
         )}
       </div>
 
+      <ul className="trajectory-mobile-list mt-5 sm:hidden" aria-label="Evidence marks">
+        {MARKERS.map((m) => (
+          <li key={`mobile-${m.id}`} className={`is-${m.tone}`}>
+            <span className="font-mono text-[0.66rem] uppercase tracking-[0.1em]">{m.label}</span>
+            <span className="mt-1 block text-sm text-bone/75">{m.detail}</span>
+          </li>
+        ))}
+      </ul>
+
       <ol className="verdict-cascade mt-5" aria-label="Adjudication">
         {STAGES.map((stage) => (
           <li key={stage}>{stage}</li>
@@ -215,7 +206,7 @@ export function TrajectoryViz() {
         aria-expanded={dossier}
         onClick={() => setDossier((v) => !v)}
       >
-        {dossier ? "Hide Guard #2 dossier" : "Open Guard #2 dossier"}
+        {dossier ? "Hide technical details" : "Technical details · Guard #2"}
       </button>
       {dossier ? (
         <dl
@@ -236,8 +227,8 @@ export function TrajectoryViz() {
           </div>
         </dl>
       ) : null}
-      <p className="control-room-note mt-4 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-bone/35">
-        Click a mark to inspect the evidence fragment
+      <p className="control-room-note mt-4 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-bone/60">
+        Select an evidence mark to see the recorded fragment
       </p>
     </figure>
   );

@@ -1,7 +1,14 @@
-import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { shortHex } from "@/lib/format";
+import { CopyButton } from "@/components/ui/copy-button";
+import { midEllipsis } from "@/lib/format";
 
+/**
+ * Landing-facing identifier row.
+ *
+ * Thin wrapper over the shared <CopyButton /> so landing identifiers truncate,
+ * copy and give feedback exactly like app identifiers (root cause D: IDs must
+ * not be shortened or reproduced independently per surface).
+ */
 export function CopyValue({
   value,
   label,
@@ -13,32 +20,13 @@ export function CopyValue({
   compact?: boolean;
   className?: string;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      setCopied(false);
-    }
-  }
-
   return (
-    <button
-      type="button"
-      onClick={copy}
-      className={cn(
-        "inline-flex min-h-11 max-w-full items-center gap-2 rounded-sm font-mono text-xs tracking-tight",
-        className,
-      )}
-      aria-label={`Copy ${label}`}
-    >
-      <span className="min-w-0 truncate">{compact ? shortHex(value, 6) : value}</span>
-      <span className="shrink-0 text-[0.65rem] uppercase tracking-[0.12em] text-ochre">
-        {copied ? "Copied" : "Copy"}
+    <span className={cn("inline-flex min-w-0 max-w-full items-center gap-2", className)}>
+      <span className="min-w-0 truncate font-mono text-xs tracking-tight" title={value}>
+        {compact ? midEllipsis(value) : value}
       </span>
-    </button>
+      <span className="sr-only">{value}</span>
+      <CopyButton value={value} label={label} compact />
+    </span>
   );
 }

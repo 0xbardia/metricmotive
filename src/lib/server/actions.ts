@@ -7,10 +7,10 @@ import {
   parseGuardrails,
   validateMotiveMetric,
 } from "@/lib/domain";
-import { buildEvidenceManifest, evidenceCommitmentHash } from "@/lib/evidence";
 import { idempotent } from "./idempotency";
 import { AppError } from "@/lib/errors";
-import { DEPLOYMENT, guardDeployment } from "@/lib/contract";
+import { DEPLOYMENT, getActiveDeployment, guardDeployment, requireActiveWrite, resolvedDeployment } from "@/lib/contract";
+import { getReadClientForDeployment } from "./chain-client";
 import {
   analytics,
   appendRunEvent,
@@ -32,6 +32,8 @@ import {
   requireGuard,
   requireOwnedGuard,
   requireOwnedRun,
+  requireRun,
+  ensureRunEvidenceSnapshot,
   resolveLocal,
   saveAdvisory,
   updateDraft,
@@ -69,6 +71,7 @@ import {
 } from "@/lib/validation";
 import {
   asStatus,
+  chainReadClient,
   readChainGuard,
   readOnChain,
 } from "./chain-read";
@@ -129,13 +132,12 @@ export const getGuardDeploymentFn = createServerFn({ method: "GET" })
 
 export const probeContractReadsFn = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { createClient } = await import("genlayer-js");
-    const { studionet } = await import("genlayer-js/chains");
-    const address = DEPLOYMENT.contractAddress;
+    const active = getActiveDeployment();
+    const address = active.contractAddress as `0x${string}`;
     if (!address) {
       throw new AppError("NOT_CERTIFIED", "Contract is not certified yet", 503);
     }
-    const client = createClient({ chain: studionet });
+    const { client } = getReadClientForDeployment(active);
     const cases: Array<{ functionName: string; args: Array<string | number> }> = [
       { functionName: "get_contract_info", args: [] },
       { functionName: "get_guard_count", args: [] },
@@ -226,11 +228,17 @@ export const getGuardFn = createServerFn({ method: "GET" })
       throw new AppError("FORBIDDEN", "You do not control this Guard", 403);
     }
     const receiptId = await receiptForGuard(guard.id);
-    const runs = guard.isExample
-      ? await listRuns(guard.id)
-      : ownerAddress
-        ? await listRuns(guard.id, ownerAddress)
-        : [];
+    /**
+     * N27 root cause.
+     *
+     * Run history was gated on an OWNER wallet session, so a resolved public
+     * case — the exact case whose receipt is already published to anyone —
+     * reported "0 runs / No Runs yet" even though its Run existed and its
+     * evidence was finalized on chain. The visibility rule now matches the
+     * receipt's: a public Guard's Run history is public, read-only, and
+     * associated by the explicit durable guard id (never by "latest Run").
+     */
+    const runs = await listRuns(guard.id, ownerAddress);
     return { guard, receiptId, runs };
   });
 
@@ -342,9 +350,19 @@ export const finishRunFn = createServerFn({ method: "POST" })
 export const getRunFn = createServerFn({ method: "GET" })
   .validator((input: unknown) => parseInput(idRequestSchema, input, "Run request is invalid"))
   .handler(async ({ data }) => {
-    const ownerAddress = await requireWalletAddress();
-    const run = await requireOwnedRun(parseId(data.id, "Run id"), ownerAddress);
+    const run = await requireRun(parseId(data.id, "Run id"));
     const guard = await requireGuard(run.guardId);
+    /*
+     * A Run is readable without a wallet exactly when its Guard already is:
+     * the receipt is public, so the evidence behind it must be inspectable too.
+     * Everything else still requires the owner wallet.
+     */
+    if (!isPublicGuard(guard)) {
+      const ownerAddress = await requireWalletAddress();
+      if (!sameWallet(guard.ownerAddress, ownerAddress)) {
+        throw new AppError("FORBIDDEN", "You do not control this Run", 403);
+      }
+    }
     return { run, guard };
   });
 
@@ -357,12 +375,9 @@ export const submitEvidenceFn = createServerFn({ method: "POST" })
     if (run.guardId !== guard.id) {
       throw new AppError("MISMATCH", "Run does not belong to this guard", 400);
     }
-    if (run.status !== "FINISHED") {
-      throw new AppError("INVALID_STATE", "Finish the run before submitting evidence", 409);
-    }
-    const manifest = await buildEvidenceManifest({ guardId: guard.id, run });
-    const updated = await attachEvidence(guard.id, manifest, ownerAddress);
-    return { guard: updated, manifest };
+    const snapshot = await ensureRunEvidenceSnapshot(run, guard.onchainId ?? guard.id);
+    const updated = await attachEvidence(guard.id, snapshot.manifest, ownerAddress);
+    return { guard: updated, manifest: snapshot.manifest };
   });
 
 export const evaluateFn = createServerFn({ method: "POST" })
@@ -521,13 +536,25 @@ export const prepareEvidenceFn = createServerFn({ method: "POST" })
     if (guard.status !== "ARMED" && guard.status !== "EVIDENCE_SUBMITTED") {
       throw new AppError("INVALID_STATE", "Evidence requires an armed guard", 409);
     }
-    const manifest = await buildEvidenceManifest({ guardId: guard.onchainId ?? guard.id, run });
+    // Replay the snapshot pinned at Finish Run. Rebuilding here would let the
+    // preview drift from what the wallet is about to commit.
+    if (!guard.onchainId) {
+      throw new AppError("INVALID_STATE", "This Guard is not on Studionet yet.", 409);
+    }
+    const snapshot = await ensureRunEvidenceSnapshot(run, guard.onchainId);
+    if (snapshot.manifest.guardId !== guard.onchainId) {
+      throw new AppError(
+        "MISMATCH",
+        "The Run's evidence snapshot targets a different on-chain Guard.",
+        409,
+      );
+    }
     return {
-      manifest,
-      encoded: JSON.stringify(manifest),
+      manifest: snapshot.manifest,
+      encoded: snapshot.encoded,
       onchainId: guard.onchainId,
-      eventCount: manifest.events.length,
-      commitmentHash: await evidenceCommitmentHash(manifest),
+      eventCount: snapshot.manifest.events.length,
+      commitmentHash: snapshot.commitmentHash,
     };
   });
 
@@ -573,11 +600,12 @@ export const recordCreateSubmissionFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => parseInput(recordCreateSubmissionRequestSchema, input, "Create transaction provenance is invalid"))
   .handler(async ({ data }) => {
     const ownerAddress = await requireWalletAddress();
-    if (data.chainId !== DEPLOYMENT.chainId) {
-      throw new AppError("WRONG_NETWORK", `Create transactions must target ${DEPLOYMENT.network}`, 409);
-    }
     const local = await requireOwnedGuard(data.id, ownerAddress);
-    if (data.contractAddress.toLowerCase() !== guardDeployment(local).contractAddress.toLowerCase()) {
+    const resource = requireActiveWrite(resolvedDeployment(local));
+    if (data.chainId !== resource.chainId) {
+      throw new AppError("WRONG_NETWORK", `Create transactions must target ${resource.networkName}`, 409);
+    }
+    if (data.contractAddress.toLowerCase() !== resource.contractAddress.toLowerCase()) {
       throw new AppError("CONTRACT_MISMATCH", "Create transaction contract is not certified", 409);
     }
     if (!sameWallet(data.originatingWallet, ownerAddress)) {
@@ -599,11 +627,13 @@ export const recordTransactionFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => parseInput(recordTransactionRequestSchema, input, "Transaction provenance is invalid"))
   .handler(async ({ data }) => {
     const ownerAddress = await requireWalletAddress();
-    if (data.chainId !== DEPLOYMENT.chainId) {
-      throw new AppError("WRONG_NETWORK", `Transactions must target ${DEPLOYMENT.network}`, 409);
-    }
     const local = await requireOwnedGuard(data.id, ownerAddress);
-    if (data.contractAddress.toLowerCase() !== guardDeployment(local).contractAddress.toLowerCase()) {
+    const resource = resolvedDeployment(local);
+    if (data.operation !== "create_guard") requireActiveWrite(resource);
+    if (data.chainId !== resource.chainId) {
+      throw new AppError("WRONG_NETWORK", `Transactions must target ${resource.networkName}`, 409);
+    }
+    if (data.contractAddress.toLowerCase() !== resource.contractAddress.toLowerCase()) {
       throw new AppError("CONTRACT_MISMATCH", "Transaction contract is not certified", 409);
     }
     if (!sameWallet(data.originatingWallet, ownerAddress)) {
@@ -730,10 +760,11 @@ export const listOwnerGuardsFn = createServerFn({ method: "GET" })
   .validator((input: unknown) => parseInput(ownerRequestSchema, input, "Owner request is invalid"))
   .handler(async ({ data }) => {
     const owner = normalizeWalletAddress(data.owner);
-    const contractAddress = data.contractAddress ?? DEPLOYMENT.contractAddress;
+    const contractAddress = data.contractAddress ?? getActiveDeployment().contractAddress;
     const result = (await readOnChain("get_guards_by_owner", [owner], contractAddress)) as {
       found?: boolean;
       ids?: string[];
     };
-    return { ids: result?.ids ?? [], contractAddress, chainId: DEPLOYMENT.chainId };
+    const { deployment } = chainReadClient(contractAddress);
+    return { ids: result?.ids ?? [], contractAddress, chainId: deployment.chainId };
   });

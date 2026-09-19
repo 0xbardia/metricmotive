@@ -1,5 +1,3 @@
-import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
 import { DEPLOYMENT } from "@/lib/contract";
 import {
   type Findings,
@@ -10,6 +8,7 @@ import {
 } from "@/lib/domain";
 import { AppError } from "@/lib/errors";
 import { chainGuardSchema, parseFindingsInput } from "@/lib/validation";
+import { getReadClientForContract, getReadClientForProvenance } from "./chain-client";
 
 export type ChainGuardView = {
   found: boolean;
@@ -39,14 +38,19 @@ function jsonSafe(value: unknown): unknown {
   );
 }
 
-export function chainReadClient(address: string = DEPLOYMENT.contractAddress) {
+export function chainReadClient(address: string = DEPLOYMENT.contractAddress, chainId?: number) {
   if (!/^0x[0-9a-fA-F]{40}$/.test(address)) throw new AppError("INVALID_CONTRACT", "Contract address is invalid", 400);
   if (!DEPLOYMENT.contractAddress) {
     throw new AppError("NOT_CERTIFIED", "Contract is not certified yet", 503);
   }
+  const resolved = chainId == null
+    ? getReadClientForContract(address)
+    : getReadClientForProvenance({ chainId, contractAddress: address });
   return {
     address: address as `0x${string}`,
-    client: createClient({ chain: studionet }),
+    client: resolved.client,
+    deployment: resolved.deployment,
+    chain: resolved.chain,
   };
 }
 
@@ -54,8 +58,9 @@ export async function readOnChain(
   functionName: string,
   args: Array<string | number> = [],
   contractAddress: string = DEPLOYMENT.contractAddress,
+  chainId?: number,
 ): Promise<unknown> {
-  const { address, client } = chainReadClient(contractAddress);
+  const { address, client } = chainReadClient(contractAddress, chainId);
   const result = await client.readContract({
     address,
     functionName,
@@ -64,19 +69,23 @@ export async function readOnChain(
   return jsonSafe(result);
 }
 
-export async function readChainGuard(onchainId: string, contractAddress: string): Promise<ChainGuardView> {
+export async function readChainGuard(
+  onchainId: string,
+  contractAddress: string,
+  chainId?: number,
+): Promise<ChainGuardView> {
   const idNum = Number(onchainId);
   if (!Number.isFinite(idNum) || idNum <= 0) {
     throw new AppError("INVALID_ID", "On-chain guard id is invalid", 400);
   }
-  const raw: unknown = await readOnChain("get_guard", [idNum], contractAddress);
+  const raw: unknown = await readOnChain("get_guard", [idNum], contractAddress, chainId);
   const parsed = chainGuardSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new AppError("CHAIN_INVALID", "Studionet returned invalid Guard data", 502);
+    throw new AppError("CHAIN_INVALID", "Network returned invalid Guard data", 502);
   }
   const view = parsed.data as ChainGuardView;
   if (!view.found) {
-    throw new AppError("NOT_FOUND", "Guard not found on Studionet", 404);
+    throw new AppError("NOT_FOUND", "Guard not found on the recorded deployment", 404);
   }
   return view;
 }

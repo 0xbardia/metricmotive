@@ -47,14 +47,22 @@ official examples; ordinary GET routes do not seed data.
 
 Source: `contracts/metric-motive/src/metric_motive.py`
 
-- Network: GenLayer Studionet
-- Chain ID: 61999
-- Address: `0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d`
-- Previous deployment tx (legacy only): `0xb7cde061b32726e6abfafb2a83868b8d4993028769dc5c5f6fa6e90d89f7ffda`
+- Network: GenLayer Studio Dev
+- Chain ID: 61997
+- Address: `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`
+- RPC: `https://studio-dev.genlayer.com/api`
+- Explorer: `https://explorer-studio-dev.genlayer.com`
 - Deployer: `0xAfdd7BB72513E8516f4F1d43F9bA9cC7A611F677`
 - Source SHA-256: `0e5f3cc0103e5f785fe12b34ecd478dfc909014a40d803ccf98227bb77a7cee1`
+- Client SDK: `genlayer-js@2.0.0-rc.1`
+- Studio Dev is not mainnet and does not carry permanent state guarantees.
 
-Studio: https://studio.genlayer.com/contracts
+Studio: https://studio-dev.genlayer.com/?import-contract=0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703
+
+Historical Studionet (61999) remains supported as read-only provenance:
+
+- Previous: `0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d`
+- Legacy: `0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8D7C`
 
 The earlier Studionet address `0x41C3A675c4dd1Bc7C502e4Bfe5086D9F2E996937` is superseded.
 
@@ -77,6 +85,21 @@ is rejected. The API caps request bodies at 32 KiB, event data at 2,000 UTF-8
 bytes, and a run at 80 events. See `/api/v1/openapi.json` and
 `packages/sdk/README.md` for schemas, errors, and HMAC headers.
 
+## Studio Dev E2E certification (61997)
+
+Certified on `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`. Not mainnet.
+
+- Local Guard `grd_6bf7a408ce5c883c` / on-chain Guard `1`
+- Run `run_82a3826bf23f3ab7`
+- Receipt `rct_14804bf62424284e`
+- create `0x1a24c92ea8beab437d4abb21e9ff646f8aec9d62273a60dbbc541dc069284eb5`
+- arm `0x65ce7e772d68e673c63a26ed9e44debf7030a9fc56265cd2c5390c48e4202933`
+- submit_evidence `0xf8901f18657b0c612d4f148c89fb3786bb2d4b389a31d623439321649aceaa4b`
+- evaluate `0x33bdfa268b36a59eb230f3a7f2dbfcff31caa40ee793b2e7345326d1ce151245`
+- Verdict `METRIC_GAMING` / `CONSTRAINT_BYPASS`
+
+Failed ETH-layer attempts such as `0xed292a6e940460c43c38f07dea7da3368c514c23af2989bdaaac60e5768e4986` are not successful GenLayer lifecycle transactions.
+
 ## Historical certification cases (previous Studionet deployment)
 
 These cases certify only `0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8d7C`, not the current deployment.
@@ -88,7 +111,7 @@ Labeled official cases, not user history:
 
 ## V1 limits
 
-- Wallet writes need a browser wallet on Studionet (chain 61999). Public reads do not.
+- Wallet writes need a browser wallet on GenLayer Studio Dev (chain 61997). Public reads do not. Historical Studionet Guards remain read-only.
 - Private Guard, Run, evidence, and receipt mutations require the owning wallet session.
 - Browser auth uses `POST /api/v1/auth/nonce` and `POST /api/v1/auth/verify`; the nonce is single-use and expires after five minutes. Sessions expire after seven days.
 - Webhook auth requires `METRICMOTIVE_WEBHOOK_SECRET` and `METRICMOTIVE_WEBHOOK_OWNER`, plus timestamp, request ID, and HMAC headers. Anonymous event hooks are rejected.

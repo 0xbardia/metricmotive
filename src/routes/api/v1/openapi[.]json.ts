@@ -21,7 +21,7 @@ const spec = {
     version: "1.0.3",
     description: "Authenticated Run Recorder and Guard indexing. GenLayer remains authoritative for finalized verdicts. Mutation bodies are capped at 32 KiB.",
   },
-  servers: [{ url: "https://metricmotive.bydx.fun" }],
+  servers: [{ url: "https://metricmotive.xyz" }],
   paths: {
     "/api/v1/health": {
       get: { summary: "Liveness", responses: { "200": { description: "ok" } } },
@@ -30,7 +30,7 @@ const spec = {
       get: { summary: "Readiness", responses: { "200": { description: "ready" }, "503": errorResponse } },
     },
     "/api/v1/contract": {
-      get: { summary: "Certified Studionet deployment", responses: { "200": { description: "deployment" } } },
+      get: { summary: "Active GenLayer Studio Dev deployment", responses: { "200": { description: "deployment" } } },
     },
     "/api/v1/auth/nonce": {
       post: {

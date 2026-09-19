@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { FlowRail } from "@/components/product-ui";
+import { Stepper } from "@/components/ui/stepper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -45,7 +45,7 @@ function AppHomeFallback() {
           </div>
           <Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link>
         </div>
-        <div className="mt-7"><FlowRail steps={["Define", "Lock", "Run", "Review & verify"]} current={0} /></div>
+        <Stepper kind="lifecycle" current={0} className="mt-7" />
       </div>
       <section className="product-status paper-panel mt-9 max-w-3xl p-6" aria-live="polite">
         <Badge tone="ochre">Start here</Badge>

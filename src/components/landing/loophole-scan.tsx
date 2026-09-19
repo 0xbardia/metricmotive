@@ -74,9 +74,9 @@ export function LoopholeScanSection() {
               </div>
             </Reveal>
             <Reveal as="li" delay={160} className="scan-trace-row scan-trace-protection">
-              <span className="scan-trace-index font-mono text-xs text-sage">03</span>
+              <span className="scan-trace-index font-mono text-xs text-[var(--color-sage-text)]">03</span>
               <div className="min-w-0">
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-sage">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-[var(--color-sage-text)]">
                   Protection
                 </p>
                 <p className="mt-3 max-w-xl font-display text-2xl leading-tight">

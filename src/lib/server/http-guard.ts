@@ -104,7 +104,7 @@ export function applySecurityHeaders(headers: Headers): void {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
         "img-src 'self' data: https:",
-        "connect-src 'self' https://studio.genlayer.com https://explorer-studio.genlayer.com https://relay.walletconnect.com https://api.web3modal.org",
+        "connect-src 'self' https://studio-dev.genlayer.com https://explorer-studio-dev.genlayer.com https://studio.genlayer.com https://explorer-studio.genlayer.com https://relay.walletconnect.com https://api.web3modal.org",
         "frame-src 'self' https://verify.walletconnect.com https://walletconnect.com",
         "frame-ancestors 'self'",
         "base-uri 'self'",

@@ -6,11 +6,10 @@
  * projection. It has no wallet, signer, or contract-write capability.
  */
 import pg from "pg";
-import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
 import { guardDeployment } from "../src/lib/contract.ts";
+import { getReadClientForProvenance } from "../src/lib/server/chain-client.ts";
 import { GENLAYER, mapVerdict, parseGuardrails } from "../src/lib/domain.ts";
-import { buildEvidenceManifest, evidenceCommitmentHash, evidenceManifestPreimage } from "../src/lib/evidence.ts";
+import { buildEvidenceManifest, evidenceCommitmentHash, evidenceManifestPreimage, replayEvidenceSnapshot } from "../src/lib/evidence.ts";
 import { newId } from "../src/lib/ids.ts";
 import { findingsSchema, chainGuardSchema, parseEvidence } from "../src/lib/validation.ts";
 import {
@@ -174,7 +173,10 @@ try {
   await ensureProvenance(row);
 
   const local = localDefinition(row);
-  const client = createClient({ chain: studionet });
+  const { client } = getReadClientForProvenance({
+    chainId: deployment.chainId,
+    contractAddress: deployment.contractAddress,
+  });
   const transaction = await client.getTransaction({ hash: txHash });
   let expectedEvidenceHash = null;
   if (operation === "submit_evidence") {
@@ -194,7 +196,8 @@ try {
       throw new Error("The submitted evidence manifest is invalid");
     }
     const runResult = await pool.query(
-      `select id, guard_id, agent_ref, status, events_json, outcome_json, started_at, completed_at
+      `select id, guard_id, agent_ref, status, events_json, outcome_json, started_at, completed_at,
+              evidence_snapshot_json
          from runs where id=$1 limit 1`,
       [submittedManifest.runId],
     );
@@ -202,22 +205,45 @@ try {
     if (!runRow || runRow.guard_id !== guardId || runRow.status !== "FINISHED") {
       throw new Error("The submitted evidence does not belong to a finished Run for this Guard");
     }
-    const expectedManifest = await buildEvidenceManifest({
-      guardId: row.onchain_id,
-      run: {
-        id: runRow.id,
-        agentRef: runRow.agent_ref,
-        startedAt: isoDate(runRow.started_at),
-        completedAt: runRow.completed_at == null ? null : isoDate(runRow.completed_at),
-        events: JSON.parse(runRow.events_json),
-        outcome: JSON.parse(runRow.outcome_json),
-      },
-    });
-    if (submittedManifest.guardId !== row.onchain_id ||
-        evidenceManifestPreimage(submittedManifest) !== evidenceManifestPreimage(expectedManifest)) {
-      throw new Error("The submitted evidence does not match the persisted Run snapshot");
+    if (submittedManifest.guardId !== row.onchain_id) {
+      throw new Error("The submitted evidence targets a different on-chain Guard");
     }
-    expectedEvidenceHash = await evidenceCommitmentHash(submittedManifest);
+
+    // 1. A Run finished after snapshots shipped replays its pinned bytes.
+    if (runRow.evidence_snapshot_json) {
+      const snapshot = await replayEvidenceSnapshot(runRow.evidence_snapshot_json);
+      if (evidenceManifestPreimage(submittedManifest) !== evidenceManifestPreimage(snapshot.manifest)) {
+        throw new Error("The submitted evidence does not match the persisted Run snapshot");
+      }
+      expectedEvidenceHash = snapshot.commitmentHash;
+    } else {
+      // 2. Pre-snapshot Run: prove the on-chain submission is canonically
+      //    equivalent to the persisted Run, then pin those exact submitted
+      //    bytes. The transaction is the submission of record, so pinning it
+      //    is a recovery, never a fabrication — a mismatch fails closed.
+      const rebuilt = await buildEvidenceManifest({
+        guardId: row.onchain_id,
+        run: {
+          id: runRow.id,
+          agentRef: runRow.agent_ref,
+          startedAt: isoDate(runRow.started_at),
+          completedAt: runRow.completed_at == null ? null : isoDate(runRow.completed_at),
+          events: JSON.parse(runRow.events_json),
+          outcome: JSON.parse(runRow.outcome_json),
+        },
+      });
+      if (evidenceManifestPreimage(submittedManifest) !== evidenceManifestPreimage(rebuilt)) {
+        throw new Error("The submitted evidence does not match the persisted Run snapshot");
+      }
+      const encoded = JSON.stringify(submittedManifest);
+      await pool.query(
+        `update runs set evidence_snapshot_json=$1, evidence_manifest_hash=$2, evidence_commitment_hash=$3,
+           evidence_committed_at=coalesce(evidence_committed_at, now())
+         where id=$4 and evidence_snapshot_json is null`,
+        [encoded, submittedManifest.manifestHash, await evidenceCommitmentHash(submittedManifest), runRow.id],
+      );
+      expectedEvidenceHash = await evidenceCommitmentHash(submittedManifest);
+    }
   }
   const decoded = await verifyTransaction(transaction, {
     operation,

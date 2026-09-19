@@ -1,11 +1,9 @@
-import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
-import { TransactionStatus } from "genlayer-js/types";
+import { createClient, isSuccessful } from "genlayer-js";
+import { studioDevnet } from "genlayer-js/chains";
 import type { CalldataEncodable } from "genlayer-js/types";
 import type { Connector } from "wagmi";
-import { GENLAYER } from "@/lib/domain";
-import { confirmationBackoffMs, isTemporaryChainError } from "@/lib/reconciliation";
-import { isUserRejection, walletErrorMessage } from "./errors";
+import { getActiveDeployment } from "../contract.ts";
+import { isUserRejection, walletErrorMessage } from "./errors.ts";
 
 export type Eip1193Provider = {
   request: (args: { method: string; params?: unknown }) => Promise<unknown>;
@@ -17,28 +15,147 @@ export type ChainWriteResult = {
   hash: `0x${string}`;
   execution: string;
   status: unknown;
+  feeValue: bigint;
 };
 
-function executionOf(receipt: unknown): string {
-  if (!receipt || typeof receipt !== "object") return "";
-  const rec = receipt as {
-    consensus_data?: { leader_receipt?: unknown };
-    txExecutionResultName?: string;
-  };
-  const leader = rec.consensus_data?.leader_receipt;
-  const first = Array.isArray(leader) ? leader[0] : leader;
-  if (first && typeof first === "object") {
-    const row = first as { execution_result?: unknown; genvm_result?: { error_description?: unknown } };
-    const exec = row.execution_result ?? row.genvm_result?.error_description;
-    if (exec != null) return String(exec);
+export const LIFECYCLE_WRITE_METHODS = [
+  "create_guard",
+  "update_draft",
+  "arm_guard",
+  "submit_evidence",
+  "create_version",
+  "evaluate_guard",
+] as const;
+export type LifecycleWriteMethod = (typeof LIFECYCLE_WRITE_METHODS)[number];
+
+export type LifecycleWriteDescriptor = {
+  address: `0x${string}`;
+  functionName: LifecycleWriteMethod;
+  args: CalldataEncodable[];
+};
+
+export class LifecycleWriteError extends Error {
+  readonly code: "INSUFFICIENT_GEN_FOR_FEES" | "FEE_ESTIMATION_FAILED" | "HISTORICAL_DEPLOYMENT_READ_ONLY" | "WRITE_NOT_SUCCESSFUL";
+  readonly feeValue?: bigint;
+  constructor(
+    code: LifecycleWriteError["code"],
+    message: string,
+    feeValue?: bigint,
+  ) {
+    super(message);
+    this.code = code;
+    this.feeValue = feeValue;
   }
-  if (rec.txExecutionResultName) return String(rec.txExecutionResultName);
-  return "";
 }
 
-function isSuccess(execution: string): boolean {
-  const u = execution.toUpperCase();
-  return u === "SUCCESS" || u.includes("FINISHED_WITH_RETURN") || u === "OK";
+export type FeeEstimate = {
+  distribution: unknown;
+  feeValue: bigint;
+};
+
+export type LifecycleWriteDeps = {
+  estimateTransactionFeesForWrite: (write: LifecycleWriteDescriptor & { account: `0x${string}` }) => Promise<FeeEstimate>;
+  getBalance: (address: `0x${string}`) => Promise<bigint>;
+  writeContract: (input: LifecycleWriteDescriptor & {
+    account: `0x${string}`;
+    fees: { distribution: unknown; feeValue: bigint };
+  }) => Promise<`0x${string}`>;
+  waitForFinalization: (hash: `0x${string}`) => Promise<unknown>;
+  isSuccessful: (transaction: unknown) => boolean;
+};
+
+export function isLifecycleWriteMethod(name: string): name is LifecycleWriteMethod {
+  return (LIFECYCLE_WRITE_METHODS as readonly string[]).includes(name);
+}
+
+export function assertActiveLifecycleTarget(chainId: number, contractAddress: string): void {
+  const active = getActiveDeployment();
+  if (chainId !== active.chainId || contractAddress.toLowerCase() !== active.contractAddress.toLowerCase()) {
+    throw new LifecycleWriteError(
+      "HISTORICAL_DEPLOYMENT_READ_ONLY",
+      "Historical deployment — read only",
+    );
+  }
+}
+
+export function sameWriteDescriptor(a: LifecycleWriteDescriptor, b: LifecycleWriteDescriptor): boolean {
+  return (
+    a.address.toLowerCase() === b.address.toLowerCase() &&
+    a.functionName === b.functionName &&
+    JSON.stringify(a.args) === JSON.stringify(b.args)
+  );
+}
+
+export async function submitLifecycleWrite(
+  input: {
+    account: `0x${string}`;
+    write: LifecycleWriteDescriptor;
+    chainId: number;
+  },
+  deps: LifecycleWriteDeps,
+): Promise<{ hash: `0x${string}`; transaction: unknown; feeValue: bigint; estimate: FeeEstimate }> {
+  assertActiveLifecycleTarget(input.chainId, input.write.address);
+  if (!isLifecycleWriteMethod(input.write.functionName)) {
+    throw new Error(`Unsupported lifecycle write ${input.write.functionName}`);
+  }
+
+  let estimate: FeeEstimate;
+  try {
+    estimate = await deps.estimateTransactionFeesForWrite({
+      ...input.write,
+      account: input.account,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("[lifecycle-write] FEE_ESTIMATION_FAILED", detail);
+    throw new LifecycleWriteError(
+      "FEE_ESTIMATION_FAILED",
+      "Could not estimate GenLayer Studio Dev transaction fees. No transaction was sent.",
+    );
+  }
+
+  if (estimate.feeValue == null || estimate.feeValue <= 0n || estimate.distribution == null) {
+    throw new LifecycleWriteError(
+      "FEE_ESTIMATION_FAILED",
+      "Could not estimate GenLayer Studio Dev transaction fees. No transaction was sent.",
+    );
+  }
+
+  const balance = await deps.getBalance(input.account);
+  if (balance < estimate.feeValue) {
+    throw new LifecycleWriteError(
+      "INSUFFICIENT_GEN_FOR_FEES",
+      "This wallet does not have enough GEN to pay Studio Dev transaction fees. Fund the wallet, then try again. No transaction was sent.",
+      estimate.feeValue,
+    );
+  }
+
+  const submitted: LifecycleWriteDescriptor = {
+    address: input.write.address,
+    functionName: input.write.functionName,
+    args: input.write.args,
+  };
+  if (!sameWriteDescriptor(input.write, submitted)) {
+    throw new Error("Write descriptor drifted between estimate and submit.");
+  }
+
+  const hash = await deps.writeContract({
+    ...submitted,
+    account: input.account,
+    fees: {
+      distribution: estimate.distribution,
+      feeValue: estimate.feeValue,
+    },
+  });
+
+  const transaction = await deps.waitForFinalization(hash);
+  if (!deps.isSuccessful(transaction)) {
+    throw new LifecycleWriteError(
+      "WRITE_NOT_SUCCESSFUL",
+      "The transaction was not successful. No on-chain state was created.",
+    );
+  }
+  return { hash, transaction, feeValue: estimate.feeValue, estimate };
 }
 
 export async function getConnectorProvider(connector: Connector): Promise<Eip1193Provider> {
@@ -47,6 +164,13 @@ export async function getConnectorProvider(connector: Connector): Promise<Eip119
     throw new Error("Connected wallet did not expose an EIP-1193 provider.");
   }
   return provider;
+}
+
+async function hexToBigInt(raw: unknown): Promise<bigint> {
+  if (typeof raw === "bigint") return raw;
+  if (typeof raw === "number") return BigInt(raw);
+  if (typeof raw === "string") return BigInt(raw);
+  return 0n;
 }
 
 export async function writeIntelligentContract(input: {
@@ -59,116 +183,117 @@ export async function writeIntelligentContract(input: {
   wait: TxWait;
   onHash?: (hash: `0x${string}`) => void | Promise<void>;
 }): Promise<ChainWriteResult> {
+  const active = getActiveDeployment();
   if (!/^0x[0-9a-fA-F]{40}$/.test(input.contractAddress)) {
     throw new Error("Contract address is not certified.");
   }
-  if (input.chainId !== GENLAYER.chainId) {
-    throw new Error(`Switch to Studionet (chain ${GENLAYER.chainId}) before sending a write.`);
+  if (input.chainId !== studioDevnet.id || input.chainId !== active.chainId) {
+    throw new Error("Switch to GenLayer Studio Dev");
+  }
+  assertActiveLifecycleTarget(input.chainId, input.contractAddress);
+  if (!isLifecycleWriteMethod(input.functionName)) {
+    throw new Error(`Unsupported lifecycle write ${input.functionName}`);
   }
 
   const provider = await getConnectorProvider(input.connector);
-  const client = createClient({
-    chain: studionet,
+  const liveChain = await readProviderChainId(provider);
+  if (liveChain !== studioDevnet.id) {
+    throw new Error("Switch to GenLayer Studio Dev");
+  }
+
+  const readClient = createClient({ chain: studioDevnet });
+  const writeClient = createClient({
+    chain: studioDevnet,
     account: input.account,
     provider,
   });
 
-  let hash: `0x${string}`;
+  const write: LifecycleWriteDescriptor = {
+    address: input.contractAddress as `0x${string}`,
+    functionName: input.functionName,
+    args: input.args as CalldataEncodable[],
+  };
+
+  let submittedHash: `0x${string}` | null = null;
   try {
-    hash = (await client.writeContract({
-      address: input.contractAddress as `0x${string}`,
-      functionName: input.functionName,
-      args: input.args as CalldataEncodable[],
-      value: 0n,
-    })) as `0x${string}`;
+    const result = await submitLifecycleWrite(
+      { account: input.account, write, chainId: input.chainId },
+      {
+        estimateTransactionFeesForWrite: async (descriptor) => {
+          // genlayer-js reads account.address (Account-like). A bare 0x string
+          // becomes from=0x0 and owner-gated methods such as arm_guard fail simulation.
+          const estimate = await writeClient.estimateTransactionFeesForWrite({
+            account: { address: descriptor.account } as never,
+            address: descriptor.address,
+            functionName: descriptor.functionName,
+            args: descriptor.args,
+          });
+          return { distribution: estimate.distribution, feeValue: BigInt(estimate.feeValue) };
+        },
+        getBalance: async (address) => {
+          const raw = await readClient.request({
+            method: "eth_getBalance",
+            params: [address, "latest"],
+          });
+          return hexToBigInt(raw);
+        },
+        writeContract: async (descriptor) => {
+          const hash = (await writeClient.writeContract({
+            address: descriptor.address,
+            functionName: descriptor.functionName,
+            args: descriptor.args,
+            fees: {
+              distribution: descriptor.fees.distribution as never,
+              feeValue: descriptor.fees.feeValue,
+            },
+          })) as `0x${string}`;
+          await input.onHash?.(hash);
+          submittedHash = hash;
+          return hash;
+        },
+        waitForFinalization: async (hash) => {
+          if (input.wait === "accepted") {
+            return writeClient.waitForTransactionReceipt({
+              hash: hash as never,
+              waitUntil: "decided",
+              interval: 4000,
+              retries: 45,
+            });
+          }
+          return writeClient.waitForFinalization({
+            hash: hash as never,
+            interval: 4000,
+            retries: 90,
+          });
+        },
+        isSuccessful: (transaction) => isSuccessful(transaction as never),
+      },
+    );
+    const rec = result.transaction as {
+      statusName?: unknown;
+      status?: unknown;
+      txExecutionResultName?: unknown;
+    };
+    return {
+      hash: result.hash,
+      execution: String(rec.txExecutionResultName ?? "FINISHED_WITH_RETURN"),
+      status: rec.statusName ?? rec.status,
+      feeValue: result.feeValue,
+    };
   } catch (err) {
     if (isUserRejection(err)) throw new Error("Wallet request was rejected.");
+    if (err instanceof LifecycleWriteError) throw err;
+    if (submittedHash) {
+      throw new Error(
+        `${walletErrorMessage(err, "Transaction confirmation is delayed")}. Do not submit the transaction again yet. Hash ${submittedHash}`,
+      );
+    }
     throw new Error(walletErrorMessage(err, `Write ${input.functionName} failed`));
   }
-
-  await input.onHash?.(hash);
-
-  const receipt = await waitForTransaction(client, hash, input.wait);
-  const receiptStatus = String(receipt.statusName ?? receipt.status ?? "");
-  if (receiptStatus === TransactionStatus.CANCELED || receiptStatus === TransactionStatus.UNDETERMINED) {
-    throw new Error(`Transaction did not confirm on Studionet (${receiptStatus}).`);
-  }
-  if (input.wait === "finalized" && receiptStatus !== TransactionStatus.FINALIZED) {
-    throw new Error("Transaction submitted. GenLayer finalization is still pending.");
-  }
-
-  const execution = executionOf(receipt);
-  if (execution && !isSuccess(execution)) {
-    throw new Error(
-      `Transaction landed but execution failed (${execution}). A hash is not a successful write.`,
-    );
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  return { hash, execution: execution || "SUCCESS", status: receipt?.status };
 }
 
-async function waitForTransaction(
-  client: ReturnType<typeof createClient>,
-  hash: `0x${string}`,
-  wait: TxWait,
-): Promise<Awaited<ReturnType<ReturnType<typeof createClient>["getTransaction"]>>> {
-  const attempts = wait === "finalized" ? 12 : 8;
-  const terminal = new Set(
-    wait === "finalized"
-      ? [TransactionStatus.FINALIZED, TransactionStatus.CANCELED, TransactionStatus.UNDETERMINED]
-      : [TransactionStatus.ACCEPTED, TransactionStatus.FINALIZED, TransactionStatus.CANCELED, TransactionStatus.UNDETERMINED],
-  );
-  let lastError: unknown;
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    try {
-      const transaction = await withTimeout(client.getTransaction({ hash: hash as never }), 12_000);
-      const status = String(transaction.statusName ?? transaction.status ?? "");
-      if (terminal.has(status as TransactionStatus)) return transaction;
-      if (attempt === attempts - 1) break;
-    } catch (error) {
-      if (isTemporaryChainError(error) && /rate limit|too many requests|\b429\b/i.test(error instanceof Error ? error.message : String(error))) {
-        throw new Error("Transaction submitted. Confirmation temporarily unavailable.");
-      }
-      lastError = error;
-      if (attempt === attempts - 1) break;
-    }
-    await waitWhileVisible(confirmationBackoffMs(attempt));
-  }
-  if (lastError && !isTemporaryChainError(lastError)) {
-    throw new Error(walletErrorMessage(lastError, "Transaction confirmation is temporarily unavailable."));
-  }
-  throw new Error("Transaction submitted. Confirmation temporarily unavailable.");
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error("Studionet confirmation timed out")), ms);
-    promise.then(
-      (value) => {
-        window.clearTimeout(timer);
-        resolve(value);
-      },
-      (error: unknown) => {
-        window.clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
-
-function waitWhileVisible(ms: number): Promise<void> {
-  if (typeof document === "undefined" || document.visibilityState !== "hidden") {
-    return new Promise((resolve) => window.setTimeout(resolve, ms));
-  }
-  return new Promise((resolve) => {
-    const onVisibility = () => {
-      if (document.visibilityState !== "hidden") {
-        document.removeEventListener("visibilitychange", onVisibility);
-        resolve();
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-  });
+async function readProviderChainId(provider: Eip1193Provider): Promise<number> {
+  const raw = await provider.request({ method: "eth_chainId" });
+  if (typeof raw === "string" && raw.startsWith("0x")) return Number.parseInt(raw, 16);
+  return Number(raw);
 }

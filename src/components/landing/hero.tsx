@@ -38,11 +38,11 @@ export function LandingHero() {
             </Link>
             <a href="#receipt">
               <Button variant="ghost" size="lg" className="text-bone hover:bg-bone/10">
-                Inspect a real verdict
+                View a real receipt
               </Button>
             </a>
           </div>
-          <div className="hero-meta mt-9 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-bone/48">
+          <div className="hero-meta mt-9 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-bone/62">
             <span>Guard #2 / Metric gaming</span>
             <span>Hosted certification case</span>
             <span>Not user activity</span>

@@ -16,7 +16,10 @@ const PIPE = [
 const VALIDATORS = ["A", "B", "C", "D"] as const;
 
 export function GenLayerProofSection() {
-  const reads = `${DEPLOYMENT.readMethods.length}/${DEPLOYMENT.readMethods.length}`;
+  // Derived from the maintained verified-interface constant, never hardcoded —
+  // if the interface changes, this count changes with it (L7).
+  const readCount = DEPLOYMENT.readMethods.length;
+  const reads = `${readCount}/${readCount}`;
 
   return (
     <section id="contract" className="bg-carbon text-bone">
@@ -41,7 +44,7 @@ export function GenLayerProofSection() {
                 {String(i + 1).padStart(2, "0")}
               </div>
               <div className="pipeline-step-copy">
-                <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-bone/45">
+                <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-bone/62">
                   {step.owner}
                 </p>
                 <h3 className="mt-2 font-display text-2xl">{step.k}</h3>
@@ -53,22 +56,22 @@ export function GenLayerProofSection() {
 
         <div
           className="consensus-figure mt-14"
-          aria-label="Independent validator interpretations converge"
+          aria-label="Independent validators converged on one structured finding"
         >
           <div>
-            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-bone/45">
+            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-bone/62">
               Distributed adjudication
             </p>
             <p className="mt-2 max-w-sm text-sm text-bone/70">
-              Different readings. The same structured finding.
+              Independent validators converged on the same structured finding.
             </p>
           </div>
           <div className="consensus-layout mt-6">
-            <ul className="consensus-lanes" aria-label="Validator readings">
+            <ul className="consensus-lanes" aria-label="Validator agreement">
               {VALIDATORS.map((lane) => (
                 <li key={lane} className="consensus-lane">
                   <span className="consensus-lane-key">Validator {lane}</span>
-                  <span>CONSTRAINT_BYPASS</span>
+                  <span>agreed</span>
                 </li>
               ))}
             </ul>
@@ -85,12 +88,16 @@ export function GenLayerProofSection() {
           <p className="mt-5 max-w-xl text-sm text-bone/70">
             GenLayer handles semantic agreement. The contract handles finality.
           </p>
+          <p className="mt-2 max-w-xl text-xs text-bone/55">
+            Individual validator wording is not published. MetricMotive shows only the structured finding
+            the validators agreed on, so nothing here is a reconstructed quote.
+          </p>
         </div>
 
         <Reveal>
           <div className="proof-strip mt-16">
             <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-ochre">
-              Technical dossier
+              Technical details
             </p>
             <dl className="proof-grid mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
               <div>
@@ -113,7 +120,14 @@ export function GenLayerProofSection() {
               </div>
               <div>
                 <dt>Reads</dt>
-                <dd>{reads}</dd>
+                <dd>
+                  <span title="Public contract read methods verified against the deployed interface.">
+                    {reads}
+                  </span>{" "}
+                  <span className="text-bone/55">
+                    verified public contract read methods
+                  </span>
+                </dd>
               </div>
               <div>
                 <dt>Legacy Guard 1</dt>
@@ -126,7 +140,7 @@ export function GenLayerProofSection() {
             </dl>
             <Link to="/contract" className="mt-6 inline-block">
               <Button variant="ghost" className="text-bone hover:bg-bone/10">
-                Inspect the proof
+                Technical details
               </Button>
             </Link>
           </div>
@@ -135,14 +149,14 @@ export function GenLayerProofSection() {
         <div className="verdict-field mt-16">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-bone/45">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-bone/62">
                 Verdict taxonomy
               </p>
               <p className="mt-2 max-w-md text-sm text-bone/65">
                 Four outcomes. One deterministic mapping.
               </p>
             </div>
-            <p className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-brick">
+            <p className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-[var(--color-danger-on-dark)]">
               Legacy Guard #2 → METRIC_GAMING
             </p>
           </div>
@@ -154,7 +168,7 @@ export function GenLayerProofSection() {
                 data-active={item.id === "METRIC_GAMING"}
                 title={item.meaning}
               >
-                <span className="verdict-cell-index font-mono text-[0.62rem] text-bone/35">
+                <span className="verdict-cell-index font-mono text-[0.62rem] text-bone/60">
                   0{VERDICT_TAXONOMY.indexOf(item) + 1}
                 </span>
                 <p className="font-mono text-xs tracking-[0.08em]">{item.id}</p>

@@ -21,7 +21,7 @@ function apply(headers: Headers): void {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
         "img-src 'self' data: https:",
-        "connect-src 'self' https://studio.genlayer.com https://explorer-studio.genlayer.com https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://rpc.walletconnect.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://api.web3modal.org https://cca-lite.coinbase.com https://keys.coinbase.com https://api.coinbase.com",
+        "connect-src 'self' https://studio-dev.genlayer.com https://explorer-studio-dev.genlayer.com https://studio.genlayer.com https://explorer-studio.genlayer.com https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://rpc.walletconnect.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://api.web3modal.org https://cca-lite.coinbase.com https://keys.coinbase.com https://api.coinbase.com",
         "frame-src 'self' https://verify.walletconnect.com https://verify.walletconnect.org https://secure.walletconnect.com https://secure.walletconnect.org https://keys.coinbase.com https://*.walletconnect.com",
         "frame-ancestors 'self'",
         "base-uri 'self'",

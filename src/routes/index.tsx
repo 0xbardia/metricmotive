@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteFooter, SiteHeader } from "@/components/chrome";
+import { MarketingShell } from "@/components/marketing-shell";
+import { LandingSectionNav } from "@/components/landing/section-nav";
 import { DefineSection } from "@/components/landing/define";
 import { EvidenceStorySection } from "@/components/landing/evidence-story";
 import { FinalCtaSection } from "@/components/landing/final-cta";
@@ -13,9 +14,8 @@ export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
   return (
-    <div className="bg-bone text-carbon">
-      <SiteHeader invert />
-      <main>
+    <MarketingShell invert>
+        <LandingSectionNav />
         <LandingHero />
         <DefineSection />
         <MotiveLockSection />
@@ -23,9 +23,7 @@ function Home() {
         <EvidenceStorySection />
         <GenLayerProofSection />
         <ReceiptSection />
-        <FinalCtaSection />
-      </main>
-      <SiteFooter />
-    </div>
+      <FinalCtaSection />
+    </MarketingShell>
   );
 }

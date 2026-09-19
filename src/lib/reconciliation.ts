@@ -102,8 +102,13 @@ function normalizeHex(value: unknown): Hex | null {
 }
 
 function callEntries(value: unknown): AnyRecord | null {
-  if (value instanceof Map) return Object.fromEntries(value.entries()) as AnyRecord;
-  return record(value);
+  const raw = value instanceof Map ? (Object.fromEntries(value.entries()) as AnyRecord) : record(value);
+  if (!raw) return null;
+  // genlayer-js 2.x encodes the method name under the empty string key.
+  if (!raw.method && typeof raw[""] === "string") {
+    return { ...raw, method: raw[""] };
+  }
+  return raw;
 }
 
 function rawCalldata(tx: AnyRecord): Uint8Array | null {
@@ -426,4 +431,23 @@ export function isTemporaryChainError(error: unknown): boolean {
 
 export function confirmationBackoffMs(attempt: number): number {
   return Math.min(30_000, 1_500 * 2 ** Math.max(0, attempt));
+}
+
+const STATUS_RANK: Record<string, number> = {
+  UNDETERMINED: 0,
+  PENDING: 1,
+  ACCEPTED: 2,
+  FINALIZED: 3,
+  CANCELED: 4,
+};
+
+export function transactionStatusRank(status: string): number {
+  return STATUS_RANK[status.toUpperCase()] ?? -1;
+}
+
+/** A delayed poll must never report an earlier status than one already observed. */
+export function monotonicTransactionStatus(previous: string | null | undefined, next: string): string {
+  if (!previous) return next;
+  if (transactionStatusRank(next) < transactionStatusRank(previous)) return previous;
+  return next;
 }

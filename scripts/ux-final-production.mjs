@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
-const BASE = process.env.CERT_BASE_URL || "https://metricmotive.bydx.fun";
+const BASE = process.env.CERT_BASE_URL || "https://metricmotive.xyz";
 const OUT = "/workspace/screenshots/ux-final-production";
 const VIDEO = `${OUT}/videos`;
 mkdirSync(VIDEO, { recursive: true });
@@ -116,7 +116,7 @@ try {
 
   await loaded(journey, "/");
   await heading(journey, /Your agent hit the metric\./, "landing headline");
-  await visible(journey, "Motive Control Room", "landing control-room label");
+  await heading(journey, /Your agent hit the metric\./, "landing hero rendered");
   await screenshot(journey, "journey-landing");
 
   await pathAfterClick(
@@ -147,13 +147,13 @@ try {
   await visible(journey, "Once locked, the target cannot be rewritten after seeing the result.", "Motive Lock section");
 
   await loaded(journey, "/");
-  await journey.getByRole("link", { name: "Inspect a real verdict", exact: true }).click();
+  await journey.getByRole("link", { name: "View a real receipt", exact: true }).click();
   await journey.waitForTimeout(500);
   check(new URL(journey.url()).hash === "#receipt", "proof CTA lands on receipt section");
   await visible(journey, "Motive Receipt", "landing receipt section");
   await pathAfterClick(
     journey,
-    journey.getByRole("link", { name: "Open the public receipt", exact: true }),
+    journey.getByRole("link", { name: "View receipt", exact: true }),
     "/verify/rct_example_sales",
     "public receipt link opens verification route",
   );
@@ -231,7 +231,7 @@ try {
       : path.includes("grd_example")
         ? "Example"
         : path.includes("run_example")
-          ? "You don’t have access to this Run."
+          ? "This Run does not exist."
           : path === "/contract"
             ? "Contract"
       : path === "/docs"
@@ -264,10 +264,16 @@ try {
   const docs = await browser.newPage({ viewport: { width: 390, height: 844 } });
   observe(docs, "docs anchor interaction");
   await loaded(docs, "/docs");
-  await docs.getByRole("link", { name: "Developers", exact: true }).click();
+  // The docs section is "SDK & agent integration" (slug #sdk); the Run page's
+  // "Connect an agent" link must point at that same anchor.
+  // The mobile section nav is a horizontal scroller, so the SDK link starts
+  // off-screen; scroll it in before clicking (the real user gesture).
+  const sdkLink = docs.getByRole("link", { name: "SDK", exact: true });
+  await sdkLink.scrollIntoViewIfNeeded();
+  await sdkLink.click();
   await docs.waitForTimeout(250);
-  check(new URL(docs.url()).hash === "#developers", "Docs anchor updates the URL");
-  check(await docs.getByRole("heading", { name: "Developers", exact: true }).isVisible(), "Docs anchor reveals the requested section");
+  check(new URL(docs.url()).hash === "#sdk", "Docs anchor updates the URL");
+  check(await docs.getByRole("heading", { name: "SDK & agent integration", exact: true }).isVisible(), "Docs anchor reveals the requested section");
   await noOverflow(docs, "Docs anchor interaction");
   await docs.close();
 
@@ -286,7 +292,7 @@ try {
   await noOverflow(keyboard, "Guard builder at 125 percent zoom");
   await keyboard.close();
 
-  for (const path of ["/", "/app"]) {
+  for (const path of ["/", "/app", "/app/guards/grd_example_sales", "/verify/rct_example_sales"]) {
     for (const viewport of [
       { name: "desktop", width: 1280, height: 800 },
       { name: "mobile", width: 390, height: 844 },

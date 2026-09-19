@@ -20,6 +20,17 @@
   --color-ochre-soft: #f3e4c4;
   --color-sage-soft: #dde5d6;
   --color-brick-soft: #f0d8d2;
+  /* Text-strength semantics. The --*-soft tokens above are background fills and
+     are deliberately low-contrast; these are the matching AA-safe text tones.
+     Brand ochre as *text* on bone fails AA, so light surfaces use brand-text. */
+  --color-brand-text: #8a5a12;
+  --color-danger-text: #a0452f;
+  --color-sage-text: #5c6c52;
+  /* Elevated variants for dark (carbon) surfaces, where the light tones fail. */
+  --color-warning-on-dark: #e2b25c;
+  --color-danger-on-dark: #d98c76;
+  --color-sage-on-dark: #a8bb9c;
+  --color-warning-soft: #f7ecd6;
   --color-background: #f3f0e6;
   --color-foreground: #171816;
   --color-muted: #5e5f59;
@@ -64,7 +75,7 @@
     color: var(--color-carbon);
     overflow-x: clip;
     scroll-behavior: smooth;
-    scroll-padding-top: 4rem;
+    scroll-padding-top: 5.5rem;
   }
 
   body {
@@ -495,7 +506,7 @@
 }
 
 .state-arrow {
-  color: rgba(243, 240, 230, 0.36);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .reveal.is-in .state-node {
@@ -825,7 +836,7 @@
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(243, 240, 230, 0.45);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .proof-strip dd {
@@ -956,7 +967,7 @@
 
 .hero-kicker-case {
   margin-left: 0.35rem;
-  color: rgba(243, 240, 230, 0.42);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .hero-headline-muted {
@@ -970,7 +981,7 @@
 
 .hero-meta span + span::before {
   margin-right: 1.25rem;
-  color: rgba(243, 240, 230, 0.25);
+  color: rgba(243, 240, 230, 0.55);
   content: "/";
 }
 
@@ -1028,7 +1039,7 @@
   grid-template-columns: auto auto;
   align-items: center;
   gap: 0.3rem 0.45rem;
-  color: rgba(243, 240, 230, 0.48);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .control-room-status-dot {
@@ -1170,16 +1181,24 @@
 }
 
 .control-room-detail-label.is-motive {
-  color: var(--color-sage);
+  color: var(--color-sage-on-dark);
 }
 
 .control-room-detail-label.is-fault {
-  color: var(--color-brick);
+  color: var(--color-danger-on-dark);
 }
 
 .control-room-detail {
   border-left: 2px solid var(--color-ochre);
   padding-left: 0.75rem;
+}
+
+.control-room-detail:has(.is-fault) {
+  border-left-color: var(--color-danger-on-dark);
+}
+
+.control-room-detail:has(.is-motive) {
+  border-left-color: var(--color-sage-on-dark);
 }
 
 .guard-dossier {
@@ -1262,7 +1281,7 @@
 }
 
 .lock-pane-label {
-  color: rgba(243, 240, 230, 0.48);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .lock-spec-armed .lock-pane-label {
@@ -1620,7 +1639,7 @@
 }
 
 .consensus-lane-key {
-  color: rgba(243, 240, 230, 0.45);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .consensus-lane > span:last-child {
@@ -1647,7 +1666,7 @@
 }
 
 .consensus-convergence-label {
-  color: rgba(243, 240, 230, 0.45);
+  color: rgba(243, 240, 230, 0.62);
 }
 
 .proof-strip {
@@ -1656,7 +1675,7 @@
 }
 
 .proof-strip dt {
-  color: rgba(243, 240, 230, 0.45);
+  color: rgba(243, 240, 230, 0.62);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.12em;
@@ -2315,5 +2334,273 @@
 
   .evidence-summary-list li {
     grid-template-columns: 3.75rem minmax(0, 1fr);
+  }
+}
+
+/* ─ Shared remediation primitives ─────────────────────────────────────── */
+
+/* Long case pages: progress sits below the sticky header with a clear gap so
+   the two never share a border line, and anchored sections clear it too (H2). */
+.flow-rail-region {
+  display: block;
+  scroll-margin-top: 5.5rem;
+}
+
+.flow-rail-step[data-state="complete"] .flow-rail-number {
+  color: var(--color-sage);
+}
+
+/* Provenance chain (Capture → Canonicalize → Hash → Commit → Verify) */
+.mm-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mm-provenance li[data-state="done"] {
+  color: var(--color-sage);
+}
+
+.mm-provenance li[data-state="pending"] {
+  color: var(--color-graphite);
+}
+
+/* Segmented control: obvious selected state without relying on colour alone
+   (M1). The selected option also carries a filled marker glyph. */
+.mm-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  background: var(--color-card);
+}
+
+.mm-segmented-option {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  color: var(--color-graphite);
+  font-size: 0.875rem;
+  transition: background-color var(--motion-quick) var(--ease-out-soft);
+}
+
+.mm-segmented-option + .mm-segmented-option {
+  border-left: 1px solid var(--color-rule);
+}
+
+.mm-segmented-option::before {
+  display: inline-block;
+  width: 0.75rem;
+  content: "";
+  font-size: 0.7rem;
+}
+
+.mm-segmented-option[data-selected="true"] {
+  background: var(--color-cream);
+  color: var(--color-carbon);
+  font-weight: 600;
+}
+
+.mm-segmented-option[data-selected="true"]::before {
+  content: "●";
+  color: var(--color-carbon);
+}
+
+.mm-segmented-option[data-selected="false"]::before {
+  content: "○";
+}
+
+.mm-segmented-option:hover {
+  background: var(--color-cream);
+}
+
+/* Trajectory chart (L1): axis/target labels, legend, mobile-safe marks. */
+.trajectory-text-target {
+  fill: var(--color-bone);
+  opacity: 0.62;
+  font-size: 3.1px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trajectory-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(243, 240, 230, 0.62);
+}
+
+.trajectory-legend li::before {
+  display: inline-block;
+  width: 0.9rem;
+  height: 2px;
+  background: currentColor;
+  content: "";
+}
+
+.trajectory-legend .is-metric {
+  color: var(--color-ochre);
+}
+
+.trajectory-legend .is-motive {
+  color: var(--color-sage-on-dark);
+}
+
+.trajectory-legend .is-target {
+  color: rgba(243, 240, 230, 0.62);
+}
+
+.trajectory-legend .is-fault {
+  color: var(--color-danger-on-dark);
+}
+
+.trajectory-legend .is-target::before {
+  height: 0;
+  border-top: 2px dashed currentColor;
+}
+
+/* Mobile-only evidence summary. Written as a media query rather than relying on
+   the component's `sm:hidden` utility: this stylesheet is unlayered while
+   Tailwind's utilities live in a cascade layer, so an unlayered `display: grid`
+   would beat `sm:hidden` and leak the list onto desktop (duplicating the
+   selected-mark detail verbatim). */
+@media (max-width: 639px) {
+  .trajectory-mobile-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .trajectory-mobile-list li {
+    border-left: 2px solid rgba(243, 240, 230, 0.3);
+    padding-left: 0.75rem;
+  }
+
+  .trajectory-mobile-list li.is-metric {
+    border-left-color: var(--color-ochre);
+  }
+
+  .trajectory-mobile-list li.is-motive {
+    border-left-color: var(--color-sage-on-dark);
+  }
+
+  .trajectory-mobile-list li.is-fault {
+    border-left-color: var(--color-danger-on-dark);
+  }
+}
+
+/* Landing section navigation (L5): a small rail on desktop, a compact jump
+   strip on mobile. Sits below the sticky header so the two never overlap. */
+.landing-rail {
+  display: none;
+}
+
+.landing-jump {
+  position: sticky;
+  top: 68px;
+  z-index: 20;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(243, 240, 230, 0.14);
+  background: rgba(23, 24, 22, 0.86);
+  padding: 0.35rem 1rem;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  scrollbar-width: none;
+}
+
+.landing-jump::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-jump a {
+  flex: none;
+  padding: 0.4rem 0.6rem;
+  color: rgba(243, 240, 230, 0.62);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing-jump a[data-active="true"] {
+  color: var(--color-ochre);
+}
+
+@media (min-width: 1024px) {
+  .landing-jump {
+    display: none;
+  }
+
+  .landing-rail {
+    position: fixed;
+    top: 50%;
+    right: 1.25rem;
+    z-index: 25;
+    display: block;
+    transform: translateY(-50%);
+  }
+
+  .landing-rail ol {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .landing-rail a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .landing-rail-dot {
+    order: 2;
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1px solid rgba(243, 240, 230, 0.5);
+    border-radius: 999px;
+    background: transparent;
+    transition: background-color var(--motion-quick) var(--ease-out-soft);
+  }
+
+  .landing-rail a[data-active="true"] .landing-rail-dot,
+  .landing-rail a:hover .landing-rail-dot {
+    background: var(--color-ochre);
+    border-color: var(--color-ochre);
+  }
+
+  .landing-rail-label {
+    order: 1;
+    overflow: hidden;
+    max-width: 0;
+    color: rgba(243, 240, 230, 0.75);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: max-width var(--motion-quick) var(--ease-out-soft);
+  }
+
+  .landing-rail a:hover .landing-rail-label,
+  .landing-rail a:focus-visible .landing-rail-label {
+    max-width: 7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-jump,
+  .landing-rail-dot,
+  .landing-rail-label {
+    scroll-behavior: auto;
+    transition: none;
   }
 }

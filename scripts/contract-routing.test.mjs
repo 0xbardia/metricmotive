@@ -14,10 +14,14 @@ test("persisted deployment routes RPC, reconciles colliding Guard IDs, and prese
   let chainGuard;
   let transaction;
   globalThis.__migrationTestClient = {
-    getChainId: async () => 61999,
+    getChainId: async () => 61997,
     writeContract: async (request) => { calls.push(request); return `0x${"b".repeat(64)}`; },
     readContract: async (request) => { calls.push(request); return chainGuard; },
     getTransaction: async () => transaction,
+    estimateTransactionFeesForWrite: async () => ({ distribution: { leaderTimeunitsAllocation: 100n }, feeValue: 1n }),
+    request: async ({ method } = {}) => method === "eth_getBalance" ? "0xffffffffffffffff" : undefined,
+    waitForFinalization: async () => ({ statusName: "FINALIZED", txExecutionResultName: "FINISHED_WITH_RETURN" }),
+    waitForTransactionReceipt: async () => ({ statusName: "ACCEPTED", txExecutionResultName: "FINISHED_WITH_RETURN" }),
   };
   const server = await createServer({
     configFile: false,
@@ -49,35 +53,41 @@ test("persisted deployment routes RPC, reconciles colliding Guard IDs, and prese
     const { writeIntelligentContract } = await server.ssrLoadModule("/src/lib/wallet/write.ts");
     const { reconcileTransaction } = await server.ssrLoadModule("/src/lib/server/chain-reconciliation.ts");
     const wallet = "0x61e26394c57c540C152f45f373f6C03a38674E2d";
-    const addresses = [LEGACY_DEPLOYMENT.contractAddress, DEPLOYMENT.contractAddress];
+    const rows = [
+      { contractAddress: LEGACY_DEPLOYMENT.contractAddress, chainId: LEGACY_DEPLOYMENT.chainId },
+      { contractAddress: DEPLOYMENT.contractAddress, chainId: DEPLOYMENT.chainId },
+    ];
+    const addresses = rows.map((row) => row.contractAddress);
     const guards = [];
-    for (const [index, contractAddress] of addresses.entries()) {
+    for (const [index, { contractAddress, chainId }] of rows.entries()) {
       const guard = await repo.insertGuard({ ownerAddress: wallet, parentId: null, version: 1, motive: "Genuine sales opportunities", metric: "Book 80 meetings", guardrails: [] });
       assert.equal(guard.contractAddress, DEPLOYMENT.contractAddress);
-      await sql.query("update guards set contract_address=$1 where id=$2", [contractAddress, guard.id]);
+      await sql.query("update guards set contract_address=$1, chain_id=$2 where id=$3", [contractAddress, chainId, guard.id]);
       const hash = `0x${String(index + 1).repeat(64)}`;
       const reservation = await repo.reserveCreateGuard(guard.id, `claim-${index}`, wallet);
       assert.equal(reservation.canSubmit, true);
-      await repo.recordChainTransaction(guard.id, { operation: "create_guard", txHash: hash, originatingWallet: wallet, chainId: 61999, contractAddress, submittedAt: new Date().toISOString(), reservationToken: `claim-${index}` }, wallet);
-      transaction = { hash, sender: wallet, recipient: contractAddress, chainId: 61999, statusName: "FINALIZED", txDataDecoded: { callData: new Map([["method", "create_guard"], ["args", [guard.motive, guard.metric, "[]"]]]) }, consensus_data: { leader_receipt: [{ execution_result: "SUCCESS", result: { status: "return", payload: { readable: '"10"' } } }] } };
+      await repo.recordChainTransaction(guard.id, { operation: "create_guard", txHash: hash, originatingWallet: wallet, chainId, contractAddress, submittedAt: new Date().toISOString(), reservationToken: `claim-${index}` }, wallet);
+      transaction = { hash, sender: wallet, recipient: contractAddress, chainId, statusName: "FINALIZED", txDataDecoded: { callData: new Map([["method", "create_guard"], ["args", [guard.motive, guard.metric, "[]"]]]) }, consensus_data: { leader_receipt: [{ execution_result: "SUCCESS", result: { status: "return", payload: { readable: '"10"' } } }] } };
       chainGuard = { found: true, id: "10", owner: wallet, parent_id: "0", version: 1, motive: guard.motive, metric: guard.metric, guardrails_json: "[]", definition_hash: guard.definitionHash, status: "DRAFT", evidence_json: "", evidence_hash: "", findings_json: "", verdict: "NONE", primary_pattern: "NONE", created_at: "", armed_at: "", evidence_at: "", resolved_at: "" };
       const result = await reconcileTransaction(guard.id, "create_guard", wallet);
       assert.equal(result.state, "reconciled", result.message);
       assert.equal(result.guard.onchainId, "10");
       assert.equal(calls.at(-1).address, contractAddress);
-      for (const functionName of ["create_guard", "arm_guard", "submit_evidence", "evaluate_guard"]) {
-        await assert.rejects(writeIntelligentContract({ account: wallet, connector: { getProvider: async () => ({ request: async () => undefined }) }, chainId: 61999, contractAddress, functionName, args: [], wait: "accepted", onHash: () => { throw new Error("captured mock submission"); } }), /captured mock/);
-        assert.equal(calls.at(-1).address, contractAddress);
-        assert.equal(calls.at(-1).functionName, functionName);
+      if (chainId === DEPLOYMENT.chainId) {
+        for (const functionName of ["create_guard", "arm_guard", "submit_evidence", "evaluate_guard"]) {
+          await assert.rejects(writeIntelligentContract({ account: wallet, connector: { getProvider: async () => ({ request: async ({ method } = {}) => method === "eth_chainId" ? "0xf22d" : undefined }) }, chainId, contractAddress, functionName, args: [], wait: "accepted", onHash: () => { throw new Error("captured mock submission"); } }), /captured mock/);
+          assert.equal(calls.at(-1).address, contractAddress);
+          assert.equal(calls.at(-1).functionName, functionName);
+        }
       }
       await reads.readChainGuard("10", contractAddress);
       assert.equal(calls.at(-1).address, contractAddress);
-      await assert.rejects(repo.recordChainTransaction(guard.id, { operation: "arm_guard", txHash: `0x${"a".repeat(64)}`, originatingWallet: wallet, chainId: 61999, contractAddress: addresses[1 - index], submittedAt: new Date().toISOString(), expectedGuardId: "10" }, wallet), /contract/i);
+      await assert.rejects(repo.recordChainTransaction(guard.id, { operation: "arm_guard", txHash: `0x${"a".repeat(64)}`, originatingWallet: wallet, chainId, contractAddress: addresses[1 - index], submittedAt: new Date().toISOString(), expectedGuardId: "10" }, wallet), /contract/i);
       await sql.query("update guards set status='RESOLVED', authority='GENLAYER', verdict='FAITHFUL_SUCCESS' where id=$1", [guard.id]);
       const receiptId = await repo.createReceipt(await repo.getGuard(guard.id));
       const receipt = await repo.getReceipt(receiptId);
       assert.equal(receipt.snapshot.contractAddress, contractAddress);
-      assert.equal(receipt.snapshot.chainId, 61999);
+      assert.equal(receipt.snapshot.chainId, chainId);
       guards.push(await repo.getGuard(guard.id));
     }
     assert.equal(guards[0].onchainId, guards[1].onchainId);

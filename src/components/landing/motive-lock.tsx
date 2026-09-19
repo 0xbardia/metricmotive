@@ -34,7 +34,7 @@ export function MotiveLockSection() {
           <div className="lock-demo" data-locked={locked}>
             <header className="lock-demo-header">
               <div>
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-bone/45">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-bone/62">
                   Guard #2 / specification
                 </p>
                 <p className="mt-1 text-sm text-bone/65">
@@ -43,7 +43,7 @@ export function MotiveLockSection() {
               </div>
               <button
                 type="button"
-                className="lock-replay min-h-11 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ochre underline-offset-4 hover:underline"
+                className="lock-replay min-h-11 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[var(--color-warning-on-dark)] underline-offset-4 hover:underline"
                 onClick={replayLock}
               >
                 Replay lock

@@ -1,5 +1,5 @@
 import { canonicalJson, sha256Hex } from "../../packages/sdk/src/canonical.ts";
-import { CURRENT_CONTRACT } from "../../packages/sdk/src/deployment.ts";
+import { getActiveDeployment } from "../../packages/sdk/src/deployment.ts";
 
 export { canonicalize, canonicalJson, sha256Hex } from "../../packages/sdk/src/canonical.ts";
 
@@ -10,12 +10,14 @@ export const APP_NAME = "MetricMotive";
 export const APP_TAGLINE = "Your agent hit the metric. Did it honor the motive?";
 export const CONTRACT_VERSION = "1.0.0";
 
+const ACTIVE = getActiveDeployment();
+
 export const GENLAYER = {
-  network: CURRENT_CONTRACT.network,
-  chainId: CURRENT_CONTRACT.chainId,
-  rpcUrl: CURRENT_CONTRACT.rpcUrl,
-  studioUrl: "https://studio.genlayer.com/contracts",
-  explorerUrl: "https://explorer-studio.genlayer.com",
+  network: ACTIVE.networkName,
+  chainId: ACTIVE.chainId,
+  rpcUrl: ACTIVE.rpcUrl,
+  studioUrl: ACTIVE.studioUrl,
+  explorerUrl: ACTIVE.explorerUrl,
   currency: "GEN",
 } as const;
 
@@ -147,6 +149,15 @@ export type RunRecord = {
   outcome: JsonBag;
   startedAt: string;
   completedAt: string | null;
+  /**
+   * Canonical evidence manifest captured ONCE at Finish Run. The wallet
+   * submits exactly these bytes and reconciliation replays them; it must never
+   * be rebuilt from the mutable columns above (that is how the same Run drifted
+   * between submission and confirmation).
+   */
+  evidenceSnapshotJson: string | null;
+  evidenceManifestHash: string | null;
+  evidenceCommitmentHash: string | null;
 };
 
 export type ReceiptSnapshot = {

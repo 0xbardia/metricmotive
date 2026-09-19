@@ -61,12 +61,23 @@ const globalRef = globalThis as typeof globalThis & {
  *                                   `::text` if you ever need huge integers)
  *   date                         -> 'YYYY-MM-DD' string
  *   interval                     -> Postgres interval text
+ *   timestamptz                  -> ISO-8601 UTC string
  * numeric already comes back as a string on both (arbitrary precision).
+ *
+ * `timestamptz` is normalized because a Date here is not merely a type
+ * inconvenience: it silently changed the evidence commitment. `pg` returns a
+ * Date by default, and any consumer that re-serializes it (canonical JSON for
+ * the evidence manifest) produced a different digest than the same Run read as
+ * ISO text. The row type says `string`; make the driver agree.
  */
 const OID_INT8 = 20;
 const OID_DATE = 1082;
 const OID_INTERVAL = 1186;
+const OID_TIMESTAMPTZ = 1184;
 const identity = (v: string) => v;
+
+/** Both drivers accept raw Postgres timestamp text; emit the ISO-8601 UTC form. */
+const toIsoTimestamp = (v: string) => new Date(v).toISOString();
 
 type Run = <T>(text: string, params: unknown[]) => Promise<T[]>;
 
@@ -120,6 +131,7 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_INT8, Number);
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
+    types.setTypeParser(OID_TIMESTAMPTZ, toIsoTimestamp);
     const pool = new Pool({ connectionString: databaseUrl });
     return toSql(async <T>(text: string, params: unknown[]) => {
       const res = await pool.query(text, params);
@@ -143,6 +155,9 @@ async function createPgliteSql(): Promise<Sql> {
         [OID_INT8]: Number,
         [OID_DATE]: identity,
         [OID_INTERVAL]: identity,
+        // PGLite defaults to Date objects; parse the same text to the same ISO
+        // string so preview and production hash identical evidence.
+        [OID_TIMESTAMPTZ]: toIsoTimestamp,
       },
     });
     await pg.waitReady;

@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TxPanel } from "@/components/tx-panel";
+import { LockSummary, ProvenanceChain } from "@/components/ui/lock-summary";
+import { StatusBanner } from "@/components/ui/status-banner";
+import { TxStatusBanner } from "@/components/ui/tx-status-banner";
 import { TechnicalDetails } from "@/components/product-ui";
 import { WalletControl } from "@/components/wallet-control";
 import { auditUiAction } from "@/lib/action-audit";
-import { GENLAYER, type Guardrail, type RunEvent } from "@/lib/domain";
+import { type Guardrail } from "@/lib/domain";
+import { getActiveDeployment } from "@/lib/contract";
+import { ACTIVE_CHAIN_ID } from "@/lib/wallet/chain";
+import { CTA } from "@/lib/terminology";
 import {
   getGuardDeploymentFn,
   prepareEvidenceFn,
@@ -30,6 +37,7 @@ import {
   txBusy,
 } from "@/lib/wallet/tx-state";
 import { confirmationBackoffMs } from "@/lib/reconciliation";
+import { advance, operationViewFromTx } from "@/lib/operations";
 
 const UI_ACTION_NAMES: Partial<Record<ChainOperation, string>> = {
   create_guard: "publish_guard",
@@ -40,13 +48,6 @@ const UI_ACTION_NAMES: Partial<Record<ChainOperation, string>> = {
 
 function railsJson(guardrails: Guardrail[]): string {
   return JSON.stringify(guardrails);
-}
-
-function evidenceEventSummary(event: RunEvent): string {
-  const preferred = [event.data.observation, event.data.summary, event.data.action].find(
-    (value): value is string => typeof value === "string" && value.trim().length > 0,
-  );
-  return preferred ?? event.type.replaceAll("_", " ");
 }
 
 function useWriteGate() {
@@ -70,7 +71,7 @@ function transactionState(
     hash,
     error,
     originAddress: address ?? null,
-    originChainId: GENLAYER.chainId,
+    originChainId: ACTIVE_CHAIN_ID,
   };
 }
 
@@ -110,7 +111,28 @@ function useTransactionReconciliation({
       completedRef.current = false;
       persistPendingTx({ ...next, resourceId: guardId });
     }
-    setTxState({ ...next, resourceId: guardId });
+    /**
+     * Monotonic state (N20): a stale response must never walk a submitted
+     * transaction backwards. Once a hash exists the only thing that can end it
+     * is proven finality or proven failure — so a later "submitted" write is
+     * ignored rather than flickering the card back.
+     */
+    setTxState((previous) => {
+      const previousView = operationViewFromTx(previous);
+      const nextView = operationViewFromTx(next);
+      if (
+        previousView &&
+        nextView &&
+        previousView.type === nextView.type &&
+        previousView.txHash &&
+        next.hash === previousView.txHash &&
+        advance(previousView.state, nextView.state) === previousView.state &&
+        nextView.state !== "finalized"
+      ) {
+        return previous;
+      }
+      return { ...next, resourceId: guardId };
+    });
   };
 
   useEffect(() => {
@@ -127,7 +149,7 @@ function useTransactionReconciliation({
         hash,
         error: null,
         originAddress: gate.address ?? null,
-        originChainId: GENLAYER.chainId,
+        originChainId: ACTIVE_CHAIN_ID,
         resourceId: guardId,
       });
     } else if (hash) {
@@ -162,7 +184,7 @@ function useTransactionReconciliation({
             hash: resultHash,
             error: null,
             originAddress: gate.address,
-            originChainId: GENLAYER.chainId,
+            originChainId: ACTIVE_CHAIN_ID,
           });
           onUpdatedRef.current();
         } else if (result.state === "mismatch") {
@@ -270,7 +292,7 @@ async function recordTransaction(
       operation,
       txHash: hash,
       originatingWallet: address,
-      chainId: GENLAYER.chainId,
+      chainId: ACTIVE_CHAIN_ID,
       contractAddress: deployment.contractAddress,
       expectedGuardId,
       expectedEvidenceHash,
@@ -309,22 +331,22 @@ async function runWrite(opts: {
     setTx({ phase: "need-wallet", action: opts.action, hash: null, error: null });
     return false;
   }
-  if (gate.chainId !== GENLAYER.chainId) {
+  if (gate.chainId !== ACTIVE_CHAIN_ID) {
     setTx({ phase: "wrong-network", action: opts.action, hash: null, error: null });
     try {
-      await gate.switchChainAsync({ chainId: GENLAYER.chainId });
+      await gate.switchChainAsync({ chainId: ACTIVE_CHAIN_ID });
     } catch (err) {
       setTx({
         phase: "wrong-network",
         action: opts.action,
         hash: null,
-        error: walletErrorMessage(err, "Could not switch to Studionet"),
+        error: walletErrorMessage(err, "Could not switch to GenLayer Studio Dev"),
       });
       return false;
     }
   }
   const startingAddress = gate.address;
-  const startingChainId = GENLAYER.chainId;
+  const startingChainId = ACTIVE_CHAIN_ID;
   const provenance = {
     originAddress: startingAddress,
     originChainId: startingChainId,
@@ -361,7 +383,7 @@ async function runWrite(opts: {
       contractAddress: deployment.contractAddress,
       account: gate.address,
       connector: gate.connector,
-      chainId: GENLAYER.chainId,
+      chainId: ACTIVE_CHAIN_ID,
       functionName: opts.functionName,
       args: opts.args,
       wait: opts.wait,
@@ -419,25 +441,39 @@ async function runWrite(opts: {
   }
 }
 
+export function HistoricalReadOnlyNotice() {
+  return (
+    <p className="text-sm text-graphite" role="status">
+      Historical deployment — read only
+    </p>
+  );
+}
+
+function useHistoricalReadOnly(guardId: string): boolean {
+  const q = useQuery({
+    queryKey: ["guard-deployment", guardId],
+    queryFn: () => getGuardDeploymentFn({ data: { id: guardId } }),
+    staleTime: 30_000,
+  });
+  return Boolean(q.data && q.data.status !== "active");
+}
+
 export function WalletGate({ children }: { children: React.ReactNode }) {
   const { address, chainId } = useAccount();
   if (!address) {
     return (
       <div className="space-y-3">
         <p className="text-sm text-graphite">
-          Connect a wallet on Studionet. MetricMotive does not store private keys.
+          Connect a wallet on GenLayer Studio Dev. MetricMotive does not store private keys.
         </p>
         <WalletControl />
       </div>
     );
   }
-  if (chainId !== GENLAYER.chainId) {
+  if (chainId !== ACTIVE_CHAIN_ID) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-graphite">
-          Wallet is on chain {chainId}. Writes require GenLayer Studionet (
-          {GENLAYER.chainId}).
-        </p>
+        <p className="text-sm text-graphite">Switch to GenLayer Studio Dev</p>
         <WalletControl />
       </div>
     );
@@ -453,6 +489,7 @@ export function CreateAndLock({
   onchainId,
   txCreate,
   txArm,
+  locked = false,
   onUpdated,
 }: {
   guardId: string;
@@ -462,8 +499,11 @@ export function CreateAndLock({
   onchainId: string | null;
   txCreate: string | null;
   txArm: string | null;
+  /** The Guard is already finalized as locked; no lock action may be offered. */
+  locked?: boolean;
   onUpdated: () => void;
 }) {
+  const historical = useHistoricalReadOnly(guardId);
   const gate = useWriteGate();
   const createRecovery = useTransactionReconciliation({
     guardId,
@@ -480,11 +520,11 @@ export function CreateAndLock({
     onUpdated,
   });
   const created = Boolean(onchainId);
-  const pendingCreate = !created && createRecovery.hasUnresolved;
   const tx = created ? armRecovery.tx : createRecovery.tx;
   const busy = txBusy(tx);
   const createIntentRef = useRef(false);
   const armIntentRef = useRef(false);
+  if (historical) return <HistoricalReadOnlyNotice />;
 
   async function create() {
     if (busy || createRecovery.hasUnresolved || createIntentRef.current) return;
@@ -559,7 +599,7 @@ export function CreateAndLock({
         phase: "failed",
         action: "arm_guard",
         hash: null,
-        error: "Create the Guard on Studionet first.",
+        error: "Create the Guard on GenLayer first.",
       });
       return;
     }
@@ -590,67 +630,123 @@ export function CreateAndLock({
   return (
     <WalletGate>
       <div className="space-y-4">
-        {!created ? (
+        {locked ? (
+          /* N11: a finalized lock removes the lock CTA entirely. Leaving it in
+             place invited a second lock transaction for an already-frozen
+             Guard. */
           <>
-            {pendingCreate ? (
-              <div className="space-y-3" role="status" aria-live="polite">
-                <div className="flex items-center gap-2">
-                  <Badge tone="ochre">Step 1 of 2 · submitted</Badge>
-                </div>
-                <p className="font-display text-2xl">Publishing is in progress.</p>
-                <p className="text-sm leading-relaxed text-graphite">
-                  Your transaction is safe. Confirmation can resume after a refresh; do not publish this definition again.
-                </p>
-                <p className="break-all font-mono text-xs text-graphite">tx {createRecovery.hash ?? txCreate}</p>
-                <Button
-                  variant="outline"
-                  onClick={() => void createRecovery.reconcileOnce()}
-                  disabled={createRecovery.reconcileBusy}
-                  data-action="retry-create-confirmation"
-                >
-                  {createRecovery.reconcileBusy ? "Checking Studionet…" : "Retry confirmation"}
-                </Button>
-              </div>
-            ) : (
+            <StatusBanner
+              status="Guard locked"
+              severity="success"
+              title="This Guard version is frozen."
+              message="The Motive, Metric, and Guardrails are finalized on GenLayer. Start a Run to capture what the agent does."
+              action={
+                <Link to="/app/guards/$id" params={{ id: guardId }}>
+                  <Button variant="outline">Open case</Button>
+                </Link>
+              }
+            />
+            {/* N13: past tense once the write actually happened. */}
+            <TechnicalDetails title="What was written on-chain">
+              <p className="text-sm leading-relaxed">
+                This Guard version — Motive, Metric, and Guardrails — was frozen on {getActiveDeployment().networkName}
+                {onchainId ? ` as on-chain Guard ${onchainId}` : ""}. The lock transaction cannot be replayed and the
+                definition cannot be rewritten.
+              </p>
+            </TechnicalDetails>
+          </>
+        ) : !created ? (
+          <>
+            {/*
+              ONE card per operation (N20).
+
+              This block used to render its own "Publishing is in progress"
+              banner while <TxStatusBanner /> rendered the same create
+              transaction below — two contradictory cards for one submission
+              (and the same again for arm_guard). The canonical
+              <TxStatusBanner /> owns unpublished-create state now.
+            */}
+            {createRecovery.hasUnresolved ? null : (
               <>
-                <Badge tone="ochre">Step 1 of 2 · publish definition</Badge>
-                <p className="mt-2 font-display text-2xl">Publish your motive.</p>
+                <Badge tone="brand">Step 1 of 2 · publish definition</Badge>
+                <p className="mt-2 font-display text-2xl">Publish the Guard definition.</p>
                 <p className="text-sm leading-relaxed text-graphite">
                   Publishing creates this Guard on GenLayer as a draft. You will approve the write in your wallet.
                 </p>
-                <Button className="mt-2" onClick={() => void create()} disabled={busy || createRecovery.hasUnresolved || createIntentRef.current} data-action="create-guard">
-                  {createIntentRef.current || busy && tx.action === "create_guard" ? "Preparing publish…" : "Publish definition"}
+                <TechnicalDetails className="mt-4" title="What gets written on-chain">
+                  <p className="text-sm leading-relaxed">
+                    The certified Intelligent Contract stores this definition on {getActiveDeployment().networkName}. Its fingerprint is
+                    fixed at publish; locking is a separate transaction. MetricMotive never stores a private key.
+                  </p>
+                </TechnicalDetails>
+                <Button
+                  className="mt-2"
+                  loading={createIntentRef.current || (busy && tx.action === "create_guard")}
+                  loadingLabel="Preparing publish…"
+                  disabled={busy || createRecovery.hasUnresolved || createIntentRef.current}
+                  onClick={() => void create()}
+                  data-action="create-guard"
+                >
+                  Publish definition
                 </Button>
               </>
             )}
           </>
         ) : (
           <>
-            <Badge tone="ochre">Step 2 of 2 · lock motive</Badge>
-            <p className="mt-2 font-display text-2xl">Freeze this version.</p>
+            <Badge tone="brand">Step 2 of 2 · {CTA.lockGuard}</Badge>
+            <p className="mt-2 font-display text-2xl">Lock the Guard.</p>
             <p className="text-sm leading-relaxed text-graphite">
-              Locking freezes the Motive, Metric, and Guardrails before the agent runs. After Studionet confirms ARMED, this version cannot be rewritten.
+              The definition is already published. Locking freezes the Motive, Metric, and Guardrails on {getActiveDeployment().networkName}.
             </p>
-            <p className="font-mono text-xs text-graphite">On-chain id {onchainId}</p>
-            {armRecovery.hasUnresolved ? (
-              <div className="space-y-3" role="status" aria-live="polite">
-                <p className="text-sm">Lock transaction submitted. Confirmation can resume after a refresh.</p>
-                <p className="break-all font-mono text-xs text-graphite">tx {armRecovery.hash ?? txArm}</p>
-                <Button variant="outline" onClick={() => void armRecovery.reconcileOnce()} disabled={armRecovery.reconcileBusy}>
-                  {armRecovery.reconcileBusy ? "Checking Studionet…" : "Retry confirmation"}
-                </Button>
-              </div>
-            ) : (
-              <Button onClick={() => void lock()} disabled={busy || armRecovery.hasUnresolved} data-action="lock-motive">
-                {busy && tx.action === "arm_guard" ? "Locking motive…" : "Lock motive"}
+            {onchainId ? (
+              <p className="font-mono text-xs text-graphite">On-chain Guard id {onchainId}</p>
+            ) : null}
+            {/* ONE summary card (N8): the definition is not re-rendered here. */}
+            {/* Disclosure precedes the irreversible CTA (N9) and uses present tense
+                only until the lock is actually finalized (N13). */}
+            <TechnicalDetails className="mt-4" title="What gets written on-chain">
+              <p className="text-sm leading-relaxed">
+                The lock transaction freezes this Guard version: the Motive, the Metric, and the Guardrails, plus the
+                definition fingerprint below. It cannot be rewritten afterwards. The wallet signs this one transaction;
+                MetricMotive never stores a private key.
+              </p>
+            </TechnicalDetails>
+            <LockSummary
+              className="paper-panel p-5"
+              motive={motive}
+              metric={metric}
+              guardrails={guardrails}
+              locked={false}
+            />
+            {/* The locked CTA exists only while no lock has been submitted (N11). */}
+            {armRecovery.hasUnresolved ? null : (
+              <Button
+                loading={busy && tx.action === "arm_guard"}
+                loadingLabel="Locking…"
+                disabled={busy || armRecovery.hasUnresolved}
+                onClick={() => void lock()}
+                data-action="lock-motive"
+              >
+                {CTA.lockGuard}
               </Button>
             )}
           </>
         )}
-        <TxPanel state={tx} />
+        <TxStatusBanner state={tx} onRetry={() => void recoveryRetry(tx, createRecovery, armRecovery)} />
       </div>
     </WalletGate>
   );
+}
+
+/** Routes a retry to the reconciliation owner of the active operation. */
+function recoveryRetry(
+  tx: { action: string },
+  createRecovery: { reconcileOnce: () => Promise<unknown> },
+  armRecovery: { reconcileOnce: () => Promise<unknown> },
+) {
+  if (tx.action === "arm_guard") return armRecovery.reconcileOnce();
+  return createRecovery.reconcileOnce();
 }
 
 export function SubmitEvidenceChain({
@@ -666,6 +762,7 @@ export function SubmitEvidenceChain({
   txEvidence: string | null;
   onUpdated: () => void;
 }) {
+  const historical = useHistoricalReadOnly(guardId);
   const gate = useWriteGate();
   const recovery = useTransactionReconciliation({
     guardId,
@@ -678,6 +775,7 @@ export function SubmitEvidenceChain({
   const [prepared, setPrepared] = useState<Awaited<ReturnType<typeof prepareEvidenceFn>> | null>(null);
   const [preparing, setPreparing] = useState(false);
   const submitIntentRef = useRef(false);
+  if (historical) return <HistoricalReadOnlyNotice />;
 
   async function prepare() {
     if (busy || recovery.hasUnresolved || preparing) return;
@@ -686,7 +784,7 @@ export function SubmitEvidenceChain({
         phase: "failed",
         action: "submit_evidence",
         hash: null,
-        error: "This Guard is not on Studionet yet.",
+        error: "This Guard is not on GenLayer yet.",
       });
       return;
     }
@@ -762,15 +860,7 @@ export function SubmitEvidenceChain({
   return (
     <WalletGate>
       <div className="space-y-3">
-        {recovery.hasUnresolved ? (
-          <div className="space-y-3" role="status" aria-live="polite">
-            <p className="text-sm">Evidence transaction submitted. Confirmation can resume after a refresh.</p>
-            <p className="break-all font-mono text-xs text-graphite">tx {recovery.hash ?? txEvidence}</p>
-            <Button variant="outline" onClick={() => void recovery.reconcileOnce()} disabled={recovery.reconcileBusy}>
-              {recovery.reconcileBusy ? "Checking Studionet…" : "Retry confirmation"}
-            </Button>
-          </div>
-        ) : prepared ? (
+        {recovery.hasUnresolved ? null : prepared ? (
           <div className="space-y-4" data-evidence-preview>
             <div className="paper-panel space-y-4 p-5">
               <div>
@@ -781,17 +871,26 @@ export function SubmitEvidenceChain({
               <dl className="grid gap-3 border-y border-rule py-3 text-sm sm:grid-cols-3">
                 <div><dt className="text-graphite">Run</dt><dd className="mt-1 font-mono break-all">{prepared.manifest.runId}</dd></div>
                 <div><dt className="text-graphite">Captured</dt><dd className="mt-1 font-display text-xl">{prepared.eventCount} events</dd></div>
-                <div><dt className="text-graphite">Manifest</dt><dd className="mt-1 text-sage">Generated and ready</dd></div>
+                <div><dt className="text-graphite">Manifest</dt><dd className="mt-1 text-[var(--color-sage-text)]">Generated and ready</dd></div>
               </dl>
-              <ul className="evidence-summary-list" aria-label="Evidence summary">
-                {prepared.manifest.events.slice(0, 5).map((event, index) => (
-                  <li key={`${event.timestamp}-${index}`}>
-                    <time dateTime={event.timestamp}>{event.timestamp.slice(11, 16)} UTC</time>
-                    <p><span className="font-medium">{evidenceEventSummary(event)}</span><span className="mt-1 block text-xs text-graphite">Source: {event.source}</span></p>
-                  </li>
-                ))}
-                {prepared.manifest.events.length > 5 ? <li className="py-3 text-sm text-graphite">+ {prepared.manifest.events.length - 5} more events</li> : null}
-              </ul>
+              {/*
+                H7: the full evidence list already lives on the Run page. This
+                preview summarises and points there rather than repeating it.
+              */}
+              <p className="text-sm text-graphite">
+                {prepared.manifest.events.length} captured events are included in this manifest. The full list stays on
+                the Run page; the canonical contents are below.
+              </p>
+              {/* A finished Run is already captured, canonicalized and hashed;
+                  only the on-chain commit and the verdict remain (N19). */}
+              <ProvenanceChain
+                className="mm-provenance"
+                captured
+                canonicalized
+                hashed={Boolean(prepared.manifest.manifestHash)}
+                committed={Boolean(guardId && (txEvidence || recovery.hash))}
+                verified={false}
+              />
               <TechnicalDetails title="Evidence integrity">
                 <dl>
                   <div><dt>Guard ID</dt><dd>{prepared.manifest.guardId}</dd></div>
@@ -802,23 +901,54 @@ export function SubmitEvidenceChain({
               </TechnicalDetails>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => void submit()} disabled={busy || submitIntentRef.current} data-action="submit-evidence">
-                {busy || submitIntentRef.current ? "Committing evidence…" : "Commit evidence to GenLayer"}
+              <Button
+                loading={busy || submitIntentRef.current}
+                loadingLabel="Committing evidence…"
+                disabled={busy || submitIntentRef.current}
+                onClick={() => void submit()}
+                data-action="submit-evidence"
+              >
+                Commit evidence to GenLayer
               </Button>
-              <Button variant="outline" onClick={() => void prepare()} disabled={busy || preparing}>
-                {preparing ? "Refreshing preview…" : "Refresh preview"}
+              <Button
+                variant="outline"
+                loading={preparing}
+                loadingLabel="Refreshing preview…"
+                disabled={busy || preparing}
+                onClick={() => void prepare()}
+              >
+                Refresh preview
               </Button>
             </div>
           </div>
         ) : (
-          <Button onClick={() => void prepare()} disabled={busy || preparing} data-action="prepare-evidence">
-            {preparing ? "Preparing evidence…" : "Review evidence"}
+          /*
+            N18: the user is already inside the Run's evidence list, which sits
+            directly above this control. "Review evidence" was an instruction to
+            do what they were doing, so the label names the real next state
+            instead: building the commitment.
+          */
+          <Button
+            loading={preparing}
+            loadingLabel="Preparing evidence…"
+            disabled={busy || preparing}
+            onClick={() => void prepare()}
+            data-action="prepare-evidence"
+          >
+            {CTA.continueToCommitment}
           </Button>
         )}
-        <p className="text-sm text-graphite">
-          MetricMotive commits the evidence fingerprint on Studionet. The commitment cannot be replaced.
-        </p>
-        <TxPanel state={recovery.tx} />
+        {recovery.hasUnresolved ? null : (
+          <p className="text-sm text-graphite">
+            MetricMotive commits the evidence fingerprint on GenLayer. The commitment cannot be replaced.
+          </p>
+        )}
+        {/* THE one status surface for this operation. */}
+        <TxStatusBanner
+          state={recovery.tx}
+          onRetry={() => void recovery.reconcileOnce()}
+          retryBusy={recovery.reconcileBusy}
+        />
       </div>
     </WalletGate>
   );
@@ -835,6 +965,7 @@ export function VerifyWithGenLayer({
   txEvaluate: string | null;
   onUpdated: () => void;
 }) {
+  const historical = useHistoricalReadOnly(guardId);
   const gate = useWriteGate();
   const recovery = useTransactionReconciliation({
     guardId,
@@ -845,6 +976,7 @@ export function VerifyWithGenLayer({
   });
   const busy = recovery.busy;
   const verifyIntentRef = useRef(false);
+  if (historical) return <HistoricalReadOnlyNotice />;
 
   async function verify() {
     if (busy || recovery.hasUnresolved || verifyIntentRef.current) return;
@@ -853,7 +985,7 @@ export function VerifyWithGenLayer({
         phase: "failed",
         action: "evaluate_guard",
         hash: null,
-        error: "This Guard is not on Studionet yet.",
+        error: "This Guard is not on GenLayer yet.",
       });
       return;
     }
@@ -884,29 +1016,30 @@ export function VerifyWithGenLayer({
   return (
     <WalletGate>
       <div className="space-y-3">
+        {/*
+          ONE canonical card (N24). This used to render a hand-written
+          "Verification requested." banner *and* <TxStatusBanner /> for the same
+          evaluate_guard operation, so a delayed verdict showed two competing
+          statuses. <TxStatusBanner /> owns the state; this block only supplies
+          the evidence-provenance chain that belongs to verification.
+        */}
         {recovery.hasUnresolved ? (
-          <div className="space-y-3" role="status" aria-live="polite">
-            <Badge tone="ochre">Verification in progress</Badge>
-            <div className="grid gap-2 text-sm sm:grid-cols-3">
-              <p className="text-sage">✓ Evidence committed</p>
-              <p>GenLayer evaluation <span className="text-graphite">in progress</span></p>
-              <p>Final verdict <span className="text-graphite">waiting</span></p>
-            </div>
-            <p className="text-sm text-graphite">Independent validators are evaluating the evidence against the locked motive, metric, and guardrails. Confirmation can resume after a refresh.</p>
-            <p className="break-all font-mono text-xs text-graphite">tx {recovery.hash ?? txEvaluate}</p>
-            <Button variant="outline" onClick={() => void recovery.reconcileOnce()} disabled={recovery.reconcileBusy}>
-              {recovery.reconcileBusy ? "Checking Studionet…" : "Retry confirmation"}
-            </Button>
-          </div>
+          <ProvenanceChain className="mm-provenance" captured canonicalized hashed committed verified={false} />
         ) : (
           <div className="space-y-2">
-            <Button onClick={() => void verify()} disabled={busy || verifyIntentRef.current} data-action="verify-genlayer">
-              {busy || verifyIntentRef.current ? "Starting verification…" : "Verify with GenLayer"}
+            <Button
+              loading={busy || verifyIntentRef.current}
+              loadingLabel="Starting verification…"
+              disabled={busy || verifyIntentRef.current}
+              onClick={() => void verify()}
+              data-action="verify-genlayer"
+            >
+              Verify with GenLayer
             </Button>
             <p className="text-sm text-graphite">Evidence is already committed. This asks GenLayer to evaluate it against the locked specification.</p>
           </div>
         )}
-        <TxPanel state={recovery.tx} />
+        <TxStatusBanner state={recovery.tx} onRetry={() => void recovery.reconcileOnce()} retryBusy={recovery.reconcileBusy} />
       </div>
     </WalletGate>
   );

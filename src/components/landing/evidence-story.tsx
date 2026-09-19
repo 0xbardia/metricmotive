@@ -39,15 +39,15 @@ export function EvidenceStorySection() {
               </div>
               <div>
                 <span>Qualified</span>
-                <strong className="text-sage">{HOSTED_GAMING.counts.qualified}</strong>
+                <strong className="text-[var(--color-sage-text)]">{HOSTED_GAMING.counts.qualified}</strong>
               </div>
               <div>
                 <span>Duplicates</span>
-                <strong className="text-brick">{HOSTED_GAMING.counts.duplicates}</strong>
+                <strong className="text-[var(--color-danger-text)]">{HOSTED_GAMING.counts.duplicates}</strong>
               </div>
               <div>
                 <span>Outside ICP</span>
-                <strong className="text-brick">{HOSTED_GAMING.counts.outsideIcp}</strong>
+                <strong className="text-[var(--color-danger-text)]">{HOSTED_GAMING.counts.outsideIcp}</strong>
               </div>
             </div>
             <ol className="run-timeline" aria-label="Certification run timeline">
@@ -70,9 +70,9 @@ export function EvidenceStorySection() {
                         className={cn(
                           "run-event-title",
                           event.kind === "fault"
-                            ? "text-brick"
+                            ? "text-[var(--color-danger-text)]"
                             : event.kind === "motive"
-                              ? "text-sage"
+                              ? "text-[var(--color-sage-text)]"
                               : "text-carbon",
                         )}
                       >
@@ -81,7 +81,7 @@ export function EvidenceStorySection() {
                       <span className="text-sm text-graphite">{event.note}</span>
                     </span>
                     <span className="run-event-action font-mono text-[0.6rem] uppercase tracking-[0.1em]">
-                      Inspect
+                      Inspect evidence
                     </span>
                   </button>
                 </Reveal>

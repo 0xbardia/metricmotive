@@ -22,11 +22,19 @@ import {
   type CreateIntentRecord,
   type CreateIntentState,
 } from "@/lib/create-intent";
-import { requireEvidenceEvents } from "@/lib/evidence";
+import {
+  buildEvidenceManifest,
+  evidenceCommitmentHash,
+  evidenceManifestPreimage,
+  evidenceSnapshotOf,
+  replayEvidenceSnapshot,
+  requireEvidenceEvents,
+  type RunEvidenceSnapshot,
+} from "@/lib/evidence";
 import type { ChainOperation } from "@/lib/reconciliation";
 import { AppError } from "@/lib/errors";
 import { newId } from "@/lib/ids";
-import { DEPLOYMENT, guardDeployment } from "@/lib/contract";
+import { getActiveDeployment, guardDeployment, requireActiveWrite, resolvedDeployment } from "@/lib/contract";
 import { sameWallet } from "./security";
 import { parseOutcome, parseRunEvent } from "../validation";
 
@@ -210,9 +218,9 @@ export async function insertGuard(input: {
       input.metric,
       JSON.stringify(input.guardrails),
       hash,
-      DEPLOYMENT.contractAddress,
-      DEPLOYMENT.chainId,
-      DEPLOYMENT.network,
+      getActiveDeployment().contractAddress,
+      getActiveDeployment().chainId,
+      getActiveDeployment().networkName,
     ],
   );
   return requireGuard(id);
@@ -504,7 +512,7 @@ export async function createReceipt(guard: Guard): Promise<string> {
     primaryPattern: guard.primaryPattern ?? "NONE",
     authority: guard.authority,
     definitionHash: guard.definitionHash,
-    network: guard.authority === "GENLAYER" ? "Studionet" : "local-advisory",
+    network: guard.authority === "GENLAYER" ? guardDeployment(guard).network : "local-advisory",
     advisory: guard.authority !== "GENLAYER",
     example: guard.isExample,
     resolvedAt: guard.resolvedAt ?? "",
@@ -567,13 +575,13 @@ export async function insertRun(guardId: string, agentRef: string, ownerAddress:
   const sql = await getSql();
   const id = newId("run");
   await sql.query(
-    `insert into runs (id, guard_id, agent_ref, status) values ($1,$2,$3,'STARTED')`,
-    [id, guardId, agentRef.slice(0, 200)],
+    `insert into runs (id, guard_id, agent_ref, status, started_at) values ($1,$2,$3,'STARTED',$4)`,
+    [id, guardId, agentRef.slice(0, 200), new Date().toISOString()],
   );
   return requireRun(id);
 }
 
-function mapRun(row: {
+type RunRow = {
   id: string;
   guard_id: string;
   agent_ref: string;
@@ -582,7 +590,12 @@ function mapRun(row: {
   outcome_json: string;
   started_at: string;
   completed_at: string | null;
-}): RunRecord {
+  evidence_snapshot_json?: string | null;
+  evidence_manifest_hash?: string | null;
+  evidence_commitment_hash?: string | null;
+};
+
+function mapRun(row: RunRow): RunRecord {
   let events: RunEvent[];
   let outcome: JsonBag;
   try {
@@ -605,21 +618,15 @@ function mapRun(row: {
     outcome,
     startedAt: row.started_at,
     completedAt: row.completed_at,
+    evidenceSnapshotJson: row.evidence_snapshot_json ?? null,
+    evidenceManifestHash: row.evidence_manifest_hash ?? null,
+    evidenceCommitmentHash: row.evidence_commitment_hash ?? null,
   };
 }
 
 export async function requireRun(id: string): Promise<RunRecord> {
   const sql = await getSql();
-  const rows = await sql<{
-    id: string;
-    guard_id: string;
-    agent_ref: string;
-    status: string;
-    events_json: string;
-    outcome_json: string;
-    started_at: string;
-    completed_at: string | null;
-  }>`select * from runs where id = ${id} limit 1`;
+  const rows = await sql<RunRow>`select * from runs where id = ${id} limit 1`;
   if (!rows[0]) throw new AppError("NOT_FOUND", "Run not found", 404);
   return mapRun(rows[0]);
 }
@@ -660,47 +667,135 @@ export async function finishRun(
   outcome: JsonBag,
   ownerAddress: string,
 ): Promise<RunRecord> {
-  await requireOwnedRun(id, ownerAddress);
+  const run = await requireOwnedRun(id, ownerAddress);
+  const guard = await requireGuard(run.guardId);
   const sql = await getSql();
+
+  // Pin the canonical evidence ONCE, while the Run is still open. The evidence
+  // is committed to the on-chain Guard, so the on-chain id is the manifest's
+  // guardId; a Run whose Guard is not yet published has nothing to commit and
+  // is finished without a snapshot (the local advisory path covers it).
+  const guardId = guard.onchainId ?? null;
+  let snapshot: RunEvidenceSnapshot | null = null;
+  if (guardId) {
+    requireEvidenceEvents(run.events);
+    snapshot = await evidenceSnapshotOf(
+      await buildEvidenceManifest({
+        guardId,
+        run: { ...run, completedAt: run.completedAt ?? new Date().toISOString() },
+      }),
+    );
+  }
+
   const updated = await sql.query(
-    `update runs set status='FINISHED', outcome_json=$1, completed_at=now()
-     where id=$2 and status='STARTED'
-       and exists (select 1 from guards g where g.id=runs.guard_id and lower(g.owner_address)=lower($3))
+    `update runs set status='FINISHED', outcome_json=$1, completed_at=$2,
+       evidence_snapshot_json=$3, evidence_manifest_hash=$4, evidence_commitment_hash=$5
+     where id=$6 and status='STARTED'
+       and exists (select 1 from guards g where g.id=runs.guard_id and lower(g.owner_address)=lower($7))
      returning id`,
-    [JSON.stringify(outcome), id, ownerAddress],
+    [
+      JSON.stringify(outcome),
+      snapshot ? snapshot.manifest.completedAt : new Date().toISOString(),
+      snapshot ? snapshot.encoded : null,
+      snapshot ? snapshot.manifestHash : null,
+      snapshot ? snapshot.commitmentHash : null,
+      id,
+      ownerAddress,
+    ],
   );
   if (!updated.length) throw new AppError("INVALID_STATE", "Run already finished", 409);
   return requireRun(id);
 }
+
+/**
+ * The pinned snapshot for a finished Run, captured on first need.
+ *
+ * Runs finished before snapshots existed have none; because nothing has been
+ * committed yet for those, building and persisting it now is safe and is what
+ * keeps every later read on one immutable set of bytes.
+ */
+export async function ensureRunEvidenceSnapshot(
+  run: RunRecord,
+  guardId: string,
+): Promise<RunEvidenceSnapshot> {
+  if (run.status !== "FINISHED") {
+    throw new AppError("INVALID_STATE", "Finish the run before submitting evidence", 409);
+  }
+  if (run.evidenceSnapshotJson) {
+    return replayEvidenceSnapshot(run.evidenceSnapshotJson);
+  }
+  requireEvidenceEvents(run.events);
+  const snapshot = await evidenceSnapshotOf(
+    await buildEvidenceManifest({
+      guardId,
+      run: { ...run, completedAt: run.completedAt ?? new Date().toISOString() },
+    }),
+  );
+  const sql = await getSql();
+  await sql.query(
+    `update runs set evidence_snapshot_json=$1, evidence_manifest_hash=$2,
+       evidence_commitment_hash=$3, evidence_committed_at=coalesce(evidence_committed_at,now())
+     where id=$4 and evidence_snapshot_json is null`,
+    [snapshot.encoded, snapshot.manifestHash, snapshot.commitmentHash, run.id],
+  );
+  return snapshot;
+}
+
+/**
+ * Resolve the evidence snapshot a submitted transaction must be compared to.
+ *
+ * Snapshot-backed Runs replay pinned bytes. A Run finished before snapshots
+ * existed is recovered by proving the submitted manifest is canonically
+ * identical to the persisted Run, then pinning the SUBMITTED bytes — the
+ * transaction is the submission of record, so this recovers, never fabricates.
+ * Any difference fails closed.
+ */
+export async function resolveRunEvidenceSnapshot(
+  run: RunRecord,
+  submitted: EvidenceManifest,
+): Promise<RunEvidenceSnapshot> {
+  if (run.status !== "FINISHED") {
+    throw new AppError("MISMATCH", "The submitted evidence belongs to a Run that is not finished.", 409);
+  }
+  if (run.evidenceSnapshotJson) {
+    const snapshot = await replayEvidenceSnapshot(run.evidenceSnapshotJson);
+    if (evidenceManifestPreimage(submitted) !== evidenceManifestPreimage(snapshot.manifest)) {
+      throw new AppError("MISMATCH", "The submitted evidence does not match the pinned Run snapshot.", 409);
+    }
+    return snapshot;
+  }
+
+  const rebuilt = await buildEvidenceManifest({ guardId: submitted.guardId, run });
+  if (evidenceManifestPreimage(submitted) !== evidenceManifestPreimage(rebuilt)) {
+    throw new AppError("MISMATCH", "The submitted evidence does not match the persisted Run snapshot.", 409);
+  }
+  const commitmentHash = await evidenceCommitmentHash(submitted);
+  const sql = await getSql();
+  await sql.query(
+    `update runs set evidence_snapshot_json=$1, evidence_manifest_hash=$2,
+       evidence_commitment_hash=$3, evidence_committed_at=coalesce(evidence_committed_at,now())
+     where id=$4 and evidence_snapshot_json is null`,
+    [JSON.stringify(submitted), submitted.manifestHash, commitmentHash, run.id],
+  );
+  return {
+    manifest: submitted,
+    encoded: JSON.stringify(submitted),
+    manifestHash: submitted.manifestHash,
+    commitmentHash,
+  };
+}
+
 
 export async function listRuns(guardId: string, ownerAddress?: string, limit = 50, offset = 0): Promise<RunRecord[]> {
   const sql = await getSql();
   const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
   const boundedOffset = Math.max(Math.trunc(offset), 0);
   const rows = ownerAddress
-    ? await sql<{
-        id: string;
-        guard_id: string;
-        agent_ref: string;
-        status: string;
-        events_json: string;
-        outcome_json: string;
-        started_at: string;
-        completed_at: string | null;
-      }>`select r.* from runs r join guards g on g.id=r.guard_id
+    ? await sql<RunRow>`select r.* from runs r join guards g on g.id=r.guard_id
         where r.guard_id = ${guardId} and g.is_example=false
           and lower(g.owner_address)=lower(${ownerAddress})
         order by r.started_at desc, r.id desc limit ${boundedLimit} offset ${boundedOffset}`
-    : await sql<{
-    id: string;
-    guard_id: string;
-    agent_ref: string;
-    status: string;
-    events_json: string;
-    outcome_json: string;
-    started_at: string;
-    completed_at: string | null;
-  }>`select * from runs where guard_id = ${guardId}
+    : await sql<RunRow>`select * from runs where guard_id = ${guardId}
     order by started_at desc, id desc limit ${boundedLimit} offset ${boundedOffset}`;
   return rows.map(mapRun);
 }
@@ -709,16 +804,7 @@ export async function listRunsForOwner(ownerAddress: string, limit = 50, offset 
   const sql = await getSql();
   const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
   const boundedOffset = Math.max(Math.trunc(offset), 0);
-  const rows = await sql<{
-    id: string;
-    guard_id: string;
-    agent_ref: string;
-    status: string;
-    events_json: string;
-    outcome_json: string;
-    started_at: string;
-    completed_at: string | null;
-  }>`select r.* from runs r join guards g on g.id=r.guard_id
+  const rows = await sql<RunRow>`select r.* from runs r join guards g on g.id=r.guard_id
     where g.is_example=false and lower(g.owner_address)=lower(${ownerAddress})
     order by r.started_at desc, r.id desc limit ${boundedLimit} offset ${boundedOffset}`;
   return rows.map(mapRun);
@@ -944,10 +1030,11 @@ export async function recordChainTransaction(
   if (!sameWallet(input.originatingWallet, actorAddress)) {
     throw new AppError("FORBIDDEN", "Submitted wallet does not match the wallet session", 403);
   }
-  if (input.chainId !== guardDeployment(g).chainId) {
-    throw new AppError("WRONG_NETWORK", `Transactions must target ${DEPLOYMENT.network}`, 409);
+  const resource = resolvedDeployment(g);
+  if (input.chainId !== resource.chainId) {
+    throw new AppError("WRONG_NETWORK", `Transactions must target ${resource.networkName}`, 409);
   }
-  if (input.contractAddress.toLowerCase() !== guardDeployment(g).contractAddress.toLowerCase()) {
+  if (input.contractAddress.toLowerCase() !== resource.contractAddress.toLowerCase()) {
     throw new AppError("CONTRACT_MISMATCH", "Transaction contract is not certified", 409);
   }
   if (input.expectedGuardId && g.onchainId && g.onchainId !== input.expectedGuardId) {
@@ -956,6 +1043,7 @@ export async function recordChainTransaction(
 
   const txHash = input.txHash.toLowerCase();
   const existing = await getChainTransaction(id, input.operation);
+  if (!existing && input.operation !== "create_guard") requireActiveWrite(resource);
   if (existing) {
     if (existing.txHash.toLowerCase() !== txHash) {
       throw new AppError("CONFLICT", "This Guard operation already has a different transaction", 409);

@@ -43,7 +43,7 @@ export function WalletControl() {
               onClick={openChainModal}
               data-wallet="wrong-network"
             >
-              Switch to Studionet
+              Switch to GenLayer Studio Dev
             </Button>
           );
         }

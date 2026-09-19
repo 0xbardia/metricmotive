@@ -50,16 +50,23 @@ def _install_genlayer_stub() -> types.ModuleType:
         def __init__(self, calldata):
             self.calldata = calldata
 
+    class UserError(Exception):
+        pass
+
     class _Vm:
         Return = _Return
 
         @staticmethod
-        def run_nondet_unsafe(leader_fn, validator_fn):
+        def run_nondet(*args):
+            leader_fn, validator_fn = args[-2], args[-1]
             result = leader_fn()
             agreed = validator_fn(_Return(result))
             if not agreed:
                 raise Exception("validators disagreed")
             return result
+
+    _Vm.UserError = UserError
+    _Vm.run_nondet_unsafe = _Vm.run_nondet
 
     class _Nondet:
         last_prompt = ""
@@ -101,12 +108,34 @@ def _install_genlayer_stub() -> types.ModuleType:
         message_raw = {"datetime": "2026-09-12T00:00:00Z"}
 
     gen.gl = _GL()
+    gen.public = gen.gl.public
+    gen.vm = gen.gl.vm
+    gen.nondet = gen.gl.nondet
+    gen.message = gen.gl.message
+    gen.message_raw = gen.gl.message_raw
     gen.Address = Address
     gen.u32 = u32
     gen.u256 = u256
     gen.TreeMap = TreeMap
     gen.allow_storage = allow_storage
+    types_mod = types.ModuleType("genlayer.types")
+    types_mod.Address = Address
+    types_mod.u32 = u32
+    types_mod.u256 = u256
+    types_mod.TreeMap = TreeMap
+    storage_mod = types.ModuleType("genlayer.storage")
+    storage_mod.allow = allow_storage
+    storage_mod.TreeMap = TreeMap
+    contract_mod = types.ModuleType("genlayer.contract")
+    contract_mod.Contract = object
+    gen.types = types_mod
+    gen.storage = storage_mod
+    gen.contract = contract_mod
+    gen.__path__ = []
     sys.modules["genlayer"] = gen
+    sys.modules["genlayer.types"] = types_mod
+    sys.modules["genlayer.storage"] = storage_mod
+    sys.modules["genlayer.contract"] = contract_mod
     return gen
 
 

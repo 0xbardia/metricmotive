@@ -1,5 +1,11 @@
 export function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
+  // Date must serialize as its ISO string (JSON.stringify does this via
+  // Date.prototype.toJSON). Without this, a Date reached canonicalize as a
+  // plain object with no own keys and silently became "{}" — so a Run with
+  // driver-parsed timestamps hashed differently from the same Run with ISO
+  // strings, and the submitted commitment could never be re-derived.
+  if (value instanceof Date) return value.toISOString();
   if (value && typeof value === "object") {
     const obj = value as Record<string, unknown>;
     const out: Record<string, unknown> = {};

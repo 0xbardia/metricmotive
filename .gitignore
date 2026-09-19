@@ -30,6 +30,8 @@ packages/sdk/dist
 
 # Runtime
 tmp/
+__pycache__/
+*.py[cod]
 .cache
 *.tsbuildinfo
 .grok/

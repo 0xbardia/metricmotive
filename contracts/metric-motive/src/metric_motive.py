@@ -1,4 +1,4 @@
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
 """MetricMotive Intelligent Contract.
 
 Adjudicates whether an autonomous agent honored the user's motive
@@ -6,10 +6,15 @@ or merely gamed the metric it was optimizing.
 
 GenLayer validators independently evaluate locked definition + evidence.
 The contract then maps consensus findings to a verdict deterministically.
+
+Ported to GenVM v0.3.0 for studio-dev (chain 61997).
 """
 
-from genlayer import *
+import genlayer as gl
+from genlayer.types import *
+from genlayer.storage import allow as allow_storage
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import hashlib
 import json
 
@@ -17,16 +22,16 @@ import json
 CONTRACT_NAME = "MetricMotive"
 CONTRACT_VERSION = "1.0.0"
 
-STATUS_DRAFT = u32(0)
-STATUS_ARMED = u32(1)
-STATUS_EVIDENCE_SUBMITTED = u32(2)
-STATUS_RESOLVED = u32(3)
+STATUS_DRAFT = 0
+STATUS_ARMED = 1
+STATUS_EVIDENCE_SUBMITTED = 2
+STATUS_RESOLVED = 3
 
-VERDICT_NONE = u32(255)
-VERDICT_INSUFFICIENT_EVIDENCE = u32(0)
-VERDICT_METRIC_GAMING = u32(1)
-VERDICT_FAITHFUL_SUCCESS = u32(2)
-VERDICT_PARTIAL_ALIGNMENT = u32(3)
+VERDICT_NONE = 255
+VERDICT_INSUFFICIENT_EVIDENCE = 0
+VERDICT_METRIC_GAMING = 1
+VERDICT_FAITHFUL_SUCCESS = 2
+VERDICT_PARTIAL_ALIGNMENT = 3
 
 STATUS_NAMES = {
     0: "DRAFT",
@@ -70,14 +75,14 @@ CRITICAL_FIELDS = (
 
 
 def _fail(message: str) -> None:
-    raise Exception(message)
+    raise gl.vm.UserError(message)
 
 
 def _now() -> str:
-    raw = gl.message_raw
+    raw = getattr(gl.message, "raw", None)
     if isinstance(raw, dict) and "datetime" in raw:
         return str(raw["datetime"])
-    return ""
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _clip(text: str, limit: int) -> str:
@@ -266,20 +271,20 @@ class GuardRecord:
     resolved_at: str
 
 
-class MetricMotive(gl.Contract):
+class MetricMotive(gl.contract.Contract):
     version: str
     deployer: Address
     next_id: u256
-    guards: TreeMap[u256, GuardRecord]
-    owner_ids_json: TreeMap[str, str]
+    guards: gl.storage.TreeMap[u256, GuardRecord]
+    owner_ids_json: gl.storage.TreeMap[str, str]
 
     def __init__(self):
         self.version = CONTRACT_VERSION
         self.deployer = gl.message.sender_address
-        self.next_id = u256(1)
+        self.next_id = 1
 
     def _require_exists(self, guard_id: u256) -> GuardRecord:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             _fail("guard not found")
         return self.guards[guard_id]
 
@@ -289,7 +294,7 @@ class MetricMotive(gl.Contract):
 
     def _append_owner_id(self, owner: Address, guard_id: u256) -> None:
         key = str(owner)
-        existing = self.owner_ids_json.get(key, "[]")
+        existing = self.owner_ids_json.get(key) or "[]"
         try:
             ids = json.loads(existing)
         except Exception:
@@ -367,8 +372,8 @@ class MetricMotive(gl.Contract):
         guard_id = self.next_id
         record = GuardRecord(
             owner=gl.message.sender_address,
-            parent_id=u256(0),
-            version=u32(1),
+            parent_id=0,
+            version=1,
             motive="",
             metric="",
             guardrails_json="[]",
@@ -387,7 +392,7 @@ class MetricMotive(gl.Contract):
         self._write_definition(record, motive, metric, guardrails_json)
         self.guards[guard_id] = record
         self._append_owner_id(gl.message.sender_address, guard_id)
-        self.next_id = guard_id + u256(1)
+        self.next_id = int(guard_id) + 1
         return str(int(guard_id))
 
     @gl.public.write
@@ -438,7 +443,7 @@ class MetricMotive(gl.Contract):
         record = GuardRecord(
             owner=gl.message.sender_address,
             parent_id=parent_id,
-            version=parent.version + u32(1),
+            version=int(parent.version) + 1,
             motive="",
             metric="",
             guardrails_json="[]",
@@ -457,7 +462,7 @@ class MetricMotive(gl.Contract):
         self._write_definition(record, motive, metric, guardrails_json)
         self.guards[guard_id] = record
         self._append_owner_id(gl.message.sender_address, guard_id)
-        self.next_id = guard_id + u256(1)
+        self.next_id = int(guard_id) + 1
         return str(int(guard_id))
 
     @gl.public.write
@@ -465,8 +470,6 @@ class MetricMotive(gl.Contract):
         g = self._require_exists(guard_id)
         if g.status != STATUS_EVIDENCE_SUBMITTED:
             _fail("evaluation requires submitted evidence")
-        if g.status == STATUS_RESOLVED:
-            _fail("guard is already resolved")
 
         motive_m = str(g.motive)
         metric_m = str(g.metric)
@@ -495,7 +498,7 @@ class MetricMotive(gl.Contract):
             except Exception:
                 return False
 
-        agreed = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+        agreed = gl.vm.run_nondet(leader_fn, validator_fn)
         findings = _normalize_findings(agreed)
         verdict = map_verdict(
             findings["evidence_sufficient"],
@@ -505,7 +508,7 @@ class MetricMotive(gl.Contract):
             findings["goal_advanced"],
         )
         g.findings_json = json.dumps(findings, separators=(",", ":"), sort_keys=True)
-        g.verdict = u32(verdict)
+        g.verdict = verdict
         g.primary_pattern = findings["primary_pattern"]
         g.status = STATUS_RESOLVED
         g.resolved_at = _now()
@@ -543,7 +546,7 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_summary(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {
                 "found": False,
                 "id": "0",
@@ -567,7 +570,7 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_status(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {"found": False, "status": "NONE", "status_code": 255}
         g = self.guards[guard_id]
         return {
@@ -578,7 +581,7 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_definition(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {
                 "found": False,
                 "motive": "",
@@ -599,18 +602,18 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_lineage(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {"found": False, "ids": [], "root_id": "0", "version": 0}
         ids = []
         current = guard_id
         safety = 0
         while safety < 64:
             safety += 1
-            if current == u256(0) or current >= self.next_id:
+            if current == 0 or current >= self.next_id:
                 break
             ids.append(str(int(current)))
             parent = self.guards[current].parent_id
-            if parent == u256(0):
+            if parent == 0:
                 break
             current = parent
         ids.reverse()
@@ -624,7 +627,7 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_evidence(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {"found": False, "evidence_hash": "", "evidence_json": ""}
         g = self.guards[guard_id]
         return {
@@ -636,7 +639,7 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_findings(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {
                 "found": False,
                 "goal_advanced": False,
@@ -672,7 +675,7 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard_verdict(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return {"found": False, "verdict": "NONE", "verdict_code": 255, "final": False}
         g = self.guards[guard_id]
         return {
@@ -686,17 +689,17 @@ class MetricMotive(gl.Contract):
 
     @gl.public.view
     def get_guard(self, guard_id: u256) -> dict:
-        if guard_id == u256(0) or guard_id >= self.next_id:
+        if guard_id == 0 or guard_id >= self.next_id:
             return self._empty_guard_view()
         return self._to_view(guard_id, self.guards[guard_id])
 
     @gl.public.view
     def get_guards_by_owner(self, owner: str) -> dict:
         try:
-            key = str(Address(owner))
+            key = str(gl.Address(owner))
         except Exception:
             return {"found": False, "ids": []}
-        raw = self.owner_ids_json.get(key, "[]")
+        raw = self.owner_ids_json.get(key) or "[]"
         try:
             ids = json.loads(raw)
         except Exception:

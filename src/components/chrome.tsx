@@ -19,13 +19,30 @@ const NAV = [
   { to: "/docs", label: "Docs" },
 ] as const;
 
+/**
+ * Product navigation for authenticated/app routes (H1).
+ *
+ * App routes render THIS instead of the marketing links, so a page can never
+ * stack two competing nav systems on one screen.
+ */
+const APP_NAV = [
+  { to: "/app", label: "Cases" },
+  { to: "/app/guards/new", label: "Build a Guard" },
+  { to: "/contract", label: "Contract" },
+  { to: "/docs", label: "Docs" },
+] as const;
+
 export function SiteHeader({
   invert = false,
   withWallet = false,
+  app = false,
 }: {
   invert?: boolean;
   withWallet?: boolean;
+  /** Render product navigation instead of marketing navigation. */
+  app?: boolean;
 }) {
+  const items = app ? APP_NAV : NAV;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [sectionDark, setSectionDark] = useState(invert);
@@ -94,7 +111,7 @@ export function SiteHeader({
           <Wordmark invert={dark} />
         </Link>
         <nav className="hidden items-center gap-5 lg:flex" aria-label="Primary">
-          {NAV.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.label}
               to={item.to}
@@ -123,11 +140,13 @@ export function SiteHeader({
               </Suspense>
             </div>
           ) : null}
-          <Link to="/app" preload="intent" className="hidden sm:block">
-            <Button size="sm" variant={dark ? "inverse" : "primary"}>
-              Open App
-            </Button>
-          </Link>
+          {app ? null : (
+            <Link to="/app" preload="intent" className="hidden sm:block">
+              <Button size="sm" variant={dark ? "inverse" : "primary"}>
+                Open App
+              </Button>
+            </Link>
+          )}
           <button
             type="button"
             ref={menuButtonRef}
@@ -153,7 +172,7 @@ export function SiteHeader({
           id="mobile-nav"
           className="mobile-nav flex flex-col gap-1 border-t px-4 py-3 lg:hidden"
         >
-          {NAV.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.label}
               to={item.to}
@@ -177,11 +196,13 @@ export function SiteHeader({
               </Suspense>
             </div>
           ) : null}
-          <Link to="/app" preload="intent" onClick={() => setOpen(false)}>
-            <Button className="mt-2 w-full" variant={dark ? "inverse" : "primary"}>
-              Open App
-            </Button>
-          </Link>
+          {app ? null : (
+            <Link to="/app" preload="intent" onClick={() => setOpen(false)}>
+              <Button className="mt-2 w-full" variant={dark ? "inverse" : "primary"}>
+                Open App
+              </Button>
+            </Link>
+          )}
         </nav>
       ) : null}
     </header>
@@ -238,38 +259,11 @@ export function SiteFooter() {
   );
 }
 
-export function AppBar() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const items = [
-    { to: "/app", label: "Cases" },
-    { to: "/app/guards/new", label: "Build a Guard" },
-    { to: "/contract", label: "Contract" },
-    { to: "/docs", label: "Docs" },
-  ];
-  return (
-    <div className="border-b border-rule bg-card">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-2 sm:px-6">
-        <nav className="flex gap-1" aria-label="App">
-          {items.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(
-                "min-h-11 px-3 py-2 text-sm transition-colors duration-[var(--motion-quick)]",
-                pathname === item.to ? "text-carbon" : "text-graphite hover:text-carbon",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </div>
-  );
-}
-
 export function AdvisoryNote({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-md bg-ochre-soft px-3 py-2 text-sm text-carbon">Advisory. {children}</p>
+    <p className="rounded-md bg-warning-soft px-3 py-2 text-sm text-carbon" data-note="advisory">
+      <span className="font-mono text-[0.625rem] uppercase tracking-[0.13em]">Advisory only · not a GenLayer finding.</span>{" "}
+      {children}
+    </p>
   );
 }
