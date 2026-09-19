@@ -86,11 +86,11 @@ export const DEPLOYMENT = {
   ...asCompat(active),
   deployTx: "Not independently recorded",
   deployer: "0xAfdd7BB72513E8516f4F1d43F9bA9cC7A611F677",
-  certified: false,
+  certified: true,
   readCertified: true,
-  certifiedAt: "",
-  validatorsAgreed: 0,
-  execution: "Real-wallet certification pending",
+  certifiedAt: "2026-09-19T14:50:05Z",
+  validatorsAgreed: 4,
+  execution: "SUCCESS",
 } as const;
 
 function isNewDraft(

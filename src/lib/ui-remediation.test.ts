@@ -99,18 +99,27 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.equal(presentation.step, 2);
     assert.equal(presentation.stepLabel, "Run");
     assert.equal(presentation.headline, "Guard locked. Start capturing evidence.");
+    assert.doesNotMatch(presentation.body, /Studionet/);
   });
 
   it("never resumes a persisted Guard under the transient /new route", async () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/routes/app/guards/new.tsx", "utf8"),
     );
-    // Save Definition navigates replace to the canonical local id.
-    assert.match(source, /navigate\(\{\s*to:\s*"\/app\/guards\/\$id"/);
-    assert.match(source, /params:\s*\{\s*id:\s*res\.guard\.id\s*\}/);
-    // A stale /new page can recover a persisted guardId before it mutates.
+    // Explicit ?guardId= recovery may open the canonical Guard page.
     assert.match(source, /persistedGuardQuery/);
-    assert.match(source, /to:\s*"\/app\/guards\/\$id"/);
+    assert.match(source, /persistedGuardQuery\.data\?\.guard\.id/);
+    // First Save Definition must not leave the builder before Protect.
+    const persistFn = source.slice(source.indexOf("const persist = useMutation"), source.indexOf("async function goNext()"));
+    assert.doesNotMatch(persistFn, /to:\s*"\/app\/guards\/\$id"/);
+  });
+
+  it("keeps the active network visible in the mobile wallet menu", async () => {
+    const source = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/wallet-control.tsx", "utf8"),
+    );
+    const networkControl = source.slice(source.indexOf('data-wallet="network"') - 220, source.indexOf('data-wallet="network"'));
+    assert.doesNotMatch(networkControl, /\bhidden\b/);
   });
 
   it("never treats a locally armed Guard as locked without a recorded lock (N1 / N10)", () => {
@@ -578,5 +587,21 @@ describe("empty Run and manual evidence form (C2 / C5)", () => {
     assert.equal(canSubmit({ busy: true, intentLocked: false, disabled: false }), false);
     assert.equal(canSubmit({ busy: false, intentLocked: true, disabled: false }), false);
     assert.equal(canSubmit({ busy: false, intentLocked: false, disabled: true }), false);
+  });
+
+  it("keeps the Guard builder on Protect after the first save (do not skip guardrails)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync("src/routes/app/guards/new.tsx", "utf8");
+    const persistFn = source.slice(source.indexOf("const persist = useMutation"), source.indexOf("async function goNext()"));
+    assert.doesNotMatch(
+      persistFn,
+      /to:\s*"\/app\/guards\/\$id"/,
+      "first save must stay in the builder so Protect/Review can add guardrails",
+    );
+    assert.match(source, /if \(step === 0\) \{[\s\S]*await persist\.mutateAsync\(\);[\s\S]*setStep\(1\)/);
+    assert.doesNotMatch(
+      source,
+      /draft\.guardId\?\.startsWith\("grd_"\) && draft\.guardId !== persistedGuardHint/,
+    );
   });
 });

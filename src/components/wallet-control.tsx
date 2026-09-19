@@ -52,7 +52,7 @@ export function WalletControl() {
             <button
               type="button"
               onClick={openChainModal}
-              className="hidden font-mono text-xs text-graphite sm:inline"
+              className="font-mono text-xs text-graphite"
               data-wallet="network"
             >
               {chain.name}

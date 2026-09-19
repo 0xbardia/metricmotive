@@ -355,7 +355,7 @@ function body(stage: LifecycleStage, authority: "LOCAL" | "GENLAYER"): string {
     case "DRAFT":
       return "The definition is still editable. Publish it, then approve the separate lock transaction in your wallet.";
     case "LOCKED":
-      return "This version is immutable on Studionet. The next step is to record what the agent actually did.";
+      return "This version is immutable on-chain. The next step is to record what the agent actually did.";
     case "RUN":
       return "Evidence stays off-chain until you commit its fingerprint. Nothing about the locked Guard changes.";
     case "EVIDENCE_COMMITTED":

@@ -165,14 +165,9 @@ function NewGuardContent() {
         metric?: string;
         guardrails?: Guardrail[];
       };
-      if (draft.guardId?.startsWith("grd_") && draft.guardId !== persistedGuardHint) {
-        void navigate({
-          to: "/app/guards/new",
-          search: { guardId: draft.guardId },
-          replace: true,
-        });
-        return;
-      }
+      // /app/guards/new is a new builder unless ?guardId= is explicit.
+      // Auto-sending the user to a previous local draft skipped Protect and
+      // made a Guard with no guardrails.
       if (draft.motive) setMotive(draft.motive);
       if (draft.metric) setMetric(draft.metric);
       if (Array.isArray(draft.guardrails)) setGuardrails(draft.guardrails);
@@ -224,11 +219,6 @@ function NewGuardContent() {
         } catch {
           // Route recovery does not depend on this convenience hint.
         }
-        await navigate({
-          to: "/app/guards/$id",
-          params: { id: res.guard.id },
-          replace: true,
-        });
         return res.guard.id;
       }
       await updateDraftFn({ data: { id, ...payload } });
