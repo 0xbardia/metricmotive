@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useAccount } from "wagmi";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { Stepper } from "@/components/ui/stepper";
-import { listGuardsFn } from "@/lib/server/actions";
+import { listGuardsFn, reconcileCreateFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
 import { WalletProviders } from "@/lib/wallet/provider";
 import type { Guard } from "@/lib/domain";
@@ -24,6 +25,7 @@ export function AppHomeWithWallet() {
 
 function AppHomeContent() {
   const { address, connector } = useAccount();
+  const queryClient = useQueryClient();
   const q = useQuery({
     queryKey: ["guards", address],
     enabled: Boolean(address && connector),
@@ -35,6 +37,24 @@ function AppHomeContent() {
   });
   const guards = q.data?.guards ?? [];
   const stats = q.data?.stats;
+
+  useEffect(() => {
+    if (!address || !connector || !q.data?.guards.length) return;
+    const pendingCreates = q.data.guards.filter((guard) => guard.txCreate && !guard.onchainId);
+    if (!pendingCreates.length) return;
+    let cancelled = false;
+    void Promise.allSettled(
+      pendingCreates.map((guard) => reconcileCreateFn({ data: { id: guard.id } })),
+    ).then((results) => {
+      const reconciled = results.some(
+        (result) => result.status === "fulfilled" && result.value.state === "reconciled",
+      );
+      if (!cancelled && reconciled) void queryClient.invalidateQueries({ queryKey: ["guards", address] });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [address, connector, q.data?.guards, queryClient]);
 
   return (
     <>
@@ -118,6 +138,7 @@ function statusLabel(guard: Guard): string {
   // row alone. For an on-chain Guard the lock is proven by its transaction.
   const locked = lockIsAuthoritative(guard);
   if (guard.status === "RESOLVED") return "Verified";
+  if (guard.txCreate && !guard.onchainId) return "Confirmation delayed";
   if (!locked) return guard.status === "DRAFT" && !guard.onchainId ? "Draft" : "Published · not locked";
   return { DRAFT: "Draft", ARMED: "Guard locked", EVIDENCE_SUBMITTED: "Evidence committed", RESOLVED: "Verified" }[
     guard.status
@@ -125,6 +146,7 @@ function statusLabel(guard: Guard): string {
 }
 
 function nextStep(guard: Guard): string {
+  if (guard.txCreate && !guard.onchainId) return "Check confirmation";
   if (!lockIsAuthoritative(guard)) return guard.onchainId ? "Lock the Guard" : "Publish and lock";
   if (guard.status === "ARMED") return "Start a Run";
   if (guard.status === "EVIDENCE_SUBMITTED") return "Verify";

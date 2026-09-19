@@ -152,6 +152,18 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.match(source, /await onUpdatedRef\.current\(\)/);
   });
 
+  it("recovers a submitted create from the workspace without inviting a duplicate write", async () => {
+    const source = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/app-home-content.tsx", "utf8"),
+    );
+    assert.match(source, /reconcileCreateFn/);
+    assert.match(source, /guard\.txCreate && !guard\.onchainId/);
+    assert.match(source, /result\.value\.state === "reconciled"/);
+    assert.match(source, /invalidateQueries\(\{ queryKey: \["guards", address\] \}\)/);
+    assert.match(source, /Confirmation delayed/);
+    assert.match(source, /Check confirmation/);
+  });
+
   it("keeps the active network visible in the mobile wallet menu", async () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/components/wallet-control.tsx", "utf8"),
