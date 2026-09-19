@@ -40,17 +40,16 @@ function AppHomeContent() {
 
   useEffect(() => {
     if (!address || !connector || !q.data?.guards.length) return;
-    const pendingCreates = q.data.guards.filter((guard) => guard.txCreate && !guard.onchainId);
-    if (!pendingCreates.length) return;
+    const pendingCreate = q.data.guards.find((guard) => guard.txCreate && !guard.onchainId);
+    if (!pendingCreate) return;
     let cancelled = false;
-    void Promise.allSettled(
-      pendingCreates.map((guard) => reconcileCreateFn({ data: { id: guard.id } })),
-    ).then((results) => {
-      const reconciled = results.some(
-        (result) => result.status === "fulfilled" && result.value.state === "reconciled",
-      );
-      if (!cancelled && reconciled) void queryClient.invalidateQueries({ queryKey: ["guards", address] });
-    });
+    void reconcileCreateFn({ data: { id: pendingCreate.id } })
+      .then((result) => {
+        if (!cancelled && result.state === "reconciled") {
+          void queryClient.invalidateQueries({ queryKey: ["guards", address] });
+        }
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };

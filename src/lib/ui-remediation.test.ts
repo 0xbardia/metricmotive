@@ -158,7 +158,7 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     );
     assert.match(source, /reconcileCreateFn/);
     assert.match(source, /guard\.txCreate && !guard\.onchainId/);
-    assert.match(source, /result\.value\.state === "reconciled"/);
+    assert.match(source, /result\.state === "reconciled"/);
     assert.match(source, /invalidateQueries\(\{ queryKey: \["guards", address\] \}\)/);
     assert.match(source, /Confirmation delayed/);
     assert.match(source, /Check confirmation/);
