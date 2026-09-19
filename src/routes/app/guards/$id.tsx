@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { AppShell } from "@/components/app-shell";
 import { AdvisoryNote } from "@/components/chrome";
-import { CreateAndLock, VerifyWithGenLayer } from "@/components/chain-actions";
+import { CreateAndLock, SubmitEvidenceChain, VerifyWithGenLayer } from "@/components/chain-actions";
 import { TechnicalDetails } from "@/components/product-ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,10 @@ function GuardPageContent() {
     published: Boolean(guard.onchainId),
     // The lock is authoritative only once its transaction was recorded (N10).
     lockRecorded: Boolean(guard.txArm),
-    evidenceCommitted: Boolean(guard.evidenceHash),
+    // A submitted evidence hash is already a durable intent, even while the
+    // local projection is catching up. Keep the Guard page in the same
+    // reconciliation/verification state instead of offering a duplicate Run.
+    evidenceCommitted: Boolean(guard.evidenceHash || guard.txEvidence),
     hasFinishedRunWithEvidence: finishedRunWithEvidence,
     hasReceipt: Boolean(data.receiptId),
     // N25: evaluation in flight means "Verification in progress".
@@ -258,6 +261,9 @@ function nextAction({
 }) {
   if (lifecycleKind === "publish-and-lock") return <CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onUpdated={onUpdated} />;
   if (lifecycleKind === "start-run") return <div className="flex flex-wrap items-center gap-3"><Button loading={start.isPending} loadingLabel="Starting Run…" disabled={start.isPending} onClick={async () => { const result = await start.mutateAsync(); window.location.href = `/app/runs/${result.run.id}`; }}><Play className="size-4" />{CTA.startRun}</Button></div>;
+  if (guard.txEvidence && !guard.evidenceHash && data.runs[0]) {
+    return <SubmitEvidenceChain guardId={guard.id} runId={data.runs[0].id} onchainId={guard.onchainId} txEvidence={guard.txEvidence} onUpdated={onUpdated} />;
+  }
   if (lifecycleKind === "commit-evidence" && data.runs[0]) {
     return (
       <Link to="/app/runs/$id" params={{ id: data.runs[0].id }}>

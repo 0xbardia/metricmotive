@@ -35,6 +35,17 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.equal(p.step, 3);
   });
 
+  it("keeps a submitted evidence transaction on the verification path while reconciliation catches up", () => {
+    const p = getGuardLifecyclePresentation({
+      guardStatus: "ARMED",
+      authority: "GENLAYER",
+      lockRecorded: true,
+      evidenceCommitted: true,
+    });
+    assert.equal(p.stage, "EVIDENCE_COMMITTED");
+    assert.equal(p.nextAction.kind, "continue-to-verification");
+  });
+
   it("never lets an optional action outrank the required lifecycle action", () => {
     for (const status of ["DRAFT", "ARMED", "EVIDENCE_SUBMITTED", "RESOLVED"] as const) {
       const p = getGuardLifecyclePresentation({
@@ -112,6 +123,15 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     // First Save Definition must not leave the builder before Protect.
     const persistFn = source.slice(source.indexOf("const persist = useMutation"), source.indexOf("async function goNext()"));
     assert.doesNotMatch(persistFn, /to:\s*"\/app\/guards\/\$id"/);
+  });
+
+  it("keeps a Guard-page evidence hash in reconciliation instead of starting a second Run", async () => {
+    const source = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/routes/app/guards/$id.tsx", "utf8"),
+    );
+    assert.match(source, /evidenceCommitted: Boolean\(guard\.evidenceHash \|\| guard\.txEvidence\)/);
+    assert.match(source, /guard\.txEvidence && !guard\.evidenceHash && data\.runs\[0\]/);
+    assert.match(source, /<SubmitEvidenceChain/);
   });
 
   it("keeps the active network visible in the mobile wallet menu", async () => {
