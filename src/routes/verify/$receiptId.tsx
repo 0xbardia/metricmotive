@@ -12,7 +12,7 @@ import { committedEvidenceLines } from "@/lib/evidence-summary";
 import type { RunEvent } from "@/lib/domain";
 import { verdictCopy, type Verdict } from "@/lib/domain";
 import { getReceiptFn } from "@/lib/server/actions";
-import { formatUtc } from "@/lib/format";
+import { receiptTimes } from "@/lib/receipt-times";
 import { CTA } from "@/lib/terminology";
 
 type ReceiptLoad = { data: Awaited<ReturnType<typeof getReceiptFn>> | null; error: string | null };
@@ -73,6 +73,10 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
   const snap = data.receipt.snapshot;
   const verdict = String(snap.verdict ?? data.guard?.verdict ?? "") as Verdict;
   const copy = verdict ? verdictCopy(verdict) : null;
+  const times = receiptTimes({
+    chainResolvedAt: String(snap.chainResolvedAt ?? data.guard?.chainResolvedAt ?? "") || null,
+    recordedAt: String(snap.resolvedAt ?? data.guard?.resolvedAt ?? "") || null,
+  });
   const advisory = Boolean(snap.advisory) || data.guard?.authority === "LOCAL";
   const example = Boolean(snap.example) || data.receipt.isExample;
 
@@ -126,7 +130,8 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
         <dl className="mt-6 grid gap-4 sm:grid-cols-3">
           <MetaItem k="Receipt" v={<IdBadge value={data.receipt.id} kind="fingerprint" label="receipt id" />} />
           <MetaItem k="Case" v={<IdBadge value={String(data.receipt.guardId)} kind="guard" label="local Guard id" />} />
-          <MetaItem k="Resolved" v={formatUtc(String(snap.resolvedAt ?? data.guard?.resolvedAt ?? ""))} />
+          {times.onChain ? <MetaItem k="Resolved on-chain" v={times.onChain} /> : null}
+          <MetaItem k="Recorded" v={times.recorded ?? "—"} />
         </dl>
       </header>
 

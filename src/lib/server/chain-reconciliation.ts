@@ -199,6 +199,7 @@ async function applyReconciled(
         throw mismatch("The on-chain primary pattern does not match the semantic findings.");
       }
       guard = await applyChainEvaluate(local.id, {
+        chainResolvedAt: chain.resolved_at,
         txEvaluate: transaction.txHash,
         findings,
         verdict,

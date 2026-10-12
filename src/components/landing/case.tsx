@@ -98,7 +98,7 @@ export default function Case() {
               <span className="text-bone/85">Contract</span>
               <CopyValue value={D1.contract} label="Copy contract address" />
             </p>
-            <p>Resolved {formatUtc(D1.at.resolved)}</p>
+            <p>Resolved on-chain {formatUtc(D1.at.resolved)}</p>
             <div className="flex flex-wrap gap-x-5">
               <TextLink to={D1.receiptPath} dark>
                 Open the Motive Receipt

@@ -86,6 +86,7 @@ type GuardRow = {
   armed_at: string | null;
   evidence_at: string | null;
   resolved_at: string | null;
+  chain_resolved_at: string | null;
 };
 
 function asBool(value: unknown): boolean {
@@ -150,6 +151,7 @@ function mapGuard(row: GuardRow): Guard {
     armedAt: row.armed_at,
     evidenceAt: row.evidence_at,
     resolvedAt: row.resolved_at,
+    chainResolvedAt: row.chain_resolved_at ?? null,
   };
 }
 
@@ -545,6 +547,7 @@ export async function createReceipt(guard: Guard): Promise<string> {
     advisory: guard.authority !== "GENLAYER",
     example: guard.isExample,
     resolvedAt: guard.resolvedAt ?? "",
+    chainResolvedAt: guard.chainResolvedAt ?? undefined,
     contractAddress:
       guard.authority === "GENLAYER" ? guardDeployment(guard).contractAddress : undefined,
     chainId: guard.authority === "GENLAYER" ? guardDeployment(guard).chainId : undefined,
@@ -1342,6 +1345,12 @@ export async function applyChainEvidence(
   return requireGuard(id);
 }
 
+/** Set-once: records the contract's resolve time for a Guard whose verdict was recorded before this column existed. */
+export async function setChainResolvedAt(id: string, iso: string): Promise<void> {
+  const sql = await getSql();
+  await sql.query(`update guards set chain_resolved_at=$2::timestamptz where id=$1 and chain_resolved_at is null`, [id, iso]);
+}
+
 export async function applyChainEvaluate(
   id: string,
   input: {
@@ -1349,6 +1358,8 @@ export async function applyChainEvaluate(
     findings: Findings;
     verdict: Verdict;
     pattern: GamingPattern;
+    /** The contract's own resolve time, when the chain read provided one. */
+    chainResolvedAt?: string | null;
   },
   actorAddress: string,
 ): Promise<Guard> {
@@ -1368,6 +1379,7 @@ export async function applyChainEvaluate(
   const updated = await sql.query<{ id: string }>(
     `update guards set findings_json=$1, verdict=$2, primary_pattern=$3,
      status='RESOLVED', resolved_at=now(), updated_at=now(), authority='GENLAYER',
+     chain_resolved_at=coalesce(chain_resolved_at, $7::timestamptz),
      tx_evaluate=coalesce(tx_evaluate,$4) where id=$5
        and status in ('EVIDENCE_SUBMITTED','RESOLVED')
        and (tx_evaluate is null or lower(tx_evaluate)=lower($4))
@@ -1379,6 +1391,7 @@ export async function applyChainEvaluate(
       input.txEvaluate,
       id,
       actorAddress,
+      input.chainResolvedAt || null,
     ],
   );
   if (!updated[0]) {

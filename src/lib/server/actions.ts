@@ -42,6 +42,7 @@ import {
   isPublicGuard,
 } from "./repo";
 import { proveFailedTransaction, reconcileTransaction } from "./chain-reconciliation";
+import { ensureChainResolvedAt } from "./chain-resolved-at";
 import { CONFIRMATION_UNAVAILABLE_MESSAGE, type ChainOperation } from "@/lib/reconciliation";
 import { sameWallet, normalizeWalletAddress } from "./security";
 import { getWalletSession, requireWalletAddress } from "./wallet-auth.server";
@@ -475,8 +476,9 @@ export const getReceiptFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const receipt = await getReceipt(parseId(data.id, "Receipt id"));
     if (!receipt) throw new AppError("NOT_FOUND", "Receipt not found", 404);
-    const guard = await getGuard(receipt.guardId);
-    if (!guard) throw new AppError("DATA_CORRUPT", "Receipt Guard is unavailable", 500);
+    const stored = await getGuard(receipt.guardId);
+    if (!stored) throw new AppError("DATA_CORRUPT", "Receipt Guard is unavailable", 500);
+    const guard = await ensureChainResolvedAt(stored);
     if (!isPublicGuard(guard)) {
       const ownerAddress = await requireWalletAddress();
       if (!sameWallet(guard.ownerAddress, ownerAddress)) {

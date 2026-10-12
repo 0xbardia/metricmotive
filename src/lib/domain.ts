@@ -137,7 +137,10 @@ export type Guard = {
   updatedAt: string;
   armedAt: string | null;
   evidenceAt: string | null;
+  /** When this app recorded the verdict. */
   resolvedAt: string | null;
+  /** When the contract resolved the Guard (get_guard.resolved_at); null until read from the chain. */
+  chainResolvedAt: string | null;
 };
 
 export type RunRecord = {
@@ -173,7 +176,10 @@ export type ReceiptSnapshot = {
   network: string;
   advisory: boolean;
   example: boolean;
+  /** When this app recorded the verdict. */
   resolvedAt: string;
+  /** When the contract resolved the Guard. */
+  chainResolvedAt?: string;
   contractAddress?: string;
   chainId?: number;
   onchainId?: string;
