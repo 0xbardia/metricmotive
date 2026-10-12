@@ -194,7 +194,7 @@ export function pollOutcome(
   attempt: number,
   cap: number = POLL_CAP,
 ): "continue" | "stop-final" | "stop-delayed" {
-  if (result && ["reconciled", "mismatch", "reverted"].includes(result.state)) return "stop-final";
+  if (result && ["reconciled", "mismatch", "reverted", "failed"].includes(result.state)) return "stop-final";
   if (result?.retryable === false || attempt >= cap) return "stop-delayed";
   return "continue";
 }
@@ -268,6 +268,12 @@ function copyFor(
               title: "Transaction reverted",
               message: "GenLayer rejected this transaction. No state change was finalized.",
             }
+          : tx.failureKind === "failed"
+            ? {
+                status: "Transaction failed",
+                title: "Transaction failed on GenLayer",
+                message: tx.error ?? "This transaction failed on GenLayer without a verifiable result.",
+              }
           : tx.failureKind === "mismatch"
             ? {
                 status: "Could not verify",

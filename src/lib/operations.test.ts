@@ -18,6 +18,7 @@ describe("pending -> delayed -> check again", () => {
     assert.equal(pollOutcome({ state: "pending" }, POLL_CAP), "stop-delayed");
     assert.equal(pollOutcome({ state: "unavailable", retryable: false }, 1), "stop-delayed");
     assert.equal(pollOutcome({ state: "reverted" }, 1), "stop-final");
+    assert.equal(pollOutcome({ state: "failed" }, 1), "stop-final");
     assert.equal(pollOutcome({ state: "reconciled" }, 1), "stop-final");
   });
 
@@ -28,4 +29,17 @@ describe("pending -> delayed -> check again", () => {
     assert.equal(view.retryLabel, "Check again");
     assert.equal(view.txHash, HASH);
   });
+});
+
+it("a failed transaction renders the server's failed recovery message, not the mismatch copy", async () => {
+  const { FAILED_RECOVERY_MESSAGE } = await import("./server/operation-store.ts");
+  const view = operationViewFromTx({
+    phase: "failed",
+    action: "arm_guard",
+    hash: "0x" + "c".repeat(64),
+    error: FAILED_RECOVERY_MESSAGE,
+    failureKind: "failed",
+  });
+  assert.equal(view?.title, "Transaction failed on GenLayer");
+  assert.equal(view?.message, FAILED_RECOVERY_MESSAGE);
 });

@@ -30,11 +30,11 @@ import {
 } from "./repo";
 import { asPattern, asStatus, asVerdict, parseFindings, readChainGuard } from "./chain-read";
 import { sameWallet } from "./security";
-import { markTransactionFailed } from "./operation-store";
+import { FAILED_RECOVERY_MESSAGE, markTransactionFailed } from "./operation-store";
 import { getSql } from "@/lib/db";
 
 export type TransactionReconciliation = {
-  state: "pending" | "unavailable" | "mismatch" | "reverted" | "reconciled";
+  state: "pending" | "unavailable" | "mismatch" | "reverted" | "failed" | "reconciled";
   operation: ChainOperation;
   guard: Guard;
   txHash: string;
@@ -402,23 +402,24 @@ export async function reconcileTransaction(
     if (error instanceof ReconciliationError) {
       // Stamp server-verified failure so the owner may replace a proven revert
       // (D4). Never derived from client input; MALFORMED proves nothing.
-      if (error.code === "REVERTED" || error.code === "MISMATCH") {
+      const kind = error.code === "REVERTED" ? "reverted" : error.code === "MISMATCH" ? "mismatch" : error.code === "FAILED" ? "failed" : null;
+      if (kind) {
         await markTransactionFailed(
           await getSql(),
           local.id,
           operation,
           transaction.txHash,
-          error.code === "REVERTED" ? "reverted" : "mismatch",
+          kind,
           error.message,
         ).catch(() => undefined);
       }
       return {
-        state: error.code === "REVERTED" ? "reverted" : "mismatch",
+        state: kind ?? "mismatch",
         operation,
         guard: current,
         txHash: transaction.txHash,
         onchainId: current.onchainId ?? transaction.expectedGuardId ?? undefined,
-        message: error.message,
+        message: kind === "failed" ? FAILED_RECOVERY_MESSAGE : error.message,
       } satisfies TransactionReconciliation;
     }
     if (isTemporaryChainError(error)) {

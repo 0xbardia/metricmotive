@@ -12,7 +12,7 @@ export const TX_PHASES = [
 
 export type TxPhase = (typeof TX_PHASES)[number];
 
-export type TxFailureKind = "reverted" | "mismatch";
+export type TxFailureKind = "reverted" | "mismatch" | "failed";
 
 export type TxState = {
   phase: TxPhase;

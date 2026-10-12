@@ -7,7 +7,7 @@ export type SqlLike = {
   query<T = Record<string, unknown>>(text: string, params?: unknown[]): Promise<T[]>;
 };
 
-export type FailureKind = "reverted" | "mismatch";
+export type FailureKind = "reverted" | "mismatch" | "failed";
 
 export type KnownTransaction = {
   txHash: string;
@@ -20,6 +20,8 @@ export const RESERVATION_TTL_MS = 10 * 60_000;
 
 export const MISMATCH_RECOVERY_MESSAGE =
   "This transaction does not match the Guard it was recorded for, so it cannot be replaced. Keep the transaction hash and contact support to recover this Guard.";
+export const FAILED_RECOVERY_MESSAGE =
+  "This transaction failed on GenLayer without a verifiable result, so it cannot be replaced automatically. Keep the transaction hash and contact support to recover this Guard.";
 export const STILL_CONFIRMING_MESSAGE =
   "A transaction for this step is still confirming. Wait for it to finish; no new transaction will be requested.";
 export const ALREADY_RECONCILED_MESSAGE = "This step is already confirmed on GenLayer.";
@@ -28,7 +30,7 @@ export const RESERVED_ELSEWHERE_MESSAGE =
 
 export type ReplacementDecision =
   | { action: "free" | "same" | "replace" }
-  | { action: "blocked"; reason: "reconciled" | "pending" | "mismatch"; message: string };
+  | { action: "blocked"; reason: "reconciled" | "pending" | "mismatch" | "failed"; message: string };
 
 /**
  * May `incomingHash` (null = a reservation, no hash yet) take over this
@@ -44,6 +46,7 @@ export function replacementDecision(
   if (existing.reconciledAt) return { action: "blocked", reason: "reconciled", message: ALREADY_RECONCILED_MESSAGE };
   if (existing.failureKind === "reverted") return { action: "replace" };
   if (existing.failureKind === "mismatch") return { action: "blocked", reason: "mismatch", message: MISMATCH_RECOVERY_MESSAGE };
+  if (existing.failureKind === "failed") return { action: "blocked", reason: "failed", message: FAILED_RECOVERY_MESSAGE };
   return { action: "blocked", reason: "pending", message: STILL_CONFIRMING_MESSAGE };
 }
 

@@ -23,10 +23,10 @@ export const CONFIRMATION_UNAVAILABLE_MESSAGE =
   "Transaction submitted. Confirmation temporarily unavailable.";
 
 export class ReconciliationError extends Error {
-  /** REVERTED = chain data proves the write did not apply; the only replaceable failure. */
-  readonly code: "MISMATCH" | "MALFORMED" | "REVERTED";
+  /** REVERTED = chain data proves the write did not apply; the only replaceable failure. FAILED = terminal on chain without a verifiable result (not replaceable). */
+  readonly code: "MISMATCH" | "MALFORMED" | "REVERTED" | "FAILED";
 
-  constructor(code: "MISMATCH" | "MALFORMED" | "REVERTED", message: string) {
+  constructor(code: "MISMATCH" | "MALFORMED" | "REVERTED" | "FAILED", message: string) {
     super(message);
     this.name = "ReconciliationError";
     this.code = code;
@@ -347,14 +347,14 @@ export async function verifyTransaction(
       throw new ReconciliationError("REVERTED", `The transaction ended with status ${status}.`);
     }
     if (status === "UNDETERMINED") {
-      throw new ReconciliationError("MALFORMED", `The transaction ended with status ${status}.`);
+      throw new ReconciliationError("FAILED", `The transaction ended with status ${status}.`);
     }
     return { state: "pending", status };
   }
   const execution = executionResult(tx);
   if (!execution) {
     // A finalized transaction without an execution result is unproven, never success.
-    throw new ReconciliationError("MALFORMED", "The finalized transaction has no execution result.");
+    throw new ReconciliationError("FAILED", "The finalized transaction has no execution result.");
   }
   if (execution !== "SUCCESS" && !execution.includes("FINISHED_WITH_RETURN") && execution !== "OK") {
     throw new ReconciliationError("REVERTED", `The finalized transaction did not execute successfully (${execution}).`);

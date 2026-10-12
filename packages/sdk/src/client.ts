@@ -34,11 +34,19 @@ function executionOf(receipt: unknown): string {
   return "";
 }
 
+type Confirmation = "verified" | "unverified";
+
 function isSuccess(execution: string, requireExecution: boolean): boolean {
   if (!execution) return !requireExecution;
   const u = execution.toUpperCase();
   return u === "SUCCESS" || u.includes("FINISHED_WITH_RETURN") || u === "OK";
 }
+
+/** @internal Test seam; deliberately not part of the public options type or entry. */
+export type InternalClientOptions = {
+  /** @internal supplies the genlayer-js client instead of createClient. */
+  clientFactory?: () => unknown;
+};
 
 /**
  * MetricMotive V1 client.
@@ -54,9 +62,9 @@ export class MetricMotiveClient {
   private readonly account: MetricMotiveClientOptions["account"];
   private readonly memory = new MemoryRecorder();
   private readonly http: HttpRecorder | null;
-  private readonly clientFactory: MetricMotiveClientOptions["clientFactory"];
+  private readonly clientFactory: InternalClientOptions["clientFactory"];
 
-  constructor(opts: MetricMotiveClientOptions = {}) {
+  constructor(opts: MetricMotiveClientOptions & InternalClientOptions = {}) {
     this.contractAddress = (opts.contractAddress ?? CONTRACT_ADDRESS) as `0x${string}`;
     this.apiUrl = opts.apiUrl ? opts.apiUrl.replace(/\/$/, "") : null;
     this.account = opts.account;
@@ -87,7 +95,7 @@ export class MetricMotiveClient {
     functionName: string,
     args: unknown[],
     wait: "accepted" | "finalized",
-  ): Promise<`0x${string}`> {
+  ): Promise<{ hash: `0x${string}`; confirmation: Confirmation }> {
     this.requireAccount();
     const deployment = deploymentForContractAddress(this.contractAddress);
     if (deployment.status !== "active" || deployment.contractAddress.toLowerCase() !== getActiveDeployment().contractAddress.toLowerCase()) {
@@ -161,7 +169,11 @@ export class MetricMotiveClient {
       );
     }
     const execution = executionOf(receipt);
-    if (!isSuccess(execution, wait === "finalized")) {
+    if (execution === "" && wait !== "finalized") {
+      // Accepted but no execution result yet: do not claim success.
+      return { hash, confirmation: "unverified" };
+    }
+    if (!isSuccess(execution, true)) {
       throw new MetricMotiveError(
         "EXECUTION_FAILED",
         `Transaction landed but execution failed (${execution}). A hash is not a successful write.`,
@@ -169,7 +181,7 @@ export class MetricMotiveClient {
         hash,
       );
     }
-    return hash;
+    return { hash, confirmation: "verified" };
   }
 
   async getGuard(id: number | string): Promise<ChainGuard> {
@@ -203,9 +215,13 @@ export class MetricMotiveClient {
     };
   }
 
-  async createGuard(input: CreateGuardInput): Promise<{ onchainId: string; txHash: `0x${string}` }> {
+  async createGuard(input: CreateGuardInput): Promise<
+    | { onchainId: string; txHash: `0x${string}`; confirmation: "verified" }
+    | { onchainId: null; txHash: `0x${string}`; confirmation: "unverified" }
+  > {
     const rails = JSON.stringify(input.guardrails);
-    const txHash = await this.write("create_guard", [input.motive, input.metric, rails], "accepted");
+    const { hash: txHash, confirmation } = await this.write("create_guard", [input.motive, input.metric, rails], "accepted");
+    if (confirmation === "unverified") return { onchainId: null, txHash, confirmation };
     const client = this.chainClient();
     const owner = typeof this.account === "string" ? this.account : this.account?.address;
     if (!owner) {
@@ -236,7 +252,7 @@ export class MetricMotiveClient {
       });
     }
     try {
-      return { onchainId: resolveCreatedGuardId(candidates, input, definitionHash), txHash };
+      return { onchainId: resolveCreatedGuardId(candidates, input, definitionHash), txHash, confirmation: "verified" };
     } catch (err) {
       if (err instanceof MetricMotiveError) {
         throw new MetricMotiveError(err.code, `${err.message} Transaction: ${txHash}`, "chain", txHash);
@@ -253,8 +269,12 @@ export class MetricMotiveClient {
     }));
   }
 
-  async armGuard(id: number | string): Promise<{ txHash: `0x${string}`; status: string }> {
-    const txHash = await this.write("arm_guard", [Number(id)], "accepted");
+  async armGuard(id: number | string): Promise<
+    | { txHash: `0x${string}`; status: string; confirmation: "verified" }
+    | { txHash: `0x${string}`; status: null; confirmation: "unverified" }
+  > {
+    const { hash: txHash, confirmation } = await this.write("arm_guard", [Number(id)], "accepted");
+    if (confirmation === "unverified") return { txHash, status: null, confirmation };
     const guard = await this.getGuard(id);
     if (guard.status !== "ARMED" && guard.status !== "EVIDENCE_SUBMITTED" && guard.status !== "RESOLVED") {
       throw new MetricMotiveError(
@@ -263,24 +283,28 @@ export class MetricMotiveClient {
         "chain",
       );
     }
-    return { txHash, status: String(guard.status) };
+    return { txHash, status: String(guard.status), confirmation: "verified" };
   }
 
   async submitEvidence(
     id: number | string,
     evidence: EvidenceManifest | string,
-  ): Promise<{ txHash: `0x${string}`; evidenceHash: string }> {
+  ): Promise<
+    | { txHash: `0x${string}`; evidenceHash: string; confirmation: "verified" }
+    | { txHash: `0x${string}`; evidenceHash: null; confirmation: "unverified" }
+  > {
     const encoded = typeof evidence === "string" ? evidence : encodeEvidence(evidence);
     if (encoded.length > 8000) {
       throw new MetricMotiveError("LIMIT", "Evidence bundle exceeds 8000 bytes", "chain");
     }
-    const txHash = await this.write("submit_evidence", [Number(id), encoded], "accepted");
+    const { hash: txHash, confirmation } = await this.write("submit_evidence", [Number(id), encoded], "accepted");
+    if (confirmation === "unverified") return { txHash, evidenceHash: null, confirmation };
     const guard = await this.getGuard(id);
-    return { txHash, evidenceHash: String(guard.evidence_hash ?? "") };
+    return { txHash, evidenceHash: String(guard.evidence_hash ?? ""), confirmation: "verified" };
   }
 
   async evaluateGuard(id: number | string): Promise<{ txHash: `0x${string}` }> {
-    const txHash = await this.write("evaluate_guard", [Number(id)], "finalized");
+    const { hash: txHash } = await this.write("evaluate_guard", [Number(id)], "finalized");
     return { txHash };
   }
 

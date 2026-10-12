@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { MetricMotiveClient } from "../src/index.ts";
+import { readFileSync } from "node:fs";
+import { MetricMotiveClient } from "../src/client.ts";
+import * as entry from "../src/index.ts";
 
 const ACCOUNT = { address: "0x1111111111111111111111111111111111111111" };
 
@@ -55,4 +57,31 @@ test("write passes fees and no value", async () => {
 test("finalized write with empty execution fails", async () => {
   const { client } = make({}, null);
   await assert.rejects(client.evaluateGuard(1), { code: "EXECUTION_FAILED" });
+});
+
+test("accepted write with empty execution is unverified, hash kept, no follow-up read", async () => {
+  let reads = 0;
+  const { client } = make({ readContract: async () => { reads++; return {}; } }, null);
+  for (const r of [await client.armGuard(1), await client.submitEvidence(1, "{}"), await client.createGuard({ motive: "m", metric: "x", guardrails: [] })]) {
+    assert.equal(r.confirmation, "unverified");
+    assert.equal(r.txHash, "0xabc");
+  }
+  assert.equal(reads, 0);
+});
+
+test("accepted write with SUCCESS execution is verified", async () => {
+  const { client } = make({ readContract: async () => ({ found: true, id: 1, owner: "o", motive: "m", metric: "x", guardrails_json: "[]", status: "ARMED", evidence_hash: "h", evidence_json: "", findings_json: "", verdict: "NONE", primary_pattern: "" }) });
+  const r = await client.armGuard(1);
+  assert.equal(r.confirmation, "verified");
+  assert.equal(r.status, "ARMED");
+});
+
+test("non-success execution still throws", async () => {
+  const { client } = make({}, "FINISHED_WITH_ERROR");
+  await assert.rejects(client.armGuard(1), { code: "EXECUTION_FAILED" });
+});
+
+test("clientFactory is not part of the public entry or options type", () => {
+  assert.equal("InternalClientOptions" in entry, false);
+  assert.doesNotMatch(readFileSync(new URL("../src/types.ts", import.meta.url), "utf8"), /clientFactory/);
 });

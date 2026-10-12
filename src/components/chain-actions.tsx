@@ -231,14 +231,14 @@ function useTransactionReconciliation({
             originChainId: ACTIVE_CHAIN_ID,
           });
           await onUpdatedRef.current();
-        } else if (result.state === "mismatch" || result.state === "reverted") {
+        } else if (result.state === "mismatch" || result.state === "reverted" || result.state === "failed") {
           setTx({
             ...transactionState(
               operation,
               resultHash,
               gate.address,
               result.message ?? "Transaction reconciliation stopped.",
-              result.state === "reverted" ? "reverted" : "mismatch",
+              result.state === "reverted" || result.state === "failed" ? result.state : "mismatch",
             ),
             phase: "failed",
           });
@@ -372,7 +372,7 @@ async function recordTransaction(
 
 class ConfirmationStateError extends Error {
   constructor(
-    readonly state: "pending" | "unavailable" | "mismatch" | "reverted",
+    readonly state: "pending" | "unavailable" | "mismatch" | "reverted" | "failed",
     message: string,
   ) {
     super(message);
@@ -411,7 +411,7 @@ async function reserveOperation(
       data: { id: guardId, operation, reservationToken },
     });
     if (reservation.canSubmit) return reservationToken;
-    if (reservation.txHash && reservation.failureKind !== "mismatch") {
+    if (reservation.txHash && reservation.failureKind !== "mismatch" && reservation.failureKind !== "failed") {
       setTx(transactionState(operation, reservation.txHash, address, null));
       await onUpdated();
     } else {
@@ -547,7 +547,7 @@ async function runWrite(opts: {
       await opts.confirm(result.hash);
     } catch (confirmationError) {
       if (confirmationError instanceof ConfirmationStateError) {
-        if (confirmationError.state === "mismatch" || confirmationError.state === "reverted") {
+        if (confirmationError.state === "mismatch" || confirmationError.state === "reverted" || confirmationError.state === "failed") {
           setWriteState({
             phase: "failed",
             action: opts.action,

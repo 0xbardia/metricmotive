@@ -56,6 +56,8 @@ On-chain (requires a genlayer-js account; never a GenLayer verdict until `waitFo
 - `getVerdict(id)`
 - `submitEvidence(id, manifest)`
 - `evaluateGuard(id)` — waits until the transaction is FINALIZED; if confirmation times out, the error includes the transaction hash and must be retried as confirmation, not as a new write
+Accepted-wait writes (`createGuard`, `armGuard`, `submitEvidence`) return `confirmation: "verified" | "unverified"`. `"unverified"` means the transaction was accepted but returned no execution result: `txHash` is kept, derived fields (`onchainId`, `status`, `evidenceHash`) are `null`, and success must not be assumed; re-read the guard later. A non-empty, non-success execution throws `EXECUTION_FAILED`.
+
 - `waitForVerdict(id)` — re-reads the contract until RESOLVED
 
 ## Example

@@ -340,7 +340,7 @@ export async function reserveCreateGuard(
         state: existing.reconciledAt ? "RECONCILED" : "SUBMITTED",
         txHash: existing.txHash,
         canSubmit: false,
-        message: blocked.action === "blocked" && blocked.reason === "mismatch"
+        message: blocked.action === "blocked" && (blocked.reason === "mismatch" || blocked.reason === "failed")
           ? blocked.message
           : "This Guard already has a create transaction. Confirmation can resume without submitting another transaction.",
       };
@@ -1043,7 +1043,7 @@ function mapChainTransaction(row: ChainTransactionRow): ChainTransaction {
     expectedEvidenceHash: row.expected_evidence_hash,
     submittedAt: row.submitted_at,
     reconciledAt: row.reconciled_at,
-    failureKind: row.failure_kind === "reverted" || row.failure_kind === "mismatch" ? row.failure_kind : null,
+    failureKind: row.failure_kind === "reverted" || row.failure_kind === "mismatch" || row.failure_kind === "failed" ? row.failure_kind : null,
   };
 }
 

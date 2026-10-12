@@ -127,7 +127,7 @@ test("sender, contract, definition, and return disagreements stop reconciliation
   );
   await assert.rejects(
     verifyCreateTransaction(transaction("FINALIZED", []), target),
-    (error: unknown) => error instanceof ReconciliationError && error.code === "MALFORMED",
+    (error: unknown) => error instanceof ReconciliationError && error.code === "FAILED",
   );
 });
 
@@ -269,10 +269,22 @@ test("empty execution -> failure; failed execution is REVERTED", async () => {
   const noExecution = { ...finalized, consensus_data: { leader_receipt: [{ result: { status: "return", payload: { readable: JSON.stringify("3") } } }] } };
   await assert.rejects(
     verifyCreateTransaction(noExecution, target),
-    (error: unknown) => error instanceof ReconciliationError && error.code === "MALFORMED" && /no execution result/.test(error.message),
+    (error: unknown) => error instanceof ReconciliationError && error.code === "FAILED" && /no execution result/.test(error.message),
   );
   await assert.rejects(
     verifyCreateTransaction({ ...finalized, consensus_data: { leader_receipt: [{ execution_result: "ERROR" }] } }, target),
     (error: unknown) => error instanceof ReconciliationError && error.code === "REVERTED",
+  );
+});
+
+test("UNDETERMINED is terminal FAILED; missing tx data stays transient MALFORMED", async () => {
+  const target = await expected();
+  await assert.rejects(
+    verifyCreateTransaction(transaction("UNDETERMINED"), target),
+    (error: unknown) => error instanceof ReconciliationError && error.code === "FAILED",
+  );
+  await assert.rejects(
+    verifyCreateTransaction(null as never, target),
+    (error: unknown) => error instanceof ReconciliationError && error.code === "MALFORMED",
   );
 });
