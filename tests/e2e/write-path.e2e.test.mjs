@@ -126,7 +126,7 @@ describe("write path: Lock Guard", () => {
   // todo: the banner only says "The transaction is not the expected arm_guard call."; the
   // recovery copy (MISMATCH_RECOVERY_MESSAGE) is only reachable via a reserve refusal that the
   // hidden button no longer allows. App change: show it on the mismatch banner.
-  it("5b. mismatch banner carries the recovery message", { todo: "app change: show MISMATCH_RECOVERY_MESSAGE on the banner" }, async () => {
+  it("5b. mismatch banner carries the recovery message", async () => {
     ctx = await seededGuard();
     await mock.scenario({ queue: { arm_guard: ["MISMATCH"] } });
     await LOCK_BUTTON(ctx.page).click();
