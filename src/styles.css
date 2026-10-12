@@ -1560,7 +1560,8 @@
 
 .run-event-button:hover .run-event-action,
 .run-event-button.is-selected .run-event-action {
-  color: var(--color-ochre);
+  /* This list sits on a light section: ochre text fails AA there. */
+  color: var(--color-brand-text);
   opacity: 1;
 }
 
@@ -2586,6 +2587,13 @@
     border-bottom: 1px solid var(--nav-line);
     background-color: var(--nav-bg);
     padding: 0.35rem 1rem;
+    /* The strip sticks below the header, so it must not also reserve layout space above the hero:
+       a reserved gap shows the light page background through the translucent header on phones. */
+    --jump-h: 2.5rem;
+    box-sizing: border-box;
+    height: var(--jump-h);
+    align-items: center;
+    margin-bottom: calc(-1 * var(--jump-h));
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     scrollbar-width: none;
