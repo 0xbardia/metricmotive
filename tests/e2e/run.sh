@@ -27,4 +27,5 @@ for _ in $(seq 1 90); do
   curl -sf -o /dev/null "$E2E_BASE_URL/app/guards/new" && curl -sf -o /dev/null -X POST -d '{}' "$E2E_MOCK_URL/__control/reset" && break
   sleep 1
 done
-cd "$HERE/../.." && node --test "$@" tests/e2e/*.e2e.test.mjs
+# Sequential on purpose: every file shares ONE mock RPC and ONE app, so files must not run in parallel.
+cd "$HERE/../.." && node --test --test-concurrency=1 "$@" tests/e2e/*.e2e.test.mjs

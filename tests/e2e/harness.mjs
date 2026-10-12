@@ -27,6 +27,7 @@ export const mock = {
 };
 
 let browser;
+let visitor = Math.floor(Math.random() * 60000);
 export async function launch() {
   browser ??= await chromium.launch({ headless: true });
   return browser;
@@ -39,10 +40,19 @@ export async function newSession({ timeScale = 1 } = {}) {
   const context = await b.newContext({ baseURL: BASE_URL, viewport: { width: 1280, height: 900 } });
   // External hosts (fonts, WalletConnect, analytics) are irrelevant and must never be reached.
   await context.route((u) => !["127.0.0.1", "localhost"].includes(u.hostname) && u.hostname !== "studio-dev.genlayer.com" && u.protocol.startsWith("http"), (r) => r.abort());
+  // The app rate-limits wallet sign-in per client address (10 hits/min, nonce + verify = 2 per sign-in).
+  // In production nginx supplies each visitor's own address through this trusted-proxy header; do the same
+  // here so each browser context is a distinct visitor, instead of weakening the limiter.
+  visitor += 1;
+  await context.setExtraHTTPHeaders({ "x-metricmotive-proxy": "nginx", "x-forwarded-for": `10.77.${(visitor >> 8) & 255}.${visitor & 255}` });
   const wallet = await installWallet(context, { appDir: APP_DIR, mockUrl: MOCK_URL, rpcUrl: RPC_URL, timeScale });
   const consoleErrors = [];
   context.on("page", (p) => {
     p.on("pageerror", (e) => consoleErrors.push(String(e)));
+    // Default is the real glass UI. E2E_REDUCED_TRANSPARENCY=1 runs the solid prefers-reduced-transparency state.
+    if (process.env.E2E_REDUCED_TRANSPARENCY === "1") {
+      context.newCDPSession(p).then((cdp) => cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] })).catch(() => undefined);
+    }
   });
   return { context, wallet, consoleErrors, close: () => context.close() };
 }
