@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide-react";
 import { TechnicalDetails } from "@/components/product-ui";
+import { bannerRole } from "@/lib/a11y";
 import { cn } from "@/lib/cn";
 import { roleAccent, roleClass, type Severity } from "@/lib/tokens";
 
@@ -52,8 +53,8 @@ export function StatusBanner({
     <section
       className={cn("product-status paper-panel p-5", roleClass(severity), className)}
       style={{ borderLeftColor: roleAccent(severity) }}
-      role="status"
-      aria-live={severity === "neutral" ? undefined : "polite"}
+      role={bannerRole(severity)}
+      aria-live={severity === "neutral" ? undefined : severity === "danger" ? "assertive" : "polite"}
       aria-atomic="true"
       data-active={busy || undefined}
       data-state={state}

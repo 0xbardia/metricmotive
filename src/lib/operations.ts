@@ -108,7 +108,7 @@ const OPERATION_TITLES: Record<
   },
   lock: {
     request: "Locking the Guard",
-    submitted: "Guard armed",
+    submitted: "Guard locked",
     pending: "Transaction submitted",
   },
   submitEvidence: {
@@ -336,10 +336,7 @@ export function operationViewFromTx(state: TxState): OperationView | null {
       ? "MetricMotive continues checking automatically. You can safely leave this page."
       : null,
     technicalDetails: state.error,
-    busy:
-      state.phase === "request" ||
-      state.phase === "pending" ||
-      state.phase === "confirming",
+    busy: !isDelayed && (state.phase === "request" || state.phase === "pending" || state.phase === "confirming"),
     live: true,
   };
 }

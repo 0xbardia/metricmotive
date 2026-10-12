@@ -2,7 +2,11 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/components/ui/button";
 import { GENLAYER } from "@/lib/domain";
 
-export function WalletControl() {
+/** `compact` is the phone header: the network name collapses below `sm`; the menu keeps it. */
+export function WalletControl({ compact = false }: { compact?: boolean }) {
+  const networkClass = compact
+    ? "hidden min-h-11 font-mono text-xs text-graphite sm:block"
+    : "min-h-11 font-mono text-xs text-graphite";
   return (
     <ConnectButton.Custom>
       {({
@@ -17,7 +21,7 @@ export function WalletControl() {
         const connected = ready && account && chain;
         if (!ready) {
           return (
-            <Button size="sm" variant="outline" disabled>
+            <Button size="sm" variant="outline" className="min-h-11" disabled>
               Connect wallet
             </Button>
           );
@@ -27,10 +31,12 @@ export function WalletControl() {
             <Button
               size="sm"
               variant="outline"
+              className="min-h-11"
               onClick={openConnectModal}
               data-wallet="connect"
             >
-              Connect wallet
+              <span className="sm:hidden">Connect</span>
+              <span className="hidden sm:inline">Connect wallet</span>
             </Button>
           );
         }
@@ -40,10 +46,12 @@ export function WalletControl() {
             <Button
               size="sm"
               variant="ochre"
+              className="min-h-11"
               onClick={openChainModal}
               data-wallet="wrong-network"
             >
-              Switch to GenLayer Studio Dev
+              <span className="sm:hidden">Switch network</span>
+              <span className="hidden sm:inline">Switch to GenLayer Studio Dev</span>
             </Button>
           );
         }
@@ -52,7 +60,7 @@ export function WalletControl() {
             <button
               type="button"
               onClick={openChainModal}
-              className="font-mono text-xs text-graphite"
+              className={networkClass}
               data-wallet="network"
             >
               {chain.name}
@@ -60,6 +68,7 @@ export function WalletControl() {
             <Button
               size="sm"
               variant="outline"
+              className="min-h-11 max-w-32 truncate sm:max-w-none"
               onClick={openAccountModal}
               data-wallet="account"
             >

@@ -140,6 +140,7 @@ export const recordTransactionRequestSchema = z.object({
   expectedGuardId: idField.nullable().optional(),
   expectedEvidenceHash: z.string().trim().max(128).nullable().optional(),
   reservationToken: z.string().trim().min(1).max(128).optional(),
+  runId: idField.optional(),
 }).strict();
 export const reconcileTransactionRequestSchema = z.object({
   id: idField,

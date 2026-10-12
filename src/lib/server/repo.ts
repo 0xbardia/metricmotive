@@ -42,6 +42,7 @@ import {
   replacementDecision,
   reservedByOther,
   reserveOperationSlot,
+  resolveTxRunId,
   supersedeFailedTransaction,
   type FailureKind,
   type OperationReservation,
@@ -500,48 +501,6 @@ export async function updateDraft(
     [patch.motive, patch.metric, JSON.stringify(patch.guardrails), hash, id, ownerAddress],
   );
   if (!updated[0]) throw new AppError("CONFLICT", "Guard changed while it was being edited", 409);
-  return requireGuard(id);
-}
-
-export async function armLocal(id: string, ownerAddress: string): Promise<Guard> {
-  const g = await requireOwnedGuard(id, ownerAddress);
-  if (g.status !== "DRAFT") throw new AppError("INVALID_STATE", "Only a draft can be armed", 409);
-  if (!g.motive.trim() || !g.metric.trim()) {
-    throw new AppError("INCOMPLETE", "Motive and metric are required to lock", 400);
-  }
-  const sql = await getSql();
-  const updated = await sql.query<{ id: string }>(
-    `update guards set status='ARMED', armed_at=now(), updated_at=now()
-     where id=$1 and status='DRAFT' and lower(owner_address)=lower($2)
-     returning id`,
-    [id, ownerAddress],
-  );
-  if (!updated[0]) throw new AppError("CONFLICT", "Guard changed while it was being armed", 409);
-  return requireGuard(id);
-}
-
-export async function attachEvidence(
-  id: string,
-  manifest: EvidenceManifest,
-  ownerAddress: string,
-): Promise<Guard> {
-  requireEvidenceEvents(manifest.events);
-  const g = await requireOwnedGuard(id, ownerAddress);
-  if (g.status !== "ARMED") {
-    throw new AppError("INVALID_STATE", "Evidence requires an armed guard", 409);
-  }
-  if (g.evidenceHash) {
-    throw new AppError("LOCKED", "Evidence commitment cannot be replaced", 409);
-  }
-  const sql = await getSql();
-  const updated = await sql.query<{ id: string }>(
-    `update guards set evidence_json=$1, evidence_hash=$2, status='EVIDENCE_SUBMITTED',
-     evidence_at=now(), updated_at=now() where id=$3 and status='ARMED'
-     and lower(owner_address)=lower($4)
-     returning id`,
-    [JSON.stringify(manifest), manifest.manifestHash, id, ownerAddress],
-  );
-  if (!updated[0]) throw new AppError("CONFLICT", "Guard changed while evidence was being attached", 409);
   return requireGuard(id);
 }
 
@@ -1047,6 +1006,16 @@ function mapChainTransaction(row: ChainTransactionRow): ChainTransaction {
   };
 }
 
+/** Run id stored with the guard's submit_evidence transaction (E-14), if any. */
+export async function getEvidenceTxRunId(guardId: string): Promise<string | null> {
+  const sql = await getSql();
+  const rows = await sql.query<{ run_id: string | null }>(
+    `select run_id from guard_transactions where guard_id=$1 and operation='submit_evidence' limit 1`,
+    [guardId],
+  );
+  return rows[0]?.run_id ?? null;
+}
+
 export async function getChainTransaction(
   guardId: string,
   operation: ChainOperation,
@@ -1096,10 +1065,18 @@ export async function recordChainTransaction(
     expectedGuardId?: string | null;
     expectedEvidenceHash?: string | null;
     reservationToken?: string;
+    runId?: string | null;
   },
   actorAddress: string,
 ): Promise<Guard> {
   const g = await requireOwnedGuard(id, actorAddress);
+  let txRunId: string | null = null;
+  if (input.operation === "submit_evidence" && input.runId) {
+    const run = await requireRun(input.runId).catch(() => null);
+    const resolved = resolveTxRunId(input.operation, input.runId, run?.guardId, id);
+    if (!resolved.ok) throw new AppError("MISMATCH", resolved.message, 400);
+    txRunId = resolved.runId;
+  }
   if (g.isExample) throw new AppError("FORBIDDEN", "Example guards cannot be mutated", 403);
   if (!sameWallet(input.originatingWallet, actorAddress)) {
     throw new AppError("FORBIDDEN", "Submitted wallet does not match the wallet session", 403);
@@ -1147,6 +1124,14 @@ export async function recordChainTransaction(
            where guard_id=$2 and operation=$3 and lower(tx_hash)=lower($4)
            and expected_evidence_hash is null`,
         [input.expectedEvidenceHash, id, input.operation, input.txHash],
+      );
+    }
+    if (txRunId) {
+      const sql = await getSql();
+      await sql.query(
+        `update guard_transactions set run_id=$1
+           where guard_id=$2 and operation=$3 and lower(tx_hash)=lower($4) and run_id is null`,
+        [txRunId, id, input.operation, input.txHash],
       );
     }
     if (input.operation === "create_guard" && !g.txCreate) {
@@ -1222,8 +1207,8 @@ export async function recordChainTransaction(
     const inserted = await sql.query<ChainTransactionRow>(
       `insert into guard_transactions (
          guard_id, operation, tx_hash, originating_wallet, chain_id,
-         contract_address, expected_guard_id, expected_evidence_hash, submitted_at
-       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         contract_address, expected_guard_id, expected_evidence_hash, submitted_at, run_id
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        on conflict (guard_id, operation) do update set tx_hash=guard_transactions.tx_hash
        where lower(guard_transactions.tx_hash)=lower(excluded.tx_hash)
        returning guard_id, operation, tx_hash, originating_wallet, chain_id,
@@ -1239,6 +1224,7 @@ export async function recordChainTransaction(
         input.expectedGuardId ?? g.onchainId,
         input.expectedEvidenceHash ?? null,
         input.submittedAt,
+        txRunId,
       ],
     );
     if (!inserted[0]) throw new AppError("CONFLICT", "This Guard operation already has a different transaction", 409);

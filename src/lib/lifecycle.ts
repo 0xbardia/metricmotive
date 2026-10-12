@@ -103,10 +103,11 @@ export function lifecycleStage(status: GuardStatus): LifecycleStage {
  * Guard that was already frozen while the very same card said "start a Run".
  * `LOCKED` and `RUN` therefore share a step and differ only in their action.
  */
-export function stageStep(stage: LifecycleStage): number {
+export function stageStep(stage: LifecycleStage, lockPending = false): number {
   switch (stage) {
+    // A lock transaction in flight/unconfirmed puts the user on Lock, not Draft (B-06).
     case "DRAFT":
-      return 0;
+      return lockPending ? 1 : 0;
     // Lock is done; the outstanding action is capturing a Run.
     case "LOCKED":
     case "RUN":
@@ -117,8 +118,20 @@ export function stageStep(stage: LifecycleStage): number {
   }
 }
 
-export function stageLabel(stage: LifecycleStage): string {
-  return CASE_LIFECYCLE.steps[stageStep(stage)];
+export function stageLabel(stage: LifecycleStage, lockPending = false): string {
+  return CASE_LIFECYCLE.steps[stageStep(stage, lockPending)];
+}
+
+/**
+ * B-07: the ONE "evidence committed" predicate, used by every page.
+ * Committed means reconciled (evidenceHash set). A submit_evidence transaction
+ * without a reconciled hash is "committing", never committed.
+ */
+export function isEvidenceCommitted(g: { evidenceHash?: string | null; txEvidence?: string | null }): boolean {
+  return Boolean(g.evidenceHash);
+}
+export function isEvidenceCommitting(g: { evidenceHash?: string | null; txEvidence?: string | null }): boolean {
+  return Boolean(g.txEvidence) && !g.evidenceHash;
 }
 
 export type LifecycleInput = {
@@ -140,6 +153,10 @@ export type LifecycleInput = {
   lockRecorded?: boolean;
   /** evaluate_guard has been submitted; the case is awaiting the verdict (N25). */
   verificationRequested?: boolean;
+  /** An arm_guard transaction is in flight or unconfirmed (B-06). */
+  lockInFlight?: boolean;
+  /** submit_evidence was sent but the commitment is not reconciled yet (B-07). */
+  evidenceCommitting?: boolean;
 };
 
 export function getGuardLifecyclePresentation(input: LifecycleInput): LifecyclePresentation {
@@ -152,6 +169,8 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
     hasReceipt,
     lockRecorded,
     verificationRequested,
+    lockInFlight,
+    evidenceCommitting,
   } = input;
 
   /**
@@ -173,11 +192,14 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
         ? true
         : Boolean(lockRecorded);
   const effectiveStatus: GuardStatus = lockAuthoritative ? guardStatus : "DRAFT";
+  // ARMED without a recorded arm tx on a chain Guard: the lock is unconfirmed.
+  const lockPending = !lockAuthoritative && (Boolean(lockInFlight) || guardStatus === "ARMED");
 
   // Evidence committed but the contract has not resolved yet: the required
   // action is verification, never an optional analytics panel (C0).
   const stage: LifecycleStage =
-    effectiveStatus === "EVIDENCE_SUBMITTED" || (effectiveStatus === "ARMED" && evidenceCommitted)
+    effectiveStatus === "EVIDENCE_SUBMITTED" ||
+    (effectiveStatus === "ARMED" && (evidenceCommitted || evidenceCommitting))
       ? "EVIDENCE_COMMITTED"
       : effectiveStatus === "ARMED" && hasFinishedRunWithEvidence
         ? "RUN"
@@ -207,6 +229,14 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
         kind: "commit-evidence",
         label: "Commit evidence from this Run",
         description: "The Run is finished. Commit its evidence fingerprint to GenLayer.",
+        required: true,
+      };
+    }
+    if (stage === "EVIDENCE_COMMITTED" && evidenceCommitting && !evidenceCommitted) {
+      return {
+        kind: "commit-evidence",
+        label: "Finish committing evidence",
+        description: "The evidence transaction was sent but is not confirmed yet. Wait for it to finalize.",
         required: true,
       };
     }
@@ -254,7 +284,7 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
       : [];
 
   const isResolved = stage === "RESOLVED";
-  const effectiveStep = stageStep(stage);
+  const effectiveStep = stageStep(stage, lockPending);
 
   /**
    * Step display is derived from the stage, never from a route-local index.
@@ -274,13 +304,16 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
   return {
     stage,
     step: effectiveStep,
-    stepLabel: stageLabel(stage),
+    stepLabel: stageLabel(stage, lockPending),
     stepStates,
     lockState: lockStateOf(stage, published, lockRecorded, authority),
     lockLabel: LOCK_LABELS[lockStateOf(stage, published, lockRecorded, authority)],
     isResolved,
     protocolLabel: protocolLabel(stage, effectiveStatus, verificationRequested),
-    headline: headline(stage, authority, Boolean(published), verificationRequested),
+    headline:
+      stage === "EVIDENCE_COMMITTED" && evidenceCommitting && !evidenceCommitted
+        ? "Evidence is being committed."
+        : headline(stage, authority, Boolean(published), verificationRequested),
     body: body(stage, authority),
     nextAction,
     optionalActions,

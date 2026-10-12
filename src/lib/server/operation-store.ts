@@ -15,6 +15,21 @@ export type KnownTransaction = {
   failureKind: FailureKind | null;
 };
 
+/**
+ * Run id to store with a transaction: only submit_evidence carries one, and the
+ * Run must belong to the same Guard. Pure so it runs under node:test.
+ */
+export function resolveTxRunId(
+  operation: string,
+  runId: string | null | undefined,
+  runGuardId: string | null | undefined,
+  guardId: string,
+): { ok: true; runId: string | null } | { ok: false; message: string } {
+  if (operation !== "submit_evidence" || !runId) return { ok: true, runId: null };
+  if (runGuardId !== guardId) return { ok: false, message: "Run does not belong to this guard" };
+  return { ok: true, runId };
+}
+
 /** A hashless reservation older than this is a closed tab, not a live signer. */
 export const RESERVATION_TTL_MS = 10 * 60_000;
 
@@ -95,10 +110,10 @@ export async function supersedeFailedTransaction(
     `insert into guard_transaction_history (
        guard_id, operation, tx_hash, originating_wallet, chain_id, contract_address,
        expected_guard_id, expected_evidence_hash, submitted_at, failure_kind,
-       failure_reason, failed_at, superseded_by)
+       failure_reason, failed_at, superseded_by, run_id)
      select guard_id, operation, tx_hash, originating_wallet, chain_id, contract_address,
             expected_guard_id, expected_evidence_hash, submitted_at, failure_kind,
-            failure_reason, failed_at, $4
+            failure_reason, failed_at, $4, run_id
        from guard_transactions
       where guard_id=$1 and operation=$2 and lower(tx_hash)=lower($3)
         and failure_kind='reverted' and reconciled_at is null

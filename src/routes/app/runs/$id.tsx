@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { AppShell } from "@/components/app-shell";
+import { PrivateReadError } from "@/components/app-home-content";
 import { AdvisoryNote } from "@/components/chrome";
 import { SubmitEvidenceChain } from "@/components/chain-actions";
 import { TechnicalDetails } from "@/components/product-ui";
@@ -17,7 +18,7 @@ import { EvidenceCommittedCard } from "@/components/ui/evidence-committed-card";
 import { Stepper } from "@/components/ui/stepper";
 import type { DriftReport, JsonBag, RunEvent } from "@/lib/domain";
 import { auditUiAction } from "@/lib/action-audit";
-import { getGuardLifecyclePresentation } from "@/lib/lifecycle";
+import { getGuardLifecyclePresentation, isEvidenceCommitted, isEvidenceCommitting } from "@/lib/lifecycle";
 import { CTA } from "@/lib/terminology";
 import { appendEventFn, driftFn, finishRunFn, getRunFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
@@ -63,9 +64,13 @@ function RunPageContent() {
   const qc = useQueryClient();
   const { address, connector } = useAccount();
   const q = useQuery({
-    queryKey: ["run", id],
-    queryFn: () => getRunFn({ data: { id } }),
+    queryKey: ["run", id, address ?? null],
+    queryFn: async () => {
+      if (address && connector) await ensureWalletSession(address, connector);
+      return getRunFn({ data: { id } });
+    },
   });
+  const retryRead = useCallback(() => void q.refetch(), [q.refetch]);
   const [observation, setObservation] = useState(EMPTY_EVENT_FORM.observation);
   const [result, setResult] = useState(EMPTY_EVENT_FORM.result);
   const [quantity, setQuantity] = useState(EMPTY_EVENT_FORM.quantity);
@@ -80,6 +85,36 @@ function RunPageContent() {
   const [confirmFinishEmpty, setConfirmFinishEmpty] = useState(false);
   const appendIntentRef = useRef(false);
   const finishIntentRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  // B-15: focus into the dialog, trap Tab, close on Escape, restore focus.
+  useEffect(() => {
+    if (!confirmFinishEmpty) return;
+    const dialog = dialogRef.current;
+    const focusables = () =>
+      Array.from(dialog?.querySelectorAll<HTMLElement>("button:not([disabled])") ?? []);
+    (focusables()[0] ?? dialog)?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setConfirmFinishEmpty(false);
+      } else if (event.key === "Tab") {
+        const items = focusables();
+        if (!items.length) return event.preventDefault();
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (!dialog?.contains(document.activeElement)) { event.preventDefault(); first.focus(); }
+        else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      triggerRef.current?.focus();
+    };
+  }, [confirmFinishEmpty]);
 
   function resetEventForm() {
     setObservation(EMPTY_EVENT_FORM.observation);
@@ -167,6 +202,7 @@ function RunPageContent() {
     // An empty Run needs explicit confirmation. The server still enforces the
     // empty-evidence rules, so this is never a bypass (C2).
     if (eventCount === 0) {
+      triggerRef.current = document.activeElement as HTMLElement | null;
       setConfirmFinishEmpty(true);
       return;
     }
@@ -187,42 +223,7 @@ function RunPageContent() {
     return <AppShell wallet={false}><p className="text-sm text-graphite">Loading Run…</p></AppShell>;
   }
   if (q.isError) {
-    /*
-     * Three distinct outcomes, three distinct messages. A Run that never
-     * existed is NOT a transient failure: "Try again" cannot conjure it, and
-     * telling someone their Run "was not deleted" when they mistyped an id
-     * invents an event. This mirrors the receipt route.
-     */
-    const message = q.error instanceof Error ? q.error.message : "";
-    const missing = /not found/i.test(message);
-    const unauthorized = /authentication|control|access/i.test(message);
-    const headline = missing
-      ? "This Run does not exist."
-      : unauthorized
-        ? "You don’t have access to this Run."
-        : "We couldn’t load this Run right now.";
-    const detail = missing
-      ? "No Run has this identifier. Check the link or return to the Guard."
-      : unauthorized
-        ? "Connect the wallet that owns this Run. Evidence is private to its Guard owner."
-        : "Your Run was not deleted. Check the wallet session or try again.";
-    return (
-      <AppShell wallet={false}>
-        <div role="alert" className="paper-panel max-w-2xl p-6">
-          <p className="font-display text-2xl">{headline}</p>
-          <p className="mt-2 text-sm text-graphite">{detail}</p>
-          {missing ? (
-            <Link to="/app" className="mt-4 inline-block">
-              <Button variant="outline">Back to Cases</Button>
-            </Link>
-          ) : (
-            <Button className="mt-4" variant="outline" onClick={() => void q.refetch()}>
-              Try again
-            </Button>
-          )}
-        </div>
-      </AppShell>
-    );
+    return <AppShell wallet={false}><PrivateReadError error={q.error} noun="Run" onRetry={retryRead} /></AppShell>;
   }
   const run = q.data?.run;
   const guard = q.data?.guard;
@@ -236,7 +237,8 @@ function RunPageContent() {
     authority: guard.authority,
     // The Guard behind this Run was locked by this transaction (N1 / N10).
     lockRecorded: Boolean(guard.txArm),
-    evidenceCommitted: Boolean(guard.evidenceHash),
+    evidenceCommitted: isEvidenceCommitted(guard),
+    evidenceCommitting: isEvidenceCommitting(guard),
     hasFinishedRunWithEvidence: finished && run.events.length > 0,
     // N25: evaluation in flight means "Verification in progress", never a stale
     // "Continue to verification" instruction.
@@ -370,7 +372,7 @@ function RunPageContent() {
                       data-action="finish-run"
                       onClick={() => requestFinish(run.events.length)}
                     >
-                      {CTA.continueToCommitment}
+                      {CTA.finishRun}
                     </Button>
                   </div>
                 </div>
@@ -405,7 +407,7 @@ function RunPageContent() {
 
         {confirmFinishEmpty ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-carbon/40 p-4">
-            <div role="alertdialog" aria-modal="true" aria-labelledby="finish-empty-title" aria-describedby="finish-empty-body" className="paper-panel w-full max-w-lg p-6">
+            <div ref={dialogRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="finish-empty-title" aria-describedby="finish-empty-body" className="paper-panel w-full max-w-lg p-6">
               <h2 id="finish-empty-title" className="font-display text-2xl tracking-tight">Finish without evidence?</h2>
               <p id="finish-empty-body" className="mt-3 text-sm leading-relaxed text-graphite">
                 This Run contains no evidence. GenLayer may be unable to determine whether the Guard was satisfied.

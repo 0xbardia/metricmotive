@@ -34,6 +34,7 @@ export const CTA = {
   technicalDetails: "Technical details",
   continueToVerification: "Continue to verification",
   continueToCommitment: "Review commitment details →",
+  finishRun: "Finish run",
   reviewEvidence: "Review evidence →",
   buildGuard: "Create a Motive Guard",
   lockGuard: "Lock Guard",

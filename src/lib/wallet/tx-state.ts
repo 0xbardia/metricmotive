@@ -104,22 +104,45 @@ export function clearCreateReservationToken(resourceId: string): void {
   }
 }
 
-export function loadPendingTx(resourceId: string): TxState {
+const pendingKey = (resourceId: string, action: string) =>
+  `${PENDING_TX_KEY}:${resourceId}:${action}`;
+
+function readPending(key: string, resourceId: string): (TxState & { savedAt: number }) | null {
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return null;
+  const saved = JSON.parse(raw) as TxState & { savedAt?: number };
+  if (
+    saved.resourceId !== resourceId ||
+    (saved.phase !== "pending" && saved.phase !== "confirming") ||
+    typeof saved.hash !== "string" ||
+    typeof saved.savedAt !== "number" ||
+    Date.now() - saved.savedAt > PENDING_TX_TTL_MS
+  ) {
+    return null;
+  }
+  return saved as TxState & { savedAt: number };
+}
+
+/** Newest pending tx for this guard (or only for `action` when given). Keys are per guard + operation. */
+export function loadPendingTx(resourceId: string, action?: string): TxState {
   if (typeof window === "undefined") return IDLE_TX;
   try {
-    const raw = window.localStorage.getItem(PENDING_TX_KEY);
-    if (!raw) return IDLE_TX;
-    const saved = JSON.parse(raw) as TxState & { savedAt?: number };
-    if (
-      saved.resourceId !== resourceId ||
-      (saved.phase !== "pending" && saved.phase !== "confirming") ||
-      typeof saved.hash !== "string" ||
-      typeof saved.savedAt !== "number" ||
-      Date.now() - saved.savedAt > PENDING_TX_TTL_MS
-    ) {
-      return IDLE_TX;
+    const ls = window.localStorage;
+    // One-time legacy migration: the old single key is moved only if it belongs to THIS guard.
+    const legacy = readPending(PENDING_TX_KEY, resourceId);
+    if (legacy) {
+      ls.setItem(pendingKey(resourceId, legacy.action), JSON.stringify(legacy));
+      ls.removeItem(PENDING_TX_KEY);
     }
-    return saved;
+    let best: (TxState & { savedAt: number }) | null = null;
+    const prefix = `${PENDING_TX_KEY}:${resourceId}:`;
+    for (let i = 0; i < ls.length; i++) {
+      const key = ls.key(i);
+      if (!key?.startsWith(prefix) || (action && key !== pendingKey(resourceId, action))) continue;
+      const saved = readPending(key, resourceId);
+      if (saved && (!best || saved.savedAt > best.savedAt)) best = saved;
+    }
+    return best ?? IDLE_TX;
   } catch {
     return IDLE_TX;
   }
@@ -128,21 +151,32 @@ export function loadPendingTx(resourceId: string): TxState {
 export function persistPendingTx(state: TxState): void {
   if (typeof window === "undefined" || !state.hash || !state.resourceId) return;
   try {
-    window.localStorage.setItem(PENDING_TX_KEY, JSON.stringify({ ...state, savedAt: Date.now() }));
+    window.localStorage.setItem(
+      pendingKey(state.resourceId, state.action),
+      JSON.stringify({ ...state, savedAt: Date.now() }),
+    );
   } catch {
     // Storage is best-effort; the current-page state and DB provenance remain authoritative.
   }
 }
 
-export function clearPendingTx(resourceId?: string): void {
+/** Clears one operation's pending tx, or every operation for the guard when `action` is omitted. */
+export function clearPendingTx(resourceId?: string, action?: string): void {
   if (typeof window === "undefined") return;
   try {
-    const raw = window.localStorage.getItem(PENDING_TX_KEY);
-    if (!resourceId || !raw || (JSON.parse(raw) as TxState).resourceId === resourceId) {
-      window.localStorage.removeItem(PENDING_TX_KEY);
+    const ls = window.localStorage;
+    const legacyRaw = ls.getItem(PENDING_TX_KEY);
+    if (legacyRaw && (!resourceId || (JSON.parse(legacyRaw) as TxState).resourceId === resourceId)) {
+      ls.removeItem(PENDING_TX_KEY);
+    }
+    const prefix = `${PENDING_TX_KEY}:${resourceId ?? ""}`;
+    const keys = Array.from({ length: ls.length }, (_, i) => ls.key(i) ?? "");
+    for (const key of keys) {
+      if (!key.startsWith(prefix)) continue;
+      if (!action || key === pendingKey(resourceId ?? "", action)) ls.removeItem(key);
     }
   } catch {
-    window.localStorage.removeItem(PENDING_TX_KEY);
+    // best effort
   }
 }
 

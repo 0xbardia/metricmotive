@@ -117,10 +117,12 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/routes/app/guards/new.tsx", "utf8"),
     );
-    // Explicit ?guardId= recovery may open the canonical Guard page.
-    assert.match(source, /persistedGuardQuery/);
-    assert.match(source, /persistedGuardQuery\.data\?\.guard\.id/);
-    assert.match(source, /if \(draft\.guardId\) \{[\s\S]*setId\(draft\.guardId\);[\s\S]*setStep\(1\);/);
+    // B-01/B-03: one route with validateSearch; only an owned ?guardId= resumes
+    // (initialBuilderState), never an unscoped stored draft.
+    assert.match(source, /validateSearch: validateGuardSearch/);
+    assert.match(source, /Route\.useSearch\(\)/);
+    assert.match(source, /initialBuilderState/);
+    assert.doesNotMatch(source, /"metricmotive\.guard-draft"/);
     // First Save Definition must not leave the builder before Protect.
     const persistFn = source.slice(source.indexOf("const persist = useMutation"), source.indexOf("async function goNext()"));
     assert.doesNotMatch(persistFn, /to:\s*"\/app\/guards\/\$id"/);
@@ -130,8 +132,10 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/routes/app/guards/$id.tsx", "utf8"),
     );
-    assert.match(source, /evidenceCommitted: Boolean\(guard\.evidenceHash \|\| guard\.txEvidence\)/);
-    assert.match(source, /guard\.txEvidence && !guard\.evidenceHash && data\.runs\[0\]/);
+    // B-07: one shared predicate; E-14: recovery binds to the recorded run id.
+    assert.match(source, /evidenceCommitted: isEvidenceCommitted\(guard\)/);
+    assert.match(source, /isEvidenceCommitting\(guard\) && recoveryRun/);
+    assert.match(source, /data\.runs\.find\(\(run\) => run\.id === data\.evidenceTxRunId\)/);
     assert.match(source, /<SubmitEvidenceChain/);
   });
 
@@ -216,8 +220,8 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.match(banner, /data-transaction-hash/);
     assert.match(banner, /provenance/);
     assert.match(button, /motion-reduce:animate-none/);
-    assert.match(state, /localStorage\.setItem\(\s*PENDING_TX_KEY/);
-    assert.match(state, /localStorage\.getItem\(PENDING_TX_KEY\)/);
+    // B-12: pending transactions are keyed per Guard and operation.
+    assert.match(state, /`\$\{PENDING_TX_KEY\}:\$\{resourceId\}:\$\{action\}`/);
   });
 
   it("recovers a submitted create from the workspace without inviting a duplicate write", async () => {
@@ -236,8 +240,13 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/components/wallet-control.tsx", "utf8"),
     );
-    const networkControl = source.slice(source.indexOf('data-wallet="network"') - 220, source.indexOf('data-wallet="network"'));
-    assert.doesNotMatch(networkControl, /\bhidden\b/);
+    // Only the compact phone header hides the network name; the menu keeps it.
+    assert.match(source, /: "min-h-11 font-mono text-xs text-graphite";/);
+    const chrome = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/chrome.tsx", "utf8"),
+    );
+    assert.equal(chrome.match(/<WalletControl compact \/>/g)?.length, 1);
+    assert.match(chrome, /<WalletControl \/>/);
   });
 
   it("never treats a locally armed Guard as locked without a recorded lock (N1 / N10)", () => {
@@ -247,7 +256,8 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
       published: true,
       lockRecorded: false,
     });
-    assert.equal(unpublished.step, 0);
+    // B-06: an unrecorded lock shows the Lock step, not Draft.
+    assert.equal(unpublished.step, 1);
     assert.equal(unpublished.lockState, "PUBLISHED_NOT_LOCKED");
     assert.equal(unpublished.lockLabel, "PUBLISHED · NOT LOCKED");
     assert.equal(unpublished.lockedGuard, false);
@@ -629,20 +639,6 @@ describe("empty Run and manual evidence form (C2 / C5)", () => {
     const { submitEvidenceBlockedReason } = await import("./ui-rules.ts");
     assert.match(String(submitEvidenceBlockedReason(0)), /no evidence/i);
     assert.equal(submitEvidenceBlockedReason(3), null);
-  });
-
-  it("disallows editing a locked Guard through stepper navigation (M11)", async () => {
-    const { canNavigateToStep } = await import("./ui-rules.ts");
-    // Draft is fully editable, so back/forward is safe.
-    assert.equal(canNavigateToStep(0, 1, "DRAFT"), true);
-    assert.equal(canNavigateToStep(2, 1, "DRAFT"), true);
-    // Once locked, the editable Draft step is unreachable and only forward
-    // navigation into later lifecycle steps is allowed.
-    assert.equal(canNavigateToStep(1, 0, "ARMED"), false);
-    assert.equal(canNavigateToStep(3, 1, "ARMED"), false);
-    assert.equal(canNavigateToStep(1, 2, "ARMED"), true);
-    assert.equal(canNavigateToStep(1, 0, "RESOLVED"), false);
-    assert.equal(canNavigateToStep(2, 2, "RESOLVED"), false);
   });
 
   it("never claims a contract address that was not actually recorded (H5 / provenance)", async () => {

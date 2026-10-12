@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
@@ -7,7 +7,8 @@ import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
-import { Stepper } from "@/components/ui/stepper";
+import { useWalletSession } from "@/lib/wallet/session";
+import { classifyReadError, nextPrivateReadStep } from "@/lib/private-read";
 import { listGuardsFn, reconcileCreateFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
 import { WalletProviders } from "@/lib/wallet/provider";
@@ -66,7 +67,6 @@ function AppHomeContent() {
           </div>
           <Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link>
         </div>
-        <Stepper kind="lifecycle" current={0} className="mt-7" />
       </div>
 
       {!address || !connector ? (
@@ -162,8 +162,73 @@ function lockIsAuthoritative(guard: Guard): boolean {
 export function AppHomeFallback() {
   return (
     <>
-      <div className="max-w-4xl"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">Verification workspace</p><div className="mt-1 flex flex-wrap items-end justify-between gap-4"><div><h1 className="font-display text-4xl tracking-tight">Cases</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">Define what the agent should achieve, capture what happened, and let GenLayer verify the difference.</p></div><Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link></div><Stepper kind="lifecycle" current={0} className="mt-7" /></div>
+      <div className="max-w-4xl"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">Verification workspace</p><div className="mt-1 flex flex-wrap items-end justify-between gap-4"><div><h1 className="font-display text-4xl tracking-tight">Cases</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">Define what the agent should achieve, capture what happened, and let GenLayer verify the difference.</p></div><Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link></div></div>
       <section className="product-status paper-panel mt-9 max-w-3xl p-6" aria-live="polite"><Badge tone="brand">Start here</Badge><h2 className="mt-3 font-display text-3xl tracking-tight">Connect a wallet to open your workspace.</h2><p className="mt-2 text-sm leading-relaxed text-graphite">Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.</p></section>
     </>
+  );
+}
+
+/**
+ * B-04: shared error panel for private Guard / Run reads. Signs the wallet in
+ * (or opens the connect modal) and retries before ever claiming "no access".
+ */
+export function PrivateReadError({
+  error,
+  noun,
+  onRetry,
+}: {
+  error: unknown;
+  noun: "Guard" | "Run";
+  onRetry: () => void;
+}) {
+  const { address, connector, connect } = useWalletSession();
+  const [signedFor, setSignedFor] = useState<string | null>(null);
+  const [wantSign, setWantSign] = useState(false);
+  const [signError, setSignError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const kind = classifyReadError(error);
+  const step = nextPrivateReadStep({
+    errorKind: kind,
+    walletConnected: Boolean(address),
+    sessionSignedFor: Boolean(address) && signedFor === address,
+  });
+
+  useEffect(() => {
+    if (!wantSign || !address || !connector) return;
+    setWantSign(false);
+    setBusy(true);
+    setSignError(null);
+    ensureWalletSession(address, connector)
+      .then(() => {
+        setSignedFor(address);
+        onRetry();
+      })
+      .catch((err) => setSignError(err instanceof Error ? err.message : "Signature was not completed."))
+      .finally(() => setBusy(false));
+  }, [wantSign, address, connector, onRetry]);
+
+  const copy = {
+    "not-found": [`${noun} not found.`, `That URL does not identify a ${noun}.`],
+    connect: [`Sign in to view this ${noun}.`, `Connect the wallet that owns this ${noun}. It is private to that wallet.`],
+    "sign-and-retry": [`Sign in to view this ${noun}.`, "Approve a signature request in your wallet to prove ownership. Nothing is spent."],
+    "no-access": [`You don’t have access to this ${noun}.`, `The signed-in wallet does not own this ${noun}. Switch to the wallet that created it.`],
+    retry: [`We couldn’t load this ${noun} right now.`, "Your case was not deleted. Check the wallet session or try again."],
+  }[step];
+
+  return (
+    <div role="alert" className="paper-panel max-w-2xl p-6">
+      <p className="font-display text-2xl">{copy[0]}</p>
+      <p className="mt-2 text-sm text-graphite">{copy[1]}</p>
+      {signError ? <p className="mt-2 text-sm text-carbon">{signError}</p> : null}
+      {step === "not-found" ? (
+        <Link to="/app" className="mt-4 inline-block"><Button variant="outline">Back to Cases</Button></Link>
+      ) : step === "connect" ? (
+        <Button className="mt-4" onClick={() => { setWantSign(true); connect(); }}>Connect wallet</Button>
+      ) : step === "sign-and-retry" ? (
+        <Button className="mt-4" loading={busy} loadingLabel="Waiting for signature…" disabled={busy} onClick={() => setWantSign(true)}>Sign in with wallet</Button>
+      ) : (
+        <Button className="mt-4" variant="outline" onClick={onRetry}>Try again</Button>
+      )}
+    </div>
   );
 }

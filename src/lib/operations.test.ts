@@ -43,3 +43,20 @@ it("a failed transaction renders the server's failed recovery message, not the m
   assert.equal(view?.title, "Transaction failed on GenLayer");
   assert.equal(view?.message, FAILED_RECOVERY_MESSAGE);
 });
+
+describe("copy and busy (B-09, B-17)", () => {
+  it("lock success says locked, not armed", () => {
+    const v = operationViewFromTx({
+      phase: "success", action: "arm_guard", hash: "0xabc", error: null,
+    } as TxState);
+    assert.match(`${v?.title} ${v?.message}`, /locked/i);
+    assert.doesNotMatch(`${v?.title} ${v?.message}`, /armed/i);
+  });
+  it("confirmation_delayed is not busy", () => {
+    const v = operationViewFromTx({
+      phase: "confirming", action: "arm_guard", hash: "0xabc", error: "rpc timeout",
+    } as TxState);
+    assert.equal(v?.state, "confirmation_delayed");
+    assert.equal(v?.busy, false);
+  });
+});

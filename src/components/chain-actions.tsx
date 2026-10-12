@@ -9,6 +9,7 @@ import { StatusBanner } from "@/components/ui/status-banner";
 import { TxStatusBanner } from "@/components/ui/tx-status-banner";
 import { TechnicalDetails } from "@/components/product-ui";
 import { WalletControl } from "@/components/wallet-control";
+import { useWalletSession } from "@/lib/wallet/session";
 import { auditUiAction } from "@/lib/action-audit";
 import { type Guardrail } from "@/lib/domain";
 import { getActiveDeployment } from "@/lib/contract";
@@ -62,7 +63,8 @@ function useWriteGate() {
   const { address, connector } = useAccount();
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
-  return { address, connector, chainId, switchChainAsync };
+  const { connect } = useWalletSession();
+  return { address, connector, chainId, switchChainAsync, connect };
 }
 
 /**
@@ -142,7 +144,7 @@ function useTransactionReconciliation({
     }
     if (next.phase === "success") {
       completedRef.current = true;
-      clearPendingTx(guardId);
+      clearPendingTx(guardId, operation);
     } else if (next.hash && next.phase !== "failed") {
       completedRef.current = false;
       persistPendingTx({ ...next, resourceId: guardId });
@@ -352,6 +354,7 @@ async function recordTransaction(
   expectedGuardId: string | null,
   reservationToken?: string,
   expectedEvidenceHash?: string,
+  runId?: string,
 ) {
   const deployment = await getGuardDeploymentFn({ data: { id: guardId } });
   await recordTransactionFn({
@@ -366,6 +369,7 @@ async function recordTransaction(
       expectedEvidenceHash,
       reservationToken,
       submittedAt: new Date().toISOString(),
+      ...(runId ? { runId } : {}),
     },
   });
 }
@@ -465,6 +469,7 @@ async function runWrite(opts: {
   const { gate, setTx } = opts;
   if (!gate.address || !gate.connector) {
     setTx({ phase: "need-wallet", action: opts.action, hash: null, error: null });
+    gate.connect();
     return false;
   }
   if (gate.chainId !== ACTIVE_CHAIN_ID) {
@@ -491,7 +496,7 @@ async function runWrite(opts: {
   const setWriteState = (state: TxState) => {
     const next = { ...state, ...provenance };
     setTx(next);
-    if (next.phase === "success") clearPendingTx(opts.resourceId);
+    if (next.phase === "success") clearPendingTx(opts.resourceId, opts.action);
     else if (next.hash && next.phase !== "failed") persistPendingTx(next);
   };
   try {
@@ -609,21 +614,45 @@ async function runWrite(opts: {
   }
 }
 
-export function HistoricalReadOnlyNotice() {
+export function HistoricalReadOnlyNotice({
+  loading = false,
+  failed = false,
+  onRetry,
+}: {
+  loading?: boolean;
+  failed?: boolean;
+  onRetry?: () => void;
+} = {}) {
+  if (failed) {
+    return (
+      <p className="text-sm text-graphite" role="status">
+        Could not check this Guard's deployment, so actions are hidden.{" "}
+        <button type="button" className="underline" onClick={onRetry}>
+          Try again
+        </button>
+      </p>
+    );
+  }
   return (
     <p className="text-sm text-graphite" role="status">
-      Historical deployment — read only
+      {loading ? "Checking deployment…" : "Historical deployment — read only"}
     </p>
   );
 }
 
-function useHistoricalReadOnly(guardId: string): boolean {
+/** Read-only unless the deployment query proved the deployment is active (loading/failed = read only). */
+function useHistoricalReadOnly(guardId: string): { readOnly: boolean; loading: boolean; failed: boolean; retry: () => void } {
   const q = useQuery({
     queryKey: ["guard-deployment", guardId],
     queryFn: () => getGuardDeploymentFn({ data: { id: guardId } }),
     staleTime: 30_000,
   });
-  return Boolean(q.data && q.data.status !== "active");
+  return {
+    readOnly: !q.data || q.data.status !== "active",
+    loading: q.isPending,
+    failed: q.isError,
+    retry: () => void q.refetch(),
+  };
 }
 
 export function WalletGate({ children }: { children: React.ReactNode }) {
@@ -659,6 +688,7 @@ export function CreateAndLock({
   txArm,
   locked = false,
   onCreateSubmitted,
+  onLockInFlight,
   onUpdated,
 }: {
   guardId: string;
@@ -672,6 +702,8 @@ export function CreateAndLock({
   locked?: boolean;
   /** Called after the local Guard safely records a CREATE transaction hash. */
   onCreateSubmitted?: OnUpdated;
+  /** Reports true while the lock (arm_guard) tx is reserved, signing or confirming. */
+  onLockInFlight?: (inFlight: boolean) => void;
   onUpdated: OnUpdated;
 }) {
   const historical = useHistoricalReadOnly(guardId);
@@ -695,7 +727,18 @@ export function CreateAndLock({
   const busy = txBusy(tx);
   const createIntent = useIntent();
   const armIntent = useIntent();
-  if (historical) return <HistoricalReadOnlyNotice />;
+  const lockInFlight = created && (busy || armIntent.active);
+  useEffect(() => {
+    onLockInFlight?.(lockInFlight);
+  }, [lockInFlight, onLockInFlight]);
+  if (historical.readOnly)
+    return (
+      <HistoricalReadOnlyNotice
+        loading={historical.loading}
+        failed={historical.failed}
+        onRetry={historical.retry}
+      />
+    );
 
   async function create() {
     if (busy || createRecovery.hasUnresolved || !createIntent.begin()) return;
@@ -734,7 +777,10 @@ export function CreateAndLock({
         idempotencyKey: reservationToken,
         persistHash: async (hash) => {
           submitted = true;
-          if (!gate.address) throw new Error("Wallet disconnected");
+          if (!gate.address) {
+            gate.connect();
+            throw new Error("Wallet disconnected");
+          }
           await recordTransaction(
             guardId,
             "create_guard",
@@ -799,7 +845,10 @@ export function CreateAndLock({
         resourceId: guardId,
         persistHash: async (hash) => {
           submitted = true;
-          if (!gate.address) throw new Error("Wallet disconnected");
+          if (!gate.address) {
+            gate.connect();
+            throw new Error("Wallet disconnected");
+          }
           await recordTransaction(guardId, "arm_guard", gate.address, hash, onchainId, claim);
         },
         onSubmitted: onUpdated,
@@ -972,7 +1021,14 @@ export function SubmitEvidenceChain({
   );
   const [preparing, setPreparing] = useState(false);
   const submitIntent = useIntent();
-  if (historical) return <HistoricalReadOnlyNotice />;
+  if (historical.readOnly)
+    return (
+      <HistoricalReadOnlyNotice
+        loading={historical.loading}
+        failed={historical.failed}
+        onRetry={historical.retry}
+      />
+    );
 
   async function prepare() {
     if (busy || recovery.hasUnresolved || preparing) return;
@@ -1055,7 +1111,10 @@ export function SubmitEvidenceChain({
         resourceId: guardId,
         persistHash: async (hash) => {
           submitted = true;
-          if (!gate.address) throw new Error("Wallet disconnected");
+          if (!gate.address) {
+            gate.connect();
+            throw new Error("Wallet disconnected");
+          }
           await recordTransaction(
             guardId,
             "submit_evidence",
@@ -1064,6 +1123,7 @@ export function SubmitEvidenceChain({
             onchainId,
             claim,
             prepared.commitmentHash,
+            runId,
           );
         },
         onSubmitted: onUpdated,
@@ -1224,7 +1284,14 @@ export function VerifyWithGenLayer({
   });
   const busy = recovery.busy;
   const verifyIntent = useIntent();
-  if (historical) return <HistoricalReadOnlyNotice />;
+  if (historical.readOnly)
+    return (
+      <HistoricalReadOnlyNotice
+        loading={historical.loading}
+        failed={historical.failed}
+        onRetry={historical.retry}
+      />
+    );
 
   async function verify() {
     if (busy || recovery.hasUnresolved) return;
@@ -1254,7 +1321,10 @@ export function VerifyWithGenLayer({
         resourceId: guardId,
         persistHash: async (hash) => {
           submitted = true;
-          if (!gate.address) throw new Error("Wallet disconnected");
+          if (!gate.address) {
+            gate.connect();
+            throw new Error("Wallet disconnected");
+          }
           await recordTransaction(guardId, "evaluate_guard", gate.address, hash, onchainId, claim);
         },
         onSubmitted: onUpdated,

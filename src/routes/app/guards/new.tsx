@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Textarea } from "@/components/ui/field";
 import { type Guardrail, type GuardrailKind, LIMITS, parseGuardrails } from "@/lib/domain";
 import { auditUiAction } from "@/lib/action-audit";
-import { BUILDER_FLOW } from "@/lib/lifecycle";
+import { BUILDER_FLOW, getGuardLifecyclePresentation } from "@/lib/lifecycle";
+import { initialBuilderState, loadDraft, sameWallet, saveDraft, validateGuardSearch } from "@/lib/guard-draft";
+import { useWalletSession } from "@/lib/wallet/session";
 import { CTA } from "@/lib/terminology";
 import {
   blueprintFn,
@@ -26,11 +28,10 @@ import {
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
 import { WalletProviders } from "@/lib/wallet/provider";
 
-export const Route = createFileRoute("/app/guards/new")({ component: NewGuard });
-
-type NewGuardSearch = { guardId?: string };
-
-const PERSISTED_GUARD_HINT_KEY = "metricmotive.guard-draft";
+export const Route = createFileRoute("/app/guards/new")({
+  component: NewGuard,
+  validateSearch: validateGuardSearch,
+});
 
 const STEPS = BUILDER_FLOW.steps;
 
@@ -112,19 +113,10 @@ function NewGuard() {
   );
 }
 
-const NewGuardRoute = createFileRoute("/app/guards/new")({
-  component: NewGuard,
-  validateSearch: (search: Record<string, unknown>): NewGuardSearch => ({
-    guardId:
-      typeof search.guardId === "string" && search.guardId.startsWith("grd_")
-        ? search.guardId
-        : undefined,
-  }),
-});
-
 function NewGuardContent() {
   const navigate = useNavigate();
-  const search = NewGuardRoute.useSearch() as NewGuardSearch;
+  const search = Route.useSearch();
+  const walletSession = useWalletSession();
   const persistedGuardHint = search.guardId;
   const { address, connector } = useAccount();
   const [step, setStep] = useState(0);
@@ -150,63 +142,49 @@ function NewGuardContent() {
     retry: false,
   });
 
+  // Hydrate only from a ?guardId= this wallet owns; anything else starts empty.
+  const hydratedRef = useRef(!persistedGuardHint);
+  const [hydrated, setHydrated] = useState(!persistedGuardHint);
   useEffect(() => {
-    if (id || typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(PERSISTED_GUARD_HINT_KEY);
-      if (!raw) return;
-      const draft = JSON.parse(raw) as {
-        guardId?: string;
-        motive?: string;
-        metric?: string;
-        guardrails?: Guardrail[];
-      };
-      // /app/guards/new is a new builder unless ?guardId= is explicit.
-      // Auto-sending the user to a previous local draft skipped Protect and
-      // made a Guard with no guardrails.
-      if (draft.motive) setMotive(draft.motive);
-      if (draft.metric) setMetric(draft.metric);
-      if (Array.isArray(draft.guardrails)) setGuardrails(draft.guardrails);
-      if (draft.guardId) {
-        setId(draft.guardId);
-        setStep(1);
+    if (hydratedRef.current) return;
+    if (persistedGuardQuery.isPending) return;
+    hydratedRef.current = true;
+    const g = persistedGuardQuery.data?.guard;
+    if (g && address && sameWallet(g.ownerAddress, address)) {
+      if (g.status !== "DRAFT") {
+        void navigate({ to: "/app/guards/$id", params: { id: g.id }, replace: true });
+        return;
       }
-    } catch {
-      // A corrupt local draft must never block the builder.
+      const init = initialBuilderState({
+        searchGuardId: persistedGuardHint,
+        ownedGuard: g,
+        stored: loadDraft(window.localStorage, g.id),
+      });
+      setId(init.id);
+      setStep(init.step);
+      setMotive(init.draft.motive);
+      setMetric(init.draft.metric);
+      setGuardrails(init.draft.guardrails);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, persistedGuardHint]);
+    setHydrated(true);
+  }, [persistedGuardQuery.isPending, persistedGuardQuery.data, address, persistedGuardHint, navigate]);
 
+  // Keeps saving after an id exists, under a per-guard key.
   useEffect(() => {
-    if (id || typeof window === "undefined" || !address) return;
+    if (!hydrated || typeof window === "undefined" || !address) return;
     if (!motive && !metric && !guardrails.length) return;
     const timer = window.setTimeout(() => {
-      try {
-        window.localStorage.setItem(
-          PERSISTED_GUARD_HINT_KEY,
-          JSON.stringify({ guardId: id, motive, metric, guardrails }),
-        );
-        setDraftSaved(true);
-      } catch {
-        // Best effort only: this is a convenience copy, never authoritative.
-      }
+      if (saveDraft(window.localStorage, id, { motive, metric, guardrails })) setDraftSaved(true);
     }, 600);
     return () => window.clearTimeout(timer);
-  }, [id, address, motive, metric, guardrails]);
-
-  useEffect(() => {
-    if (persistedGuardQuery.data?.guard.id) {
-      void navigate({
-        to: "/app/guards/$id",
-        params: { id: persistedGuardQuery.data.guard.id },
-        replace: true,
-      });
-    }
-  }, [navigate, persistedGuardQuery.data?.guard.id]);
+  }, [hydrated, id, address, motive, metric, guardrails]);
 
   const persist = useMutation({
     mutationFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet to save this Guard.");
+      if (!address || !connector) {
+        walletSession.connect();
+        throw new Error("Connect a wallet to save this Guard.");
+      }
       await ensureWalletSession(address, connector);
       auditUiAction({
         actionName: id ? "guard_definition_updated" : "guard_builder_saved",
@@ -216,18 +194,6 @@ function NewGuardContent() {
       if (!id) {
         const res = await createGuardFn({ data: payload });
         setId(res.guard.id);
-        try {
-          const raw = window.localStorage.getItem(PERSISTED_GUARD_HINT_KEY);
-          if (raw) {
-            const draft = JSON.parse(raw) as { guardId?: string };
-            window.localStorage.setItem(
-              PERSISTED_GUARD_HINT_KEY,
-              JSON.stringify({ ...draft, guardId: res.guard.id }),
-            );
-          }
-        } catch {
-          // Route recovery does not depend on this convenience hint.
-        }
         return res.guard.id;
       }
       await updateDraftFn({ data: { id, ...payload } });
@@ -344,14 +310,14 @@ function NewGuardContent() {
                     onBlur={() => setTouched((current) => ({ ...current, motive: true }))}
                     placeholder="Generate genuine qualified sales opportunities from the declared ICP."
                     aria-invalid={(touched.motive && Boolean(fieldErrors.motive)) || undefined}
-                    aria-describedby="motive-count motive-error"
+                    aria-describedby={`motive-count${touched.motive && fieldErrors.motive ? " motive-error" : ""}`}
                   />
                   <p className="mt-1 flex flex-wrap justify-between gap-2 text-xs text-graphite">
                     <span id="motive-count" className="tabular-nums" aria-live="polite">
                       {LIMITS.motive - motive.length} characters left
                     </span>
                   </p>
-                  <FieldError>{touched.motive ? fieldErrors.motive : null}</FieldError>
+                  <FieldError id="motive">{touched.motive ? fieldErrors.motive : null}</FieldError>
                 </fieldset>
                 <fieldset>
                   <Label htmlFor="metric">Metric</Label>
@@ -365,7 +331,7 @@ function NewGuardContent() {
                     onChange={(event) => setMetric(event.target.value)}
                     onBlur={() => setTouched((current) => ({ ...current, metric: true }))}
                     placeholder="Book 80 meetings this week."
-                    aria-describedby="metric-help metric-count metric-error"
+                    aria-describedby={`metric-help metric-count${touched.metric && fieldErrors.metric ? " metric-error" : ""}`}
                     aria-invalid={(touched.metric && Boolean(fieldErrors.metric)) || undefined}
                   />
                   <p id="metric-help" className="mt-1 text-xs text-graphite">
@@ -378,7 +344,7 @@ function NewGuardContent() {
                   >
                     {LIMITS.metric - metric.length} characters left
                   </p>
-                  <FieldError>{touched.metric ? fieldErrors.metric : null}</FieldError>
+                  <FieldError id="metric">{touched.metric ? fieldErrors.metric : null}</FieldError>
                 </fieldset>
               </div>
               <div className="mt-7 border-l-2 border-brand pl-4 text-sm text-graphite">
@@ -751,9 +717,13 @@ function NewGuardContent() {
                     txCreate={guardQ.data?.guard.txCreate ?? null}
                     txArm={guardQ.data?.guard.txArm ?? null}
                     locked={
-                      guardQ.data?.guard.status === "ARMED" ||
-                      guardQ.data?.guard.status === "EVIDENCE_SUBMITTED" ||
-                      guardQ.data?.guard.status === "RESOLVED"
+                      guardQ.data
+                        ? getGuardLifecyclePresentation({
+                            guardStatus: guardQ.data.guard.status,
+                            authority: guardQ.data.guard.authority,
+                            lockRecorded: Boolean(guardQ.data.guard.txArm),
+                          }).lockedGuard
+                        : false
                     }
                     onCreateSubmitted={async () => {
                       await navigate({ to: "/app/guards/$id", params: { id }, replace: true });

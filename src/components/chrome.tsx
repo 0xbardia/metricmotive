@@ -128,15 +128,15 @@ export function SiteHeader({
         </nav>
         <div className="flex items-center gap-2">
           {withWallet ? (
-            <div className="hidden sm:block">
+            <div>
               <Suspense
                 fallback={
-                  <Button size="sm" variant="outline" disabled>
+                  <Button size="sm" variant="outline" className="min-h-11" disabled>
                     Connect wallet
                   </Button>
                 }
               >
-                <WalletControl />
+                <WalletControl compact />
               </Suspense>
             </div>
           ) : null}

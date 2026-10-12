@@ -38,19 +38,6 @@ export function submitEvidenceBlockedReason(eventCount: number): string | null {
   return null;
 }
 
-/**
- * Stepper navigation is limited to safe, non-destructive steps. A locked Guard
- * can never be navigated back into editable states (M11).
- */
-export function canNavigateToStep(current: number, target: number, status: string): boolean {
-  if (target === current) return false;
-  if (target < 0 || target > 3) return false;
-  if (status === "DRAFT") return true;
-  // Once locked, step 0 (Draft) is the editable definition and is unreachable;
-  // only forward navigation toward later lifecycle steps is safe.
-  return target > current;
-}
-
 /** A single in-flight async action blocks any second invocation (H0). */
 export function canSubmit(input: {
   busy: boolean;

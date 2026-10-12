@@ -1,4 +1,5 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { fieldDescribedBy, fieldIds } from "@/lib/a11y";
 import { cn } from "@/lib/cn";
 
 export function Label({ className, ...props }: ComponentProps<"label">) {
@@ -30,11 +31,25 @@ export function Select({ className, ...props }: ComponentProps<"select">) {
   return <select className={cn(fieldClass, "appearance-auto", className)} {...props} />;
 }
 
-export function FieldError({ children }: { children?: string | null }) {
+export function FieldError({ children, id }: { children?: string | null; id?: string }) {
+  return (
+    <div aria-live="polite">
+      {children ? (
+        <p id={id ? fieldIds(id).error : undefined} className="mt-1.5 text-sm text-brick">
+          {children}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function FieldHint({ children, id }: { children?: ReactNode; id?: string }) {
   if (!children) return null;
   return (
-    <p className="mt-1.5 text-sm text-brick" role="alert">
+    <p id={id ? fieldIds(id).hint : undefined} className="mt-1.5 text-sm text-graphite">
       {children}
     </p>
   );
 }
+
+export { fieldDescribedBy };

@@ -1,9 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Play } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { AppShell } from "@/components/app-shell";
+import { PrivateReadError } from "@/components/app-home-content";
 import { AdvisoryNote } from "@/components/chrome";
 import { CreateAndLock, SubmitEvidenceChain, VerifyWithGenLayer } from "@/components/chain-actions";
 import { TechnicalDetails } from "@/components/product-ui";
@@ -19,7 +20,7 @@ import { guardDeployment } from "@/lib/contract";
 import { auditUiAction } from "@/lib/action-audit";
 import { verdictCopy, type Guard } from "@/lib/domain";
 import { formatUtc } from "@/lib/format";
-import { getGuardLifecyclePresentation } from "@/lib/lifecycle";
+import { getGuardLifecyclePresentation, isEvidenceCommitted, isEvidenceCommitting } from "@/lib/lifecycle";
 import {
   eligibilityObservationsFromEvents,
   explainMetric,
@@ -44,8 +45,17 @@ function GuardPageContent() {
   const { id } = Route.useParams();
   const { address, connector } = useAccount();
   const [actionError, setActionError] = useState<string | null>(null);
+  // B-06: the stepper shows Lock while the lock transaction is in flight.
+  const [lockInFlight, setLockInFlight] = useState(false);
   const v2IntentRef = useRef(false);
-  const q = useQuery({ queryKey: ["guard", id], queryFn: () => getGuardFn({ data: { id } }) });
+  const q = useQuery({
+    queryKey: ["guard", id, address ?? null],
+    queryFn: async () => {
+      if (address && connector) await ensureWalletSession(address, connector);
+      return getGuardFn({ data: { id } });
+    },
+  });
+  const retryRead = useCallback(() => void q.refetch(), [q.refetch]);
 
   const start = useMutation({
     mutationFn: async () => {
@@ -96,18 +106,7 @@ function GuardPageContent() {
 
   if (q.isLoading) return <AppShell wallet={false}><p className="text-sm text-graphite">Loading Guard…</p></AppShell>;
   if (q.isError) {
-    const message = q.error instanceof Error ? q.error.message : "";
-    const unauthorized = /authentication|control|access/i.test(message);
-    const notFound = /not found/i.test(message);
-    return (
-      <AppShell wallet={false}>
-        <div role="alert" className="paper-panel max-w-2xl p-6">
-          <p className="font-display text-2xl">{notFound ? "Guard not found." : unauthorized ? "You don’t have access to this Guard." : "We couldn’t load this Guard right now."}</p>
-          <p className="mt-2 text-sm text-graphite">{notFound ? "That Guard URL does not identify a published case." : unauthorized ? "Connect the wallet that owns this case. Private Guards are not exposed to other wallets." : "Your case was not deleted. Check the wallet session or try again."}</p>
-          <Button className="mt-4" variant="outline" onClick={() => void q.refetch()}>Try again</Button>
-        </div>
-      </AppShell>
-    );
+    return <AppShell wallet={false}><PrivateReadError error={q.error} noun="Guard" onRetry={retryRead} /></AppShell>;
   }
   const data = q.data;
   if (!data) return <AppShell wallet={false}><p>Guard not found.</p></AppShell>;
@@ -123,10 +122,12 @@ function GuardPageContent() {
     published: Boolean(guard.onchainId),
     // The lock is authoritative only once its transaction was recorded (N10).
     lockRecorded: Boolean(guard.txArm),
+    lockInFlight,
     // A submitted evidence hash is already a durable intent, even while the
     // local projection is catching up. Keep the Guard page in the same
     // reconciliation/verification state instead of offering a duplicate Run.
-    evidenceCommitted: Boolean(guard.evidenceHash || guard.txEvidence),
+    evidenceCommitted: isEvidenceCommitted(guard),
+    evidenceCommitting: isEvidenceCommitting(guard),
     hasFinishedRunWithEvidence: finishedRunWithEvidence,
     hasReceipt: Boolean(data.receiptId),
     // N25: evaluation in flight means "Verification in progress".
@@ -180,7 +181,7 @@ function GuardPageContent() {
 
         <div className="mt-8">
           <NextActionCard lifecycle={lifecycle}>
-            {nextAction({ guard, data, start, lifecycleKind: lifecycle.nextAction.kind, onUpdated: async () => { await q.refetch(); } })}
+            {nextAction({ guard, data, start, lifecycleKind: lifecycle.nextAction.kind, onLockInFlight: setLockInFlight, onUpdated: async () => { await q.refetch(); } })}
           </NextActionCard>
         </div>
 
@@ -243,11 +244,22 @@ function GuardPageContent() {
   );
 }
 
+/**
+ * E-14: evidence recovery binds to the Run recorded with the submit_evidence
+ * transaction. Rows recorded before migration 0012 have no run id; they keep
+ * the previous latest-Run binding.
+ */
+function evidenceRecoveryRun(data: Awaited<ReturnType<typeof getGuardFn>>) {
+  if (data.evidenceTxRunId) return data.runs.find((run) => run.id === data.evidenceTxRunId);
+  return data.runs[0];
+}
+
 function nextAction({
   guard,
   data,
   start,
   lifecycleKind,
+  onLockInFlight,
   onUpdated,
 }: {
   guard: Guard;
@@ -257,12 +269,14 @@ function nextAction({
     mutateAsync: () => Promise<{ run: { id: string } }>;
   };
   lifecycleKind: string;
+  onLockInFlight: (inFlight: boolean) => void;
   onUpdated: () => void | Promise<void>;
 }) {
-  if (lifecycleKind === "publish-and-lock") return <CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onUpdated={onUpdated} />;
+  if (lifecycleKind === "publish-and-lock") return <CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onLockInFlight={onLockInFlight} onUpdated={onUpdated} />;
   if (lifecycleKind === "start-run") return <div className="flex flex-wrap items-center gap-3"><Button loading={start.isPending} loadingLabel="Starting Run…" disabled={start.isPending} onClick={async () => { const result = await start.mutateAsync(); window.location.href = `/app/runs/${result.run.id}`; }}><Play className="size-4" />{CTA.startRun}</Button></div>;
-  if (guard.txEvidence && !guard.evidenceHash && data.runs[0]) {
-    return <SubmitEvidenceChain guardId={guard.id} runId={data.runs[0].id} onchainId={guard.onchainId} txEvidence={guard.txEvidence} onUpdated={onUpdated} />;
+  const recoveryRun = evidenceRecoveryRun(data);
+  if (isEvidenceCommitting(guard) && recoveryRun) {
+    return <SubmitEvidenceChain guardId={guard.id} runId={recoveryRun.id} onchainId={guard.onchainId} txEvidence={guard.txEvidence} onUpdated={onUpdated} />;
   }
   if (lifecycleKind === "commit-evidence" && data.runs[0]) {
     return (

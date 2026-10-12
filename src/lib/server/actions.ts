@@ -15,8 +15,6 @@ import { getReadClientForDeployment } from "./chain-client";
 import {
   analytics,
   appendRunEvent,
-  armLocal,
-  attachEvidence,
   findGuardVersion,
   finishRun,
   getGuard,
@@ -26,6 +24,7 @@ import {
   listGuards,
   listRuns,
   receiptForGuard,
+  getEvidenceTxRunId,
   recordChainTransaction,
   recordActionAudit,
   releaseChainOperation,
@@ -242,7 +241,8 @@ export const getGuardFn = createServerFn({ method: "GET" })
      * associated by the explicit durable guard id (never by "latest Run").
      */
     const runs = await listRuns(guard.id, ownerAddress);
-    return { guard, receiptId, runs };
+    const evidenceTxRunId = await getEvidenceTxRunId(guard.id);
+    return { guard, receiptId, runs, evidenceTxRunId };
   });
 
 export const createGuardFn = createServerFn({ method: "POST" })
@@ -262,13 +262,6 @@ export const updateDraftFn = createServerFn({ method: "POST" })
     const parsed = parseDraft(data);
     const guard = await updateDraft(parseId(data.id, "Guard id"), parsed, ownerAddress);
     return { guard };
-  });
-
-export const armGuardFn = createServerFn({ method: "POST" })
-  .validator((input: unknown) => parseInput(idRequestSchema, input, "Guard request is invalid"))
-  .handler(async ({ data }) => {
-    const guard = await armLocal(parseId(data.id, "Guard id"), await requireWalletAddress());
-    return { guard, lockKind: "LOCAL" as const };
   });
 
 export const preflightFn = createServerFn({ method: "POST" })
@@ -367,20 +360,6 @@ export const getRunFn = createServerFn({ method: "GET" })
       }
     }
     return { run, guard };
-  });
-
-export const submitEvidenceFn = createServerFn({ method: "POST" })
-  .validator((input: unknown) => parseInput(guardRunRequestSchema, input, "Evidence request is invalid"))
-  .handler(async ({ data }) => {
-    const ownerAddress = await requireWalletAddress();
-    const guard = await requireOwnedGuard(parseId(data.guardId, "Guard id"), ownerAddress);
-    const run = await requireOwnedRun(parseId(data.runId, "Run id"), ownerAddress);
-    if (run.guardId !== guard.id) {
-      throw new AppError("MISMATCH", "Run does not belong to this guard", 400);
-    }
-    const snapshot = await ensureRunEvidenceSnapshot(run, guard.onchainId ?? guard.id);
-    const updated = await attachEvidence(guard.id, snapshot.manifest, ownerAddress);
-    return { guard: updated, manifest: snapshot.manifest };
   });
 
 export const evaluateFn = createServerFn({ method: "POST" })
@@ -674,6 +653,8 @@ export const recordTransactionFn = createServerFn({ method: "POST" })
       expectedGuardId: data.expectedGuardId ?? null,
       expectedEvidenceHash: data.expectedEvidenceHash ?? null,
       reservationToken: data.reservationToken,
+      // runId is added to recordTransactionRequestSchema (validation.ts) by the planner.
+      runId: (data as typeof data & { runId?: string }).runId ?? null,
     }, ownerAddress);
     return { guard };
   });

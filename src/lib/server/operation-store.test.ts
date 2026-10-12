@@ -155,3 +155,11 @@ describe("operation reservations (PGLite)", () => {
     assert.equal((await reserveOperationSlot(sql, { ...base, token: "tab-a", now })).canSubmit, true);
   });
 });
+
+import { resolveTxRunId } from "./operation-store.ts";
+it("resolveTxRunId stores run for submit_evidence and rejects another guard's run", () => {
+  assert.deepEqual(resolveTxRunId("submit_evidence", "r1", "g1", "g1"), { ok: true, runId: "r1" });
+  assert.equal(resolveTxRunId("submit_evidence", "r1", "g2", "g1").ok, false);
+  assert.equal(resolveTxRunId("submit_evidence", "r1", null, "g1").ok, false);
+  assert.deepEqual(resolveTxRunId("arm_guard", "r1", "g2", "g1"), { ok: true, runId: null });
+});
