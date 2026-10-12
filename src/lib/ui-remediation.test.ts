@@ -152,6 +152,73 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.match(source, /await onUpdatedRef\.current\(\)/);
   });
 
+  it("routes CREATE to the canonical Guard page after its hash is persisted", async () => {
+    const builder = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/routes/app/guards/new.tsx", "utf8"),
+    );
+    const actions = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/chain-actions.tsx", "utf8"),
+    );
+    assert.match(builder, /onCreateSubmitted=\{async \(\) => \{[\s\S]*?await navigate\(/);
+    assert.match(builder, /to: "\/app\/guards\/\$id"/);
+    assert.match(builder, /replace: true/);
+    const createFlow = actions.slice(actions.indexOf("async function create()"), actions.indexOf("async function lock()"));
+    assert.match(createFlow, /await recordTransaction\(/);
+    assert.match(createFlow, /onSubmitted: async/);
+    assert.match(createFlow, /await onCreateSubmitted\(\)/);
+  });
+
+  it("renders a pending CREATE on the canonical Guard route with one shared status surface", async () => {
+    const route = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/routes/app/guards/$id.tsx", "utf8"),
+    );
+    const actions = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/chain-actions.tsx", "utf8"),
+    );
+    const banner = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/ui/tx-status-banner.tsx", "utf8"),
+    );
+    assert.match(route, /<CreateAndLock/);
+    assert.match(route, /txCreate=\{guard\.txCreate\}/);
+    assert.match(banner, /data-transaction-hash/);
+    assert.match(actions, /loadPendingTx\(guardId\)/);
+  });
+
+  it("keeps every lifecycle write on the same guarded reconciliation path", async () => {
+    const source = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/chain-actions.tsx", "utf8"),
+    );
+    const operations = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/lib/operations.ts", "utf8"),
+    );
+    for (const action of ["create_guard", "arm_guard", "submit_evidence", "evaluate_guard"]) {
+      assert.match(source, new RegExp(`action: "${action}"`));
+      assert.match(source, new RegExp(`functionName: "${action}"`));
+    }
+    assert.match(source, /confirmationBackoffMs\(attempt\)/);
+    assert.match(source, /attempt >= 20/);
+    assert.match(operations, /No new transaction will be sent/);
+    assert.match(source, /hasUnresolved: txBusy\(tx\) \|\| isRecoverable\(tx\)/);
+  });
+
+  it("keeps hash, explorer, copy, reduced motion, and persistence affordances in the shared UI", async () => {
+    const banner = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/ui/tx-status-banner.tsx", "utf8"),
+    );
+    const button = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/components/ui/status-banner.tsx", "utf8"),
+    );
+    const state = await import("node:fs").then(({ readFileSync }) =>
+      readFileSync("src/lib/wallet/tx-state.ts", "utf8"),
+    );
+    assert.match(banner, /IdBadge/);
+    assert.match(banner, /data-transaction-hash/);
+    assert.match(banner, /provenance/);
+    assert.match(button, /motion-reduce:animate-none/);
+    assert.match(state, /localStorage\.setItem\(\s*PENDING_TX_KEY/);
+    assert.match(state, /localStorage\.getItem\(PENDING_TX_KEY\)/);
+  });
+
   it("recovers a submitted create from the workspace without inviting a duplicate write", async () => {
     const source = await import("node:fs").then(({ readFileSync }) =>
       readFileSync("src/components/app-home-content.tsx", "utf8"),
@@ -160,8 +227,8 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
     assert.match(source, /guard\.txCreate && !guard\.onchainId/);
     assert.match(source, /result\.state === "reconciled"/);
     assert.match(source, /invalidateQueries\(\{ queryKey: \["guards", address\] \}\)/);
-    assert.match(source, /Confirmation delayed/);
-    assert.match(source, /Check confirmation/);
+    assert.match(source, /Still waiting for confirmation/);
+    assert.match(source, /Open Guard to continue checking/);
   });
 
   it("keeps the active network visible in the mobile wallet menu", async () => {
@@ -243,11 +310,61 @@ describe("operation status model (C1 / M7)", () => {
     assert.equal(view.retryMode, "reconcile");
     assert.equal(view.retryLabel, "Check again");
     assert.equal(view.severity, "warning");
-    assert.ok(view.diagnostic && /No new transaction will be submitted/i.test(view.diagnostic));
+    assert.equal(view.title, "Still waiting for confirmation");
+    assert.ok(view.message.includes("No new transaction will be sent"));
+    assert.ok(view.diagnostic && /continues checking automatically/i.test(view.diagnostic));
     // The historical defect was a concatenation such as
     // "Requesting the GenLayer verdict submitted…". Assert one coherent title.
-    assert.equal(view.title, "Confirmation delayed");
+    assert.equal(view.title, "Still waiting for confirmation");
     assert.ok(!/verdict submitted\.\.\.|submitted…/.test(view.title));
+  });
+
+  it("uses one exact transaction language across CREATE, ARM, EVIDENCE, and EVALUATE", () => {
+    for (const action of ["create_guard", "arm_guard", "submit_evidence", "evaluate_guard"]) {
+      const baseState = { action, originAddress: "0x1", originChainId: 61997 };
+      assert.equal(
+        operationViewFromTx({ ...baseState, phase: "request", hash: null, error: null })?.title,
+        "Confirm in your wallet",
+      );
+      assert.equal(
+        operationViewFromTx({ ...baseState, phase: "pending", hash: "0xabc", error: null })?.title,
+        "Transaction submitted",
+      );
+      assert.equal(
+        operationViewFromTx({ ...baseState, phase: "confirming", hash: "0xabc", error: null })?.title,
+        "Confirming on GenLayer…",
+      );
+      assert.equal(
+        operationViewFromTx({ ...baseState, phase: "confirming", hash: "0xabc", error: null })?.busy,
+        true,
+      );
+      assert.equal(
+        operationViewFromTx({ ...baseState, phase: "success", hash: "0xabc", error: null })?.status,
+        "Confirmed",
+      );
+    }
+  });
+
+  it("separates a proven revert from temporary confirmation unavailability", () => {
+    const base = { action: "arm_guard", originAddress: "0x1", originChainId: 61997 };
+    const reverted = operationViewFromTx({
+      ...base,
+      phase: "failed",
+      hash: "0xabc",
+      error: "FINISHED_WITH_ERROR",
+      failureKind: "reverted",
+    });
+    const unavailable = operationViewFromTx({
+      ...base,
+      phase: "confirming",
+      hash: "0xabc",
+      error: "RPC timeout",
+    });
+    assert.equal(reverted?.state, "failed");
+    assert.equal(reverted?.title, "Transaction reverted");
+    assert.equal(unavailable?.state, "confirmation_delayed");
+    assert.equal(unavailable?.title, "Still waiting for confirmation");
+    assert.notEqual(reverted?.state, unavailable?.state);
   });
 
   it("collapses duplicate messages from different sources exactly once", () => {

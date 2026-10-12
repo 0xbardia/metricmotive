@@ -74,12 +74,7 @@ export function advance(from: OperationState, to: OperationState): OperationStat
 }
 
 export type OperationType =
-  | "create"
-  | "lock"
-  | "submitEvidence"
-  | "evaluate"
-  | "reconcile"
-  | "wallet";
+  "create" | "lock" | "submitEvidence" | "evaluate" | "reconcile" | "wallet";
 
 export type OperationView = {
   type: OperationType;
@@ -108,23 +103,23 @@ const OPERATION_TITLES: Record<
 > = {
   create: {
     request: "Publishing the Guard definition",
-    submitted: "Guard definition published",
-    pending: "Guard definition submitted",
+    submitted: "Guard published",
+    pending: "Transaction submitted",
   },
   lock: {
     request: "Locking the Guard",
-    submitted: "Guard locked",
-    pending: "Lock transaction submitted",
+    submitted: "Guard armed",
+    pending: "Transaction submitted",
   },
   submitEvidence: {
     request: "Committing the evidence",
     submitted: "Evidence committed",
-    pending: "Evidence transaction submitted",
+    pending: "Transaction submitted",
   },
   evaluate: {
     request: "Requesting the GenLayer verdict",
-    submitted: "GenLayer verdict requested",
-    pending: "Verification request submitted",
+    submitted: "Guard resolved",
+    pending: "Transaction submitted",
   },
   reconcile: {
     request: "Checking GenLayer",
@@ -166,7 +161,7 @@ const PHASE_SEVERITY: Record<TxState["phase"], Severity> = {
   pending: "info",
   // Delayed confirmation is a waiting state, not an error: warning is the
   // strongest tone it may carry, and it never reads as danger.
-  confirming: "warning",
+  confirming: "info",
   rejected: "neutral",
   failed: "danger",
   success: "success",
@@ -188,13 +183,11 @@ function operationTypeOf(action: string): OperationType {
 }
 
 /**
- * A confirmed-but-unreconciled transaction is recoverable, not failed: the hash
- * is preserved and Check again only re-reads it.
+ * A submitted-but-unreconciled transaction is recoverable, not failed: the
+ * hash is preserved and Check again only re-reads it.
  */
 export function isRecoverable(state: TxState): boolean {
-  return (
-    (state.phase === "confirming" || state.phase === "pending") && Boolean(state.hash)
-  );
+  return (state.phase === "confirming" || state.phase === "pending") && Boolean(state.hash);
 }
 
 /**
@@ -211,35 +204,40 @@ function copyFor(
   state: OperationState,
   type: OperationType,
   titles: { request: string; submitted: string; pending: string },
+  tx: TxState,
 ): OperationCopy {
   switch (state) {
     case "awaiting_wallet":
       return {
-        status: "Approve in wallet",
-        title: titles.request,
+        status: "Confirm in your wallet",
+        title: "Confirm in your wallet",
         message: "Approve this step in your wallet. Nothing is written until you sign.",
       };
     case "submitted":
       return {
-        status: "Submitted",
+        status: "Transaction submitted",
         title: titles.pending,
-        message: "The transaction was submitted. Waiting for GenLayer to confirm it.",
+        message: "The transaction was submitted. MetricMotive is checking its status.",
       };
     case "confirming":
       return {
         status: "Confirming",
-        title: titles.submitted,
-        message: "GenLayer is confirming this transaction.",
+        title: "Confirming on GenLayer…",
+        message: "The transaction has been submitted and MetricMotive is checking its status.",
       };
     case "confirmation_delayed":
       return {
-        status: "Confirmation delayed",
-        title: "Confirmation delayed",
-        message:
-          "The transaction was submitted successfully, but MetricMotive could not confirm it yet. No new transaction will be sent.",
+        status: "Still checking",
+        title: "Still waiting for confirmation",
+        message: "Your transaction has already been submitted. No new transaction will be sent.",
       };
     case "finalized":
-      return { status: "Finalized", title: titles.submitted, message: "Confirmed on-chain." };
+      return {
+        status: "Confirmed",
+        title: titles.submitted,
+        message:
+          "MetricMotive confirmed this transaction on GenLayer. The next action is available below.",
+      };
     case "failed":
       return type === "wallet"
         ? {
@@ -247,11 +245,25 @@ function copyFor(
             title: "Wallet request cancelled",
             message: "Nothing was sent. You can try again when you are ready.",
           }
-        : {
-            status: "Needs attention",
-            title: `${titles.request} did not complete`,
-            message: "The transaction was not accepted. No on-chain state was created.",
-          };
+        : tx.failureKind === "reverted"
+          ? {
+              status: "Transaction reverted",
+              title: "Transaction reverted",
+              message: "GenLayer rejected this transaction. No state change was finalized.",
+            }
+          : tx.failureKind === "mismatch"
+            ? {
+                status: "Could not verify",
+                title: "Transaction could not be verified",
+                message: tx.error ?? "MetricMotive could not verify the submitted transaction.",
+              }
+            : {
+                status: "Transaction failed",
+                title: "Transaction failed",
+                message: tx.hash
+                  ? "The transaction did not complete. Review the details before trying again."
+                  : "The transaction was not accepted. No on-chain state was created.",
+              };
     default:
       return { status: "Status", title: titles.request, message: "" };
   }
@@ -276,17 +288,14 @@ export function operationViewFromTx(state: TxState): OperationView | null {
   const hasHash = Boolean(state.hash);
   /**
    * A hash whose finality could not be READ is delayed. `confirming` with no
-   * error is a normal in-flight confirmation; `confirming` WITH an error, and a
-   * `failed` phase that nonetheless produced a hash, are both delays.
+   * error is normal in-flight confirmation; an error marks a temporary delay.
    */
-  const delayed =
-    hasHash &&
-    state.phase !== "success" &&
-    state.phase !== "rejected" &&
-    (state.phase === "confirming" ? Boolean(state.error) : state.phase === "failed");
-  const operationState: OperationState = delayed ? "confirmation_delayed" : PHASE_STATE[state.phase];
+  const delayed = hasHash && state.phase === "confirming" && Boolean(state.error);
+  const operationState: OperationState = delayed
+    ? "confirmation_delayed"
+    : PHASE_STATE[state.phase];
 
-  const copy = copyFor(operationState, type, titles);
+  const copy = copyFor(operationState, type, titles, state);
   const isDelayed = operationState === "confirmation_delayed";
 
   return {
@@ -301,10 +310,13 @@ export function operationViewFromTx(state: TxState): OperationView | null {
     retryMode: isDelayed ? "reconcile" : "none",
     retryLabel: isDelayed ? "Check again" : null,
     diagnostic: isDelayed
-      ? "No new transaction will be submitted. Checking again only re-reads this transaction."
+      ? "MetricMotive continues checking automatically. You can safely leave this page."
       : null,
     technicalDetails: state.error,
-    busy: state.phase === "request" || state.phase === "pending",
+    busy:
+      state.phase === "request" ||
+      state.phase === "pending" ||
+      state.phase === "confirming",
     live: true,
   };
 }

@@ -153,7 +153,7 @@ describe("operation state machine invariants", () => {
     });
     assert.equal(delayed?.state, "confirmation_delayed");
     assert.notEqual(delayed?.state, "failed");
-    assert.equal(delayed?.title, "Confirmation delayed");
+    assert.equal(delayed?.title, "Still waiting for confirmation");
     assert.doesNotMatch(delayed?.title ?? "", /did not complete/i);
   });
 
@@ -191,7 +191,7 @@ describe("operation state machine invariants", () => {
     });
     assert.equal(view?.retryLabel, "Check again");
     assert.equal(view?.retryMode, "reconcile");
-    assert.match(view?.diagnostic ?? "", /No new transaction will be submitted/i);
+    assert.match(view?.message ?? "", /No new transaction will be sent/i);
   });
 
   it("keeps transitions monotonic so a stale response cannot regress state", () => {

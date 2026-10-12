@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, CheckCircle2, Info, OctagonAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide-react";
 import { TechnicalDetails } from "@/components/product-ui";
 import { cn } from "@/lib/cn";
 import { roleAccent, roleClass, type Severity } from "@/lib/tokens";
@@ -24,6 +24,8 @@ export type StatusBannerProps = {
   technicalDetails?: ReactNode;
   children?: ReactNode;
   className?: string;
+  busy?: boolean;
+  state?: string;
 };
 
 /**
@@ -42,21 +44,33 @@ export function StatusBanner({
   technicalDetails,
   children,
   className,
+  busy = false,
+  state,
 }: StatusBannerProps) {
-  const Icon = ICONS[severity];
+  const Icon = busy ? Loader2 : ICONS[severity];
   return (
     <section
       className={cn("product-status paper-panel p-5", roleClass(severity), className)}
       style={{ borderLeftColor: roleAccent(severity) }}
       role="status"
       aria-live={severity === "neutral" ? undefined : "polite"}
+      aria-atomic="true"
+      data-active={busy || undefined}
+      data-state={state}
       data-severity={severity}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           {status ? (
             <p className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-graphite">
-              <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+              <Icon
+                className={cn(
+                  "size-3.5 shrink-0",
+                  busy && "animate-spin motion-reduce:animate-none",
+                  !busy && severity === "success" && "status-success-icon",
+                )}
+                aria-hidden="true"
+              />
               {status}
             </p>
           ) : null}

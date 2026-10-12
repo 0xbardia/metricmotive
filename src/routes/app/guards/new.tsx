@@ -11,12 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Textarea } from "@/components/ui/field";
-import {
-  type Guardrail,
-  type GuardrailKind,
-  LIMITS,
-  parseGuardrails,
-} from "@/lib/domain";
+import { type Guardrail, type GuardrailKind, LIMITS, parseGuardrails } from "@/lib/domain";
 import { auditUiAction } from "@/lib/action-audit";
 import { BUILDER_FLOW } from "@/lib/lifecycle";
 import { CTA } from "@/lib/terminology";
@@ -120,9 +115,10 @@ function NewGuard() {
 const NewGuardRoute = createFileRoute("/app/guards/new")({
   component: NewGuard,
   validateSearch: (search: Record<string, unknown>): NewGuardSearch => ({
-    guardId: typeof search.guardId === "string" && search.guardId.startsWith("grd_")
-      ? search.guardId
-      : undefined,
+    guardId:
+      typeof search.guardId === "string" && search.guardId.startsWith("grd_")
+        ? search.guardId
+        : undefined,
   }),
 });
 
@@ -186,7 +182,10 @@ function NewGuardContent() {
     if (!motive && !metric && !guardrails.length) return;
     const timer = window.setTimeout(() => {
       try {
-        window.localStorage.setItem(PERSISTED_GUARD_HINT_KEY, JSON.stringify({ guardId: id, motive, metric, guardrails }));
+        window.localStorage.setItem(
+          PERSISTED_GUARD_HINT_KEY,
+          JSON.stringify({ guardId: id, motive, metric, guardrails }),
+        );
         setDraftSaved(true);
       } catch {
         // Best effort only: this is a convenience copy, never authoritative.
@@ -209,7 +208,10 @@ function NewGuardContent() {
     mutationFn: async () => {
       if (!address || !connector) throw new Error("Connect a wallet to save this Guard.");
       await ensureWalletSession(address, connector);
-      auditUiAction({ actionName: id ? "guard_definition_updated" : "guard_builder_saved", resourceId: id });
+      auditUiAction({
+        actionName: id ? "guard_definition_updated" : "guard_builder_saved",
+        resourceId: id,
+      });
       const payload = { motive, metric, guardrails };
       if (!id) {
         const res = await createGuardFn({ data: payload });
@@ -218,7 +220,10 @@ function NewGuardContent() {
           const raw = window.localStorage.getItem(PERSISTED_GUARD_HINT_KEY);
           if (raw) {
             const draft = JSON.parse(raw) as { guardId?: string };
-            window.localStorage.setItem(PERSISTED_GUARD_HINT_KEY, JSON.stringify({ ...draft, guardId: res.guard.id }));
+            window.localStorage.setItem(
+              PERSISTED_GUARD_HINT_KEY,
+              JSON.stringify({ ...draft, guardId: res.guard.id }),
+            );
           }
         } catch {
           // Route recovery does not depend on this convenience hint.
@@ -310,8 +315,8 @@ function NewGuardContent() {
         <div className="mt-1">
           <h1 className="font-display text-4xl tracking-tight">Define what success means.</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
-            A Guard records the outcome you want, the number you will measure, and what the
-            agent must not sacrifice to reach it.
+            A Guard records the outcome you want, the number you will measure, and what the agent
+            must not sacrifice to reach it.
           </p>
         </div>
         <Stepper kind="builder" current={step} className="mt-7" />
@@ -319,8 +324,12 @@ function NewGuardContent() {
         <div className="mt-8 max-w-3xl stagger-in" key={step}>
           {step === 0 ? (
             <section aria-labelledby="define-title">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">Start with intent</p>
-              <h2 id="define-title" className="mt-2 font-display text-3xl tracking-tight">What should the agent actually achieve?</h2>
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+                Start with intent
+              </p>
+              <h2 id="define-title" className="mt-2 font-display text-3xl tracking-tight">
+                What should the agent actually achieve?
+              </h2>
               <div className="mt-7 grid gap-6 md:grid-cols-2">
                 <fieldset>
                   <Label htmlFor="motive">Motive</Label>
@@ -334,11 +343,13 @@ function NewGuardContent() {
                     onChange={(event) => setMotive(event.target.value)}
                     onBlur={() => setTouched((current) => ({ ...current, motive: true }))}
                     placeholder="Generate genuine qualified sales opportunities from the declared ICP."
-                    aria-invalid={touched.motive && Boolean(fieldErrors.motive) || undefined}
+                    aria-invalid={(touched.motive && Boolean(fieldErrors.motive)) || undefined}
                     aria-describedby="motive-count motive-error"
                   />
                   <p className="mt-1 flex flex-wrap justify-between gap-2 text-xs text-graphite">
-                    <span id="motive-count" className="tabular-nums" aria-live="polite">{LIMITS.motive - motive.length} characters left</span>
+                    <span id="motive-count" className="tabular-nums" aria-live="polite">
+                      {LIMITS.motive - motive.length} characters left
+                    </span>
                   </p>
                   <FieldError>{touched.motive ? fieldErrors.motive : null}</FieldError>
                 </fieldset>
@@ -355,31 +366,48 @@ function NewGuardContent() {
                     onBlur={() => setTouched((current) => ({ ...current, metric: true }))}
                     placeholder="Book 80 meetings this week."
                     aria-describedby="metric-help metric-count metric-error"
-                    aria-invalid={touched.metric && Boolean(fieldErrors.metric) || undefined}
+                    aria-invalid={(touched.metric && Boolean(fieldErrors.metric)) || undefined}
                   />
-                  <p id="metric-help" className="mt-1 text-xs text-graphite">A metric is useful. It is not the whole motive.</p>
-                  <p id="metric-count" className="mt-1 text-xs text-graphite tabular-nums" aria-live="polite">{LIMITS.metric - metric.length} characters left</p>
+                  <p id="metric-help" className="mt-1 text-xs text-graphite">
+                    A metric is useful. It is not the whole motive.
+                  </p>
+                  <p
+                    id="metric-count"
+                    className="mt-1 text-xs text-graphite tabular-nums"
+                    aria-live="polite"
+                  >
+                    {LIMITS.metric - metric.length} characters left
+                  </p>
                   <FieldError>{touched.metric ? fieldErrors.metric : null}</FieldError>
                 </fieldset>
               </div>
               <div className="mt-7 border-l-2 border-brand pl-4 text-sm text-graphite">
-                The useful tension is intentional: the metric is what gets counted; the motive is what still matters when the count goes up.
+                The useful tension is intentional: the metric is what gets counted; the motive is
+                what still matters when the count goes up.
               </div>
             </section>
           ) : null}
 
           {step === 1 ? (
             <section aria-labelledby="protect-title">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">Protect the outcome</p>
-              <h2 id="protect-title" className="mt-2 font-display text-3xl tracking-tight">What must not be sacrificed?</h2>
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+                Protect the outcome
+              </p>
+              <h2 id="protect-title" className="mt-2 font-display text-3xl tracking-tight">
+                What must not be sacrificed?
+              </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
-                Add quality, scope, cost, safety, or compliance constraints. Picking a suggestion adds an editable Guardrail row you can change or remove before saving.
+                Add quality, scope, cost, safety, or compliance constraints. Picking a suggestion
+                adds an editable Guardrail row you can change or remove before saving.
               </p>
 
               <div className="mt-7">
-                <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">Suggested guardrails</p>
+                <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">
+                  Suggested guardrails
+                </p>
                 <p className="mt-1 text-xs text-graphite">
-                  Adding a suggestion creates an editable row immediately. Nothing is final until you save.
+                  Adding a suggestion creates an editable row immediately. Nothing is final until
+                  you save.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SUGGESTED_GUARDRAILS.map((suggestion) => (
@@ -418,11 +446,20 @@ function NewGuardContent() {
                       id="rail-text"
                       value={railText}
                       onChange={(event) => setRailText(event.target.value)}
-                      placeholder={kind === "MUST" ? "Stay within the declared audience." : "Preserve accurate, useful outcomes."}
+                      placeholder={
+                        kind === "MUST"
+                          ? "Stay within the declared audience."
+                          : "Preserve accurate, useful outcomes."
+                      }
                       maxLength={LIMITS.guardrailText}
                     />
                   </div>
-                  <Button variant="outline" className="sm:self-end" onClick={addRail} disabled={!railText.trim()}>
+                  <Button
+                    variant="outline"
+                    className="sm:self-end"
+                    onClick={addRail}
+                    disabled={!railText.trim()}
+                  >
                     Add guardrail
                   </Button>
                 </div>
@@ -430,7 +467,10 @@ function NewGuardContent() {
 
               <ul className="mt-5 space-y-2" aria-label="Added guardrails">
                 {guardrails.map((guardrail, index) => (
-                  <li key={`${guardrail.kind}-${index}`} className="flex items-start justify-between gap-3 border-b border-rule py-3">
+                  <li
+                    key={`${guardrail.kind}-${index}`}
+                    className="flex items-start justify-between gap-3 border-b border-rule py-3"
+                  >
                     {editingIndex === index ? (
                       <span className="flex min-w-0 flex-1 flex-col gap-2">
                         <Input
@@ -447,7 +487,11 @@ function NewGuardContent() {
                           }
                         />
                         <span className="flex flex-wrap items-center gap-2">
-                          <span className="mm-segmented" role="radiogroup" aria-label={`Guardrail ${index + 1} category`}>
+                          <span
+                            className="mm-segmented"
+                            role="radiogroup"
+                            aria-label={`Guardrail ${index + 1} category`}
+                          >
                             {(["MUST", "QUALITY"] as const).map((value) => (
                               <button
                                 key={value}
@@ -487,7 +531,9 @@ function NewGuardContent() {
                       </span>
                     ) : (
                       <span className="min-w-0 text-sm">
-                        <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{guardrail.kind}</Badge>
+                        <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>
+                          {guardrail.kind}
+                        </Badge>
                         <span className="ml-2">{guardrail.text}</span>
                       </span>
                     )}
@@ -516,7 +562,12 @@ function NewGuardContent() {
                   </li>
                 ))}
               </ul>
-              {!guardrails.length ? <p className="mt-5 text-sm text-graphite">No guardrails added yet. You can continue, but an explicit constraint makes the result easier to verify.</p> : null}
+              {!guardrails.length ? (
+                <p className="mt-5 text-sm text-graphite">
+                  No guardrails added yet. You can continue, but an explicit constraint makes the
+                  result easier to verify.
+                </p>
+              ) : null}
             </section>
           ) : null}
 
@@ -524,86 +575,198 @@ function NewGuardContent() {
             <section aria-labelledby="review-title">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">Review before publishing</p>
-                  <h2 id="review-title" className="mt-2 font-display text-3xl tracking-tight">Does the definition say what you mean?</h2>
+                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+                    Review before publishing
+                  </p>
+                  <h2 id="review-title" className="mt-2 font-display text-3xl tracking-tight">
+                    Does the definition say what you mean?
+                  </h2>
                 </div>
                 <Badge tone="ochre">Advisory checks</Badge>
               </div>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
-                These checks help you strengthen the draft. They are editor guidance, not a GenLayer verdict.
+                These checks help you strengthen the draft. They are editor guidance, not a GenLayer
+                verdict.
               </p>
 
               <div className="mt-7 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
                 <div className="space-y-6">
                   <div className="border-t border-rule pt-4">
-                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage">Motive</p>
+                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage">
+                      Motive
+                    </p>
                     <p className="mt-2 font-display text-2xl leading-tight">{motive}</p>
                   </div>
                   <div className="border-t border-rule pt-4">
-                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-ochre">Metric</p>
+                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-ochre">
+                      Metric
+                    </p>
                     <p className="mt-2 font-display text-2xl leading-tight">{metric}</p>
                   </div>
                   <div className="border-t border-rule pt-4">
-                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">Guardrails</p>
+                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">
+                      Guardrails
+                    </p>
                     {guardrails.length ? (
                       <ul className="mt-2 space-y-2 text-sm">
-                        {guardrails.map((guardrail) => <li key={`${guardrail.kind}-${guardrail.text}`}><Badge tone={guardrail.kind === "MUST" ? "brick" : "sage"}>{guardrail.kind}</Badge><span className="ml-2">{guardrail.text}</span></li>)}
+                        {guardrails.map((guardrail) => (
+                          <li key={`${guardrail.kind}-${guardrail.text}`}>
+                            <Badge tone={guardrail.kind === "MUST" ? "brick" : "sage"}>
+                              {guardrail.kind}
+                            </Badge>
+                            <span className="ml-2">{guardrail.text}</span>
+                          </li>
+                        ))}
                       </ul>
-                    ) : <p className="mt-2 text-sm text-graphite">No guardrails recorded.</p>}
+                    ) : (
+                      <p className="mt-2 text-sm text-graphite">No guardrails recorded.</p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-4">
                   {preflight ? (
                     <div className="paper-panel p-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-mono text-xs uppercase tracking-[0.12em] text-graphite">Motive preflight · advisory</p>
-                        <Badge tone={advisoryTone(preflight.report.state)}>{advisoryLabel(preflight.report.state)}</Badge>
+                        <p className="font-mono text-xs uppercase tracking-[0.12em] text-graphite">
+                          Motive preflight · advisory
+                        </p>
+                        <Badge tone={advisoryTone(preflight.report.state)}>
+                          {advisoryLabel(preflight.report.state)}
+                        </Badge>
                       </div>
                       <p className="mt-2 text-xs text-graphite">
                         Editor guidance only. This is not a GenLayer finding, consensus, or verdict.
                       </p>
                       <ul className="mt-3 space-y-3 text-sm">
-                        {preflight.report.issues.length ? preflight.report.issues.map((issue) => <li key={issue.title}><strong>{issue.title}.</strong> {issue.detail}</li>) : <li>No motive-definition issues found.</li>}
+                        {preflight.report.issues.length ? (
+                          preflight.report.issues.map((issue) => (
+                            <li key={issue.title}>
+                              <strong>{issue.title}.</strong> {issue.detail}
+                            </li>
+                          ))
+                        ) : (
+                          <li>No motive-definition issues found.</li>
+                        )}
                       </ul>
-                      {preflight.report.recommendedGuardrails.length ? <div className="mt-4 border-t border-rule pt-3"><p className="text-xs text-graphite">Possible additions</p><div className="mt-2 flex flex-wrap gap-2">{preflight.report.recommendedGuardrails.map((guardrail) => <Button key={guardrail.text} size="sm" variant="outline" onClick={() => addSuggestion({ label: guardrail.text, kind: guardrail.kind, text: guardrail.text })}>{guardrail.text.slice(0, 42)}</Button>)}</div></div> : null}
-                    </div>
-                  ) : <p className="text-sm text-graphite">Running advisory checks…</p>}
-                  {loopholes ? (
-                      <div className="border-t border-rule pt-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="font-mono text-xs uppercase tracking-[0.12em] text-graphite">Loophole scan · advisory</p>
-                          <Badge tone={loopholes.report.loopholes.length ? "warning" : "success"}>
-                            {loopholes.report.loopholes.length ? "Caution" : "Info"}
-                          </Badge>
+                      {preflight.report.recommendedGuardrails.length ? (
+                        <div className="mt-4 border-t border-rule pt-3">
+                          <p className="text-xs text-graphite">Possible additions</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {preflight.report.recommendedGuardrails.map((guardrail) => (
+                              <Button
+                                key={guardrail.text}
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  addSuggestion({
+                                    label: guardrail.text,
+                                    kind: guardrail.kind,
+                                    text: guardrail.text,
+                                  })
+                                }
+                              >
+                                {guardrail.text.slice(0, 42)}
+                              </Button>
+                            ))}
+                          </div>
                         </div>
-                        <ul className="mt-3 space-y-3 text-sm">
-                          {loopholes.report.loopholes.slice(0, 3).map((loophole) => (
-                            <li key={loophole.title}><strong>{loophole.title}.</strong> {loophole.description}</li>
-                          ))}
-                          {!loopholes.report.loopholes.length ? <li>No obvious loophole surfaced.</li> : null}
-                        </ul>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-graphite">Running advisory checks…</p>
+                  )}
+                  {loopholes ? (
+                    <div className="border-t border-rule pt-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-mono text-xs uppercase tracking-[0.12em] text-graphite">
+                          Loophole scan · advisory
+                        </p>
+                        <Badge tone={loopholes.report.loopholes.length ? "warning" : "success"}>
+                          {loopholes.report.loopholes.length ? "Caution" : "Info"}
+                        </Badge>
                       </div>
-                    ) : null}
+                      <ul className="mt-3 space-y-3 text-sm">
+                        {loopholes.report.loopholes.slice(0, 3).map((loophole) => (
+                          <li key={loophole.title}>
+                            <strong>{loophole.title}.</strong> {loophole.description}
+                          </li>
+                        ))}
+                        {!loopholes.report.loopholes.length ? (
+                          <li>No obvious loophole surfaced.</li>
+                        ) : null}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
               </div>
-              {blueprint ? <TechnicalDetails className="mt-8" title="Evidence blueprint (advisory)"><div className="space-y-3 text-sm"><div><p className="font-medium">Required evidence</p><ul className="mt-1 list-disc space-y-1 pl-5 text-graphite">{blueprint.report.required.map((item) => <li key={item}>{item}</li>)}</ul></div><div><p className="font-medium">Recommended evidence</p><ul className="mt-1 list-disc space-y-1 pl-5 text-graphite">{blueprint.report.recommended.map((item) => <li key={item}>{item}</li>)}</ul></div></div></TechnicalDetails> : null}
+              {blueprint ? (
+                <TechnicalDetails className="mt-8" title="Evidence blueprint (advisory)">
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="font-medium">Required evidence</p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-graphite">
+                        {blueprint.report.required.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-medium">Recommended evidence</p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-graphite">
+                        {blueprint.report.recommended.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </TechnicalDetails>
+              ) : null}
             </section>
           ) : null}
 
           {step === 3 ? (
             <section aria-labelledby="publish-title">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">Make the objective durable</p>
-              <h2 id="publish-title" className="mt-2 font-display text-3xl tracking-tight">Publish the Guard</h2>
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+                Make the objective durable
+              </p>
+              <h2 id="publish-title" className="mt-2 font-display text-3xl tracking-tight">
+                Publish the Guard
+              </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
-                Publishing creates the Guard on GenLayer. Locking is a separate transaction that freezes the Motive,
-                Metric, and Guardrails so they cannot be rewritten after seeing the result.
+                Publishing creates the Guard on GenLayer. Locking is a separate transaction that
+                freezes the Motive, Metric, and Guardrails so they cannot be rewritten after seeing
+                the result.
               </p>
               <div className="mt-7">
-                {id && guardQ.isLoading ? <p className="text-sm text-graphite">Loading the saved definition…</p> : null}
-                {id && !guardQ.isLoading ? <CreateAndLock guardId={id} motive={motive} metric={metric} guardrails={guardrails} onchainId={guardQ.data?.guard.onchainId ?? null} txCreate={guardQ.data?.guard.txCreate ?? null} txArm={guardQ.data?.guard.txArm ?? null} locked={guardQ.data?.guard.status === "ARMED" || guardQ.data?.guard.status === "EVIDENCE_SUBMITTED" || guardQ.data?.guard.status === "RESOLVED"} onUpdated={async () => { await guardQ.refetch(); }} /> : null}
-                {!id ? <p className="text-sm text-graphite">Save the definition before publishing.</p> : null}
+                {id && guardQ.isLoading ? (
+                  <p className="text-sm text-graphite">Loading the saved definition…</p>
+                ) : null}
+                {id && !guardQ.isLoading ? (
+                  <CreateAndLock
+                    guardId={id}
+                    motive={motive}
+                    metric={metric}
+                    guardrails={guardrails}
+                    onchainId={guardQ.data?.guard.onchainId ?? null}
+                    txCreate={guardQ.data?.guard.txCreate ?? null}
+                    txArm={guardQ.data?.guard.txArm ?? null}
+                    locked={
+                      guardQ.data?.guard.status === "ARMED" ||
+                      guardQ.data?.guard.status === "EVIDENCE_SUBMITTED" ||
+                      guardQ.data?.guard.status === "RESOLVED"
+                    }
+                    onCreateSubmitted={async () => {
+                      await navigate({ to: "/app/guards/$id", params: { id }, replace: true });
+                    }}
+                    onUpdated={async () => {
+                      await guardQ.refetch();
+                    }}
+                  />
+                ) : null}
+                {!id ? (
+                  <p className="text-sm text-graphite">Save the definition before publishing.</p>
+                ) : null}
               </div>
-
             </section>
           ) : null}
 
@@ -617,21 +780,43 @@ function NewGuardContent() {
             {step > 0 ? (
               /* N7: the shared back affordance, with a verb-led label naming
                  the destination instead of a bare "Back". */
-              <BackButton onClick={() => setStep((current) => current - 1)} label={`Back to ${STEPS[step - 1]}`} />
+              <BackButton
+                onClick={() => setStep((current) => current - 1)}
+                label={`Back to ${STEPS[step - 1]}`}
+              />
             ) : (
-              <Link to="/app"><Button variant="ghost">Cancel</Button></Link>
+              <Link to="/app">
+                <Button variant="ghost">Cancel</Button>
+              </Link>
             )}
-            {step < 3 ? <Button
-              loading={persist.isPending || persistIntentRef.current}
-              loadingLabel="Saving…"
-              disabled={persist.isPending || persistIntentRef.current}
-              onClick={() => void goNext()}
-            >
-              {step === 0 ? "Save definition" : step === 1 ? "Review guard" : "Continue to publish"}
-              <ArrowRight className="size-4" />
-            </Button> : null}
+            {step < 3 ? (
+              <Button
+                loading={persist.isPending || persistIntentRef.current}
+                loadingLabel="Saving…"
+                disabled={persist.isPending || persistIntentRef.current}
+                onClick={() => void goNext()}
+              >
+                {step === 0
+                  ? "Save definition"
+                  : step === 1
+                    ? "Review guard"
+                    : "Continue to publish"}
+                <ArrowRight className="size-4" />
+              </Button>
+            ) : null}
           </div>
-          {step === 3 && id && guardQ.data?.guard.status === "ARMED" ? <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-sage"><Check className="size-4" aria-hidden="true" /> Guard locked.<Button size="sm" variant="ghost" onClick={() => void navigate({ to: "/app/guards/$id", params: { id } })}>{CTA.openCase}</Button></div> : null}
+          {step === 3 && id && guardQ.data?.guard.status === "ARMED" ? (
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-sage">
+              <Check className="size-4" aria-hidden="true" /> Guard locked.
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => void navigate({ to: "/app/guards/$id", params: { id } })}
+              >
+                {CTA.openCase}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
     </AppShell>

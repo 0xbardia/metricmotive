@@ -177,11 +177,11 @@ describe("operation state machine (Phase 10 / 11)", () => {
     });
     assert.ok(view);
     assert.equal(view.state, "confirmation_delayed");
-    assert.equal(view.status, "Confirmation delayed");
+    assert.equal(view.status, "Still checking");
     assert.equal(view.severity, "warning");
     assert.notEqual(view.state, "failed");
     assert.notEqual(view.status, "Needs attention");
-    assert.ok(/could not confirm it yet/i.test(view.message));
+    assert.equal(view.title, "Still waiting for confirmation");
     assert.ok(/No new transaction will be sent/i.test(view.message));
   });
 
@@ -189,7 +189,7 @@ describe("operation state machine (Phase 10 / 11)", () => {
     const view = operationViewFromTx({ ...base, phase: "pending", hash: "0xabc", error: null });
     assert.ok(view);
     assert.equal(view.state, "submitted");
-    assert.equal(view.title, "Evidence transaction submitted");
+    assert.equal(view.title, "Transaction submitted");
     assert.ok(!/did not complete/i.test(view.title));
     assert.ok(!/needs attention/i.test(view.status));
   });

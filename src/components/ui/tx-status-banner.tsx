@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { Button } from "@/components/ui/button";
 import { IdBadge } from "@/components/ui/id-badge";
+import type { Provenance } from "@/lib/explorer";
 import { operationViewFromTx } from "@/lib/operations";
 import type { TxState } from "@/lib/wallet/tx-state";
 
@@ -16,12 +17,14 @@ export function TxStatusBanner({
   state,
   onRetry,
   retryBusy = false,
+  provenance,
   children,
 }: {
   state: TxState;
   /** Reconciles the persisted hash. Must never resubmit a transaction. */
   onRetry?: () => void;
   retryBusy?: boolean;
+  provenance?: Provenance;
   children?: ReactNode;
 }) {
   const view = operationViewFromTx(state);
@@ -45,6 +48,8 @@ export function TxStatusBanner({
       status={view.status}
       severity={view.severity}
       title={view.title}
+      busy={view.busy}
+      state={view.state}
       message={
         <>
           {view.message}
@@ -55,16 +60,8 @@ export function TxStatusBanner({
       }
       action={retry}
       technicalDetails={
-        view.txHash || view.technicalDetails ? (
+        view.technicalDetails ? (
           <dl>
-            {view.txHash ? (
-              <div>
-                <dt>Transaction</dt>
-                <dd>
-                  <IdBadge value={view.txHash} kind="tx" />
-                </dd>
-              </div>
-            ) : null}
             {view.technicalDetails ? (
               <div>
                 <dt>Detail</dt>
@@ -75,6 +72,21 @@ export function TxStatusBanner({
         ) : undefined
       }
     >
+      {view.txHash ? (
+        <div className="min-w-0 border-t border-rule pt-3" data-transaction-hash>
+          <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-graphite">
+            Transaction hash
+          </p>
+          <IdBadge
+            className="mt-2 flex-wrap"
+            value={view.txHash}
+            kind="tx"
+            provenance={
+              provenance ?? (state.originChainId ? { chainId: state.originChainId } : undefined)
+            }
+          />
+        </div>
+      ) : null}
       {children}
     </StatusBanner>
   );

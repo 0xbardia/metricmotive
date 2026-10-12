@@ -23,7 +23,11 @@ import {
   reserveCreateGuardFn,
 } from "@/lib/server/actions";
 import type { ChainOperation } from "@/lib/reconciliation";
-import { writeIntelligentContract, type Eip1193Provider } from "@/lib/wallet/write";
+import {
+  LifecycleWriteError,
+  writeIntelligentContract,
+  type Eip1193Provider,
+} from "@/lib/wallet/write";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
 import { isUserRejection, walletErrorMessage } from "@/lib/wallet/errors";
 import {
@@ -37,7 +41,7 @@ import {
   txBusy,
 } from "@/lib/wallet/tx-state";
 import { confirmationBackoffMs } from "@/lib/reconciliation";
-import { advance, operationViewFromTx } from "@/lib/operations";
+import { advance, isRecoverable, operationViewFromTx } from "@/lib/operations";
 
 const UI_ACTION_NAMES: Partial<Record<ChainOperation, string>> = {
   create_guard: "publish_guard",
@@ -65,12 +69,14 @@ function transactionState(
   hash: string | null,
   address: string | undefined,
   error: string | null,
+  failureKind?: TxState["failureKind"],
 ): TxState {
   return {
     phase: "confirming",
     action: operation,
     hash,
     error,
+    failureKind,
     originAddress: address ?? null,
     originChainId: ACTIVE_CHAIN_ID,
   };
@@ -108,7 +114,7 @@ function useTransactionReconciliation({
     if (next.phase === "success") {
       completedRef.current = true;
       clearPendingTx(guardId);
-    } else if (next.hash) {
+    } else if (next.hash && next.phase !== "failed") {
       completedRef.current = false;
       persistPendingTx({ ...next, resourceId: guardId });
     }
@@ -155,12 +161,12 @@ function useTransactionReconciliation({
       });
     } else if (hash) {
       setTxState({
-        ...transactionState(
-          operation,
-          hash,
-          gate.address,
-          storedForOperation.error ?? "Transaction submitted. Confirmation temporarily unavailable.",
-        ),
+        phase: storedForOperation.error ? "confirming" : "pending",
+        action: operation,
+        hash,
+        error: storedForOperation.error ?? null,
+        originAddress: gate.address ?? null,
+        originChainId: ACTIVE_CHAIN_ID,
         resourceId: guardId,
       });
     } else {
@@ -180,7 +186,8 @@ function useTransactionReconciliation({
             id: guardId,
             operation,
             txHash: hash ?? undefined,
-            reservationToken: operation === "create_guard" ? loadCreateReservationToken(guardId) : undefined,
+            reservationToken:
+              operation === "create_guard" ? loadCreateReservationToken(guardId) : undefined,
           },
         });
         const resultHash = result.txHash || hash;
@@ -197,15 +204,32 @@ function useTransactionReconciliation({
           await onUpdatedRef.current();
         } else if (result.state === "mismatch") {
           setTx({
-            ...transactionState(operation, resultHash, gate.address, result.message ?? "Transaction reconciliation stopped."),
+            ...transactionState(
+              operation,
+              resultHash,
+              gate.address,
+              result.message ?? "Transaction reconciliation stopped.",
+              "mismatch",
+            ),
             phase: "failed",
           });
         } else {
-          setTx(transactionState(operation, resultHash, gate.address, result.message ?? "Transaction submitted. Confirmation temporarily unavailable."));
+          setTx(
+            transactionState(
+              operation,
+              resultHash,
+              gate.address,
+              result.state === "unavailable"
+                ? (result.message ?? "Confirmation temporarily unavailable.")
+                : null,
+            ),
+          );
         }
         return result;
       } catch {
-        setTx(transactionState(operation, hash, gate.address, "Transaction submitted. Confirmation temporarily unavailable."));
+        setTx(
+          transactionState(operation, hash, gate.address, "Confirmation temporarily unavailable."),
+        );
         return null;
       } finally {
         setReconcileBusy(false);
@@ -255,14 +279,9 @@ function useTransactionReconciliation({
       await waitUntilVisible();
       if (cancelled) return;
       const result = await reconcileRef.current?.();
-      if (
-        cancelled ||
-        result?.state === "reconciled" ||
-        result?.state === "mismatch" ||
-        result?.state === "unavailable" && result.retryable === false
-      ) return;
+      if (cancelled || result?.state === "reconciled" || result?.state === "mismatch") return;
       attempt += 1;
-      if (attempt >= 12) return;
+      if (attempt >= 20) return;
       timer = window.setTimeout(() => void poll(), confirmationBackoffMs(attempt));
     };
     void poll();
@@ -279,7 +298,7 @@ function useTransactionReconciliation({
     busy: txBusy(tx),
     reconcileBusy,
     reconcileOnce,
-    hasUnresolved: Boolean(knownHash && !completedRef.current),
+    hasUnresolved: txBusy(tx) || isRecoverable(tx),
     hash: knownHash,
   };
 }
@@ -310,14 +329,25 @@ async function recordTransaction(
   });
 }
 
+class ConfirmationStateError extends Error {
+  constructor(
+    readonly state: "pending" | "unavailable" | "mismatch",
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 async function requireReconciled(
   guardId: string,
   operation: ChainOperation,
 ): Promise<ReconciliationResult> {
   const result = await reconcileTransactionFn({ data: { id: guardId, operation } });
-  if (result.state !== "reconciled") {
-    throw new Error(result.message ?? "Transaction submitted. Confirmation temporarily unavailable.");
-  }
+  if (result.state !== "reconciled")
+    throw new ConfirmationStateError(
+      result.state,
+      result.message ?? "Confirmation temporarily unavailable.",
+    );
   return result;
 }
 
@@ -364,7 +394,7 @@ async function runWrite(opts: {
     const next = { ...state, ...provenance };
     setTx(next);
     if (next.phase === "success") clearPendingTx(opts.resourceId);
-    else if (next.hash) persistPendingTx(next);
+    else if (next.hash && next.phase !== "failed") persistPendingTx(next);
   };
   try {
     await ensureWalletSession(gate.address, gate.connector);
@@ -408,13 +438,35 @@ async function runWrite(opts: {
       const provider = (await gate.connector.getProvider()) as Eip1193Provider;
       const accounts = (await provider.request({ method: "eth_accounts" })) as unknown;
       const chain = (await provider.request({ method: "eth_chainId" })) as unknown;
-      const currentAddress = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0].toLowerCase() : "";
+      const currentAddress =
+        Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0].toLowerCase() : "";
       const currentChain = typeof chain === "string" ? Number.parseInt(chain, 16) : Number(chain);
       if (currentAddress !== startingAddress.toLowerCase() || currentChain !== startingChainId) {
-        throw new Error("Wallet account or network changed while confirming. The submitted transaction is preserved above.");
+        throw new Error(
+          "Wallet account or network changed while confirming. The submitted transaction is preserved above.",
+        );
       }
       await opts.confirm(result.hash);
     } catch (confirmationError) {
+      if (confirmationError instanceof ConfirmationStateError) {
+        if (confirmationError.state === "mismatch") {
+          setWriteState({
+            phase: "failed",
+            action: opts.action,
+            hash: submittedHash,
+            error: confirmationError.message,
+            failureKind: "mismatch",
+          });
+        } else {
+          setWriteState({
+            phase: "confirming",
+            action: opts.action,
+            hash: submittedHash,
+            error: confirmationError.state === "unavailable" ? confirmationError.message : null,
+          });
+        }
+        return false;
+      }
       setWriteState({
         phase: "confirming",
         action: opts.action,
@@ -428,6 +480,16 @@ async function runWrite(opts: {
   } catch (err) {
     if (isUserRejection(err) && !submittedHash) {
       setWriteState({ phase: "rejected", action: opts.action, hash: null, error: null });
+      return false;
+    }
+    if (err instanceof LifecycleWriteError && err.code === "WRITE_NOT_SUCCESSFUL") {
+      setWriteState({
+        phase: "failed",
+        action: opts.action,
+        hash: submittedHash,
+        error: err.message,
+        failureKind: "reverted",
+      });
       return false;
     }
     if (submittedHash) {
@@ -498,6 +560,7 @@ export function CreateAndLock({
   txCreate,
   txArm,
   locked = false,
+  onCreateSubmitted,
   onUpdated,
 }: {
   guardId: string;
@@ -509,6 +572,8 @@ export function CreateAndLock({
   txArm: string | null;
   /** The Guard is already finalized as locked; no lock action may be offered. */
   locked?: boolean;
+  /** Called after the local Guard safely records a CREATE transaction hash. */
+  onCreateSubmitted?: OnUpdated;
   onUpdated: OnUpdated;
 }) {
   const historical = useHistoricalReadOnly(guardId);
@@ -546,12 +611,9 @@ export function CreateAndLock({
       });
       if (!reservation.canSubmit) {
         if (reservation.txHash) {
-          createRecovery.setTx(transactionState(
-            "create_guard",
-            reservation.txHash,
-            gate.address,
-            reservation.message ?? "Transaction submitted. Confirmation can resume without another create.",
-          ));
+          createRecovery.setTx(
+            transactionState("create_guard", reservation.txHash, gate.address, null),
+          );
           await onUpdated();
         } else {
           createRecovery.setTx({
@@ -576,9 +638,19 @@ export function CreateAndLock({
         persistHash: async (hash) => {
           submitted = true;
           if (!gate.address) throw new Error("Wallet disconnected");
-          await recordTransaction(guardId, "create_guard", gate.address, hash, null, reservationToken);
+          await recordTransaction(
+            guardId,
+            "create_guard",
+            gate.address,
+            hash,
+            null,
+            reservationToken,
+          );
         },
-        onSubmitted: onUpdated,
+        onSubmitted: async () => {
+          if (onCreateSubmitted) await onCreateSubmitted();
+          else await onUpdated();
+        },
         confirm: async () => {
           await requireReconciled(guardId, "create_guard");
           await onUpdated();
@@ -593,7 +665,9 @@ export function CreateAndLock({
       });
     } finally {
       if (reserved && !submitted) {
-        await releaseCreateGuardFn({ data: { id: guardId, reservationToken } }).catch(() => undefined);
+        await releaseCreateGuardFn({ data: { id: guardId, reservationToken } }).catch(
+          () => undefined,
+        );
         clearCreateReservationToken(guardId);
       }
       if (!submitted) createIntentRef.current = false;
@@ -601,7 +675,8 @@ export function CreateAndLock({
   }
 
   async function lock() {
-    if (busy || armRecovery.hasUnresolved || createRecovery.hasUnresolved || armIntentRef.current) return;
+    if (busy || armRecovery.hasUnresolved || createRecovery.hasUnresolved || armIntentRef.current)
+      return;
     if (!onchainId) {
       armRecovery.setTx({
         phase: "failed",
@@ -657,9 +732,10 @@ export function CreateAndLock({
             {/* N13: past tense once the write actually happened. */}
             <TechnicalDetails title="What was written on-chain">
               <p className="text-sm leading-relaxed">
-                This Guard version — Motive, Metric, and Guardrails — was frozen on {getActiveDeployment().networkName}
-                {onchainId ? ` as on-chain Guard ${onchainId}` : ""}. The lock transaction cannot be replayed and the
-                definition cannot be rewritten.
+                This Guard version — Motive, Metric, and Guardrails — was frozen on{" "}
+                {getActiveDeployment().networkName}
+                {onchainId ? ` as on-chain Guard ${onchainId}` : ""}. The lock transaction cannot be
+                replayed and the definition cannot be rewritten.
               </p>
             </TechnicalDetails>
           </>
@@ -679,12 +755,14 @@ export function CreateAndLock({
                 <Badge tone="brand">Step 1 of 2 · publish definition</Badge>
                 <p className="mt-2 font-display text-2xl">Publish the Guard definition.</p>
                 <p className="text-sm leading-relaxed text-graphite">
-                  Publishing creates this Guard on GenLayer as a draft. You will approve the write in your wallet.
+                  Publishing creates this Guard on GenLayer as a draft. You will approve the write
+                  in your wallet.
                 </p>
                 <TechnicalDetails className="mt-4" title="What gets written on-chain">
                   <p className="text-sm leading-relaxed">
-                    The certified Intelligent Contract stores this definition on {getActiveDeployment().networkName}. Its fingerprint is
-                    fixed at publish; locking is a separate transaction. MetricMotive never stores a private key.
+                    The certified Intelligent Contract stores this definition on{" "}
+                    {getActiveDeployment().networkName}. Its fingerprint is fixed at publish;
+                    locking is a separate transaction. MetricMotive never stores a private key.
                   </p>
                 </TechnicalDetails>
                 <Button
@@ -705,7 +783,8 @@ export function CreateAndLock({
             <Badge tone="brand">Step 2 of 2 · {CTA.lockGuard}</Badge>
             <p className="mt-2 font-display text-2xl">Lock the Guard.</p>
             <p className="text-sm leading-relaxed text-graphite">
-              The definition is already published. Locking freezes the Motive, Metric, and Guardrails on {getActiveDeployment().networkName}.
+              The definition is already published. Locking freezes the Motive, Metric, and
+              Guardrails on {getActiveDeployment().networkName}.
             </p>
             {onchainId ? (
               <p className="font-mono text-xs text-graphite">On-chain Guard id {onchainId}</p>
@@ -715,9 +794,10 @@ export function CreateAndLock({
                 only until the lock is actually finalized (N13). */}
             <TechnicalDetails className="mt-4" title="What gets written on-chain">
               <p className="text-sm leading-relaxed">
-                The lock transaction freezes this Guard version: the Motive, the Metric, and the Guardrails, plus the
-                definition fingerprint below. It cannot be rewritten afterwards. The wallet signs this one transaction;
-                MetricMotive never stores a private key.
+                The lock transaction freezes this Guard version: the Motive, the Metric, and the
+                Guardrails, plus the definition fingerprint below. It cannot be rewritten
+                afterwards. The wallet signs this one transaction; MetricMotive never stores a
+                private key.
               </p>
             </TechnicalDetails>
             <LockSummary
@@ -741,7 +821,10 @@ export function CreateAndLock({
             )}
           </>
         )}
-        <TxStatusBanner state={tx} onRetry={() => void recoveryRetry(tx, createRecovery, armRecovery)} />
+        <TxStatusBanner
+          state={tx}
+          onRetry={() => void recoveryRetry(tx, createRecovery, armRecovery)}
+        />
       </div>
     </WalletGate>
   );
@@ -780,7 +863,9 @@ export function SubmitEvidenceChain({
     onUpdated,
   });
   const busy = recovery.busy;
-  const [prepared, setPrepared] = useState<Awaited<ReturnType<typeof prepareEvidenceFn>> | null>(null);
+  const [prepared, setPrepared] = useState<Awaited<ReturnType<typeof prepareEvidenceFn>> | null>(
+    null,
+  );
   const [preparing, setPreparing] = useState(false);
   const submitIntentRef = useRef(false);
   if (historical) return <HistoricalReadOnlyNotice />;
@@ -801,7 +886,12 @@ export function SubmitEvidenceChain({
     try {
       await ensureWalletSession(gate.address, gate.connector);
     } catch (err) {
-      recovery.setTx({ phase: "failed", action: "submit_evidence", hash: null, error: walletErrorMessage(err, "Wallet authentication failed") });
+      recovery.setTx({
+        phase: "failed",
+        action: "submit_evidence",
+        hash: null,
+        error: walletErrorMessage(err, "Wallet authentication failed"),
+      });
       setPreparing(false);
       return;
     }
@@ -812,7 +902,12 @@ export function SubmitEvidenceChain({
       }
       setPrepared(result);
     } catch (err) {
-      recovery.setTx({ phase: "failed", action: "submit_evidence", hash: null, error: walletErrorMessage(err, "Could not prepare evidence") });
+      recovery.setTx({
+        phase: "failed",
+        action: "submit_evidence",
+        hash: null,
+        error: walletErrorMessage(err, "Could not prepare evidence"),
+      });
     } finally {
       setPreparing(false);
     }
@@ -824,12 +919,18 @@ export function SubmitEvidenceChain({
       await prepare();
       return;
     }
-    if (!onchainId || prepared.manifest.guardId !== onchainId || prepared.manifest.runId !== runId || prepared.eventCount < 1) {
+    if (
+      !onchainId ||
+      prepared.manifest.guardId !== onchainId ||
+      prepared.manifest.runId !== runId ||
+      prepared.eventCount < 1
+    ) {
       recovery.setTx({
         phase: "failed",
         action: "submit_evidence",
         hash: null,
-        error: "Evidence preview no longer matches this Guard and Run. Refresh the preview before submitting.",
+        error:
+          "Evidence preview no longer matches this Guard and Run. Refresh the preview before submitting.",
       });
       return;
     }
@@ -874,20 +975,32 @@ export function SubmitEvidenceChain({
               <div>
                 <Badge tone="sage">Evidence ready for verification</Badge>
                 <p className="mt-3 font-display text-2xl">Review what happened.</p>
-                <p className="mt-1 text-sm text-graphite">This finished Run is the evidence that will be committed. Review it before opening the wallet.</p>
+                <p className="mt-1 text-sm text-graphite">
+                  This finished Run is the evidence that will be committed. Review it before opening
+                  the wallet.
+                </p>
               </div>
               <dl className="grid gap-3 border-y border-rule py-3 text-sm sm:grid-cols-3">
-                <div><dt className="text-graphite">Run</dt><dd className="mt-1 font-mono break-all">{prepared.manifest.runId}</dd></div>
-                <div><dt className="text-graphite">Captured</dt><dd className="mt-1 font-display text-xl">{prepared.eventCount} events</dd></div>
-                <div><dt className="text-graphite">Manifest</dt><dd className="mt-1 text-[var(--color-sage-text)]">Generated and ready</dd></div>
+                <div>
+                  <dt className="text-graphite">Run</dt>
+                  <dd className="mt-1 font-mono break-all">{prepared.manifest.runId}</dd>
+                </div>
+                <div>
+                  <dt className="text-graphite">Captured</dt>
+                  <dd className="mt-1 font-display text-xl">{prepared.eventCount} events</dd>
+                </div>
+                <div>
+                  <dt className="text-graphite">Manifest</dt>
+                  <dd className="mt-1 text-[var(--color-sage-text)]">Generated and ready</dd>
+                </div>
               </dl>
               {/*
                 H7: the full evidence list already lives on the Run page. This
                 preview summarises and points there rather than repeating it.
               */}
               <p className="text-sm text-graphite">
-                {prepared.manifest.events.length} captured events are included in this manifest. The full list stays on
-                the Run page; the canonical contents are below.
+                {prepared.manifest.events.length} captured events are included in this manifest. The
+                full list stays on the Run page; the canonical contents are below.
               </p>
               {/* A finished Run is already captured, canonicalized and hashed;
                   only the on-chain commit and the verdict remain (N19). */}
@@ -901,10 +1014,24 @@ export function SubmitEvidenceChain({
               />
               <TechnicalDetails title="Evidence integrity">
                 <dl>
-                  <div><dt>Guard ID</dt><dd>{prepared.manifest.guardId}</dd></div>
-                  <div><dt>Manifest hash</dt><dd>{prepared.manifest.manifestHash}</dd></div>
-                  <div><dt>Submitted commitment</dt><dd><span className="mr-2">{prepared.commitmentHash}</span></dd></div>
-                  <div><dt>Canonical schema</dt><dd>{prepared.manifest.schema}</dd></div>
+                  <div>
+                    <dt>Guard ID</dt>
+                    <dd>{prepared.manifest.guardId}</dd>
+                  </div>
+                  <div>
+                    <dt>Manifest hash</dt>
+                    <dd>{prepared.manifest.manifestHash}</dd>
+                  </div>
+                  <div>
+                    <dt>Submitted commitment</dt>
+                    <dd>
+                      <span className="mr-2">{prepared.commitmentHash}</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Canonical schema</dt>
+                    <dd>{prepared.manifest.schema}</dd>
+                  </div>
                 </dl>
               </TechnicalDetails>
             </div>
@@ -948,7 +1075,8 @@ export function SubmitEvidenceChain({
         )}
         {recovery.hasUnresolved ? null : (
           <p className="text-sm text-graphite">
-            MetricMotive commits the evidence fingerprint on GenLayer. The commitment cannot be replaced.
+            MetricMotive commits the evidence fingerprint on GenLayer. The commitment cannot be
+            replaced.
           </p>
         )}
         {/* THE one status surface for this operation. */}
@@ -1032,7 +1160,14 @@ export function VerifyWithGenLayer({
           the evidence-provenance chain that belongs to verification.
         */}
         {recovery.hasUnresolved ? (
-          <ProvenanceChain className="mm-provenance" captured canonicalized hashed committed verified={false} />
+          <ProvenanceChain
+            className="mm-provenance"
+            captured
+            canonicalized
+            hashed
+            committed
+            verified={false}
+          />
         ) : (
           <div className="space-y-2">
             <Button
@@ -1044,10 +1179,17 @@ export function VerifyWithGenLayer({
             >
               Verify with GenLayer
             </Button>
-            <p className="text-sm text-graphite">Evidence is already committed. This asks GenLayer to evaluate it against the locked specification.</p>
+            <p className="text-sm text-graphite">
+              Evidence is already committed. This asks GenLayer to evaluate it against the locked
+              specification.
+            </p>
           </div>
         )}
-        <TxStatusBanner state={recovery.tx} onRetry={() => void recovery.reconcileOnce()} retryBusy={recovery.reconcileBusy} />
+        <TxStatusBanner
+          state={recovery.tx}
+          onRetry={() => void recovery.reconcileOnce()}
+          retryBusy={recovery.reconcileBusy}
+        />
       </div>
     </WalletGate>
   );

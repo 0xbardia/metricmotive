@@ -12,11 +12,14 @@ export const TX_PHASES = [
 
 export type TxPhase = (typeof TX_PHASES)[number];
 
+export type TxFailureKind = "reverted" | "mismatch";
+
 export type TxState = {
   phase: TxPhase;
   action: string;
   hash: string | null;
   error: string | null;
+  failureKind?: TxFailureKind;
   originAddress?: string | null;
   originChainId?: number | null;
   resourceId?: string | null;
@@ -43,9 +46,10 @@ export function loadCreateReservationToken(resourceId: string): string {
       // server reservation remains the authoritative duplicate gate.
     }
   }
-  const token = typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `claim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const token =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `claim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   if (typeof window !== "undefined") {
     try {
       window.localStorage.setItem(`${CREATE_RESERVATION_PREFIX}${resourceId}`, token);
@@ -73,7 +77,7 @@ export function loadPendingTx(resourceId: string): TxState {
     const saved = JSON.parse(raw) as TxState & { savedAt?: number };
     if (
       saved.resourceId !== resourceId ||
-      saved.phase !== "pending" && saved.phase !== "confirming" ||
+      (saved.phase !== "pending" && saved.phase !== "confirming") ||
       typeof saved.hash !== "string" ||
       typeof saved.savedAt !== "number" ||
       Date.now() - saved.savedAt > PENDING_TX_TTL_MS
@@ -89,10 +93,7 @@ export function loadPendingTx(resourceId: string): TxState {
 export function persistPendingTx(state: TxState): void {
   if (typeof window === "undefined" || !state.hash || !state.resourceId) return;
   try {
-    window.localStorage.setItem(
-      PENDING_TX_KEY,
-      JSON.stringify({ ...state, savedAt: Date.now() }),
-    );
+    window.localStorage.setItem(PENDING_TX_KEY, JSON.stringify({ ...state, savedAt: Date.now() }));
   } catch {
     // Storage is best-effort; the current-page state and DB provenance remain authoritative.
   }
@@ -115,12 +116,13 @@ export function txBusy(state: TxState): boolean {
 }
 
 export function txLabel(state: TxState): string {
-  const action = {
-    create_guard: "Publishing the Guard definition",
-    arm_guard: "Locking the motive",
-    submit_evidence: "Committing the evidence",
-    evaluate_guard: "Requesting the GenLayer verdict",
-  }[state.action] ?? "Transaction";
+  const action =
+    {
+      create_guard: "Publishing the Guard definition",
+      arm_guard: "Locking the motive",
+      submit_evidence: "Committing the evidence",
+      evaluate_guard: "Requesting the GenLayer verdict",
+    }[state.action] ?? "Transaction";
   switch (state.phase) {
     case "need-wallet":
       return "Connect a wallet on GenLayer Studio Dev to continue.";

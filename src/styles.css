@@ -2288,6 +2288,27 @@
   border-left-color: var(--color-brick);
 }
 
+.status-success-icon {
+  animation: tx-success-in var(--motion-fast) var(--ease-out-soft) both;
+}
+
+@keyframes tx-success-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-success-icon {
+    animation: none;
+  }
+}
+
 .evidence-summary-list {
   display: grid;
   gap: 0;

@@ -137,7 +137,7 @@ function statusLabel(guard: Guard): string {
   // row alone. For an on-chain Guard the lock is proven by its transaction.
   const locked = lockIsAuthoritative(guard);
   if (guard.status === "RESOLVED") return "Verified";
-  if (guard.txCreate && !guard.onchainId) return "Confirmation delayed";
+  if (guard.txCreate && !guard.onchainId) return "Still waiting for confirmation";
   if (!locked) return guard.status === "DRAFT" && !guard.onchainId ? "Draft" : "Published · not locked";
   return { DRAFT: "Draft", ARMED: "Guard locked", EVIDENCE_SUBMITTED: "Evidence committed", RESOLVED: "Verified" }[
     guard.status
@@ -145,7 +145,7 @@ function statusLabel(guard: Guard): string {
 }
 
 function nextStep(guard: Guard): string {
-  if (guard.txCreate && !guard.onchainId) return "Check confirmation";
+  if (guard.txCreate && !guard.onchainId) return "Open Guard to continue checking";
   if (!lockIsAuthoritative(guard)) return guard.onchainId ? "Lock the Guard" : "Publish and lock";
   if (guard.status === "ARMED") return "Start a Run";
   if (guard.status === "EVIDENCE_SUBMITTED") return "Verify";
