@@ -7,9 +7,9 @@ export function DivergenceMark({
   className?: string;
   invert?: boolean;
 }) {
-  const bg = invert ? "#F3F0E6" : "#171816";
-  const metric = "#D79A2B";
-  const motive = invert ? "#171816" : "#74866A";
+  const bg = invert ? "var(--color-bone)" : "var(--color-carbon)";
+  const metric = "var(--color-ochre)";
+  const motive = invert ? "var(--color-carbon)" : "var(--color-sage)";
   return (
     <svg
       viewBox="0 0 32 32"
@@ -17,18 +17,18 @@ export function DivergenceMark({
       role="img"
       aria-label="MetricMotive"
     >
-      <rect width="32" height="32" rx="7" fill={bg} />
+      <rect width="32" height="32" rx="7" style={{ fill: bg }} />
       <path
         d="M9 25 C11.5 18 11.5 12 10 6"
         fill="none"
-        stroke={metric}
+        style={{ stroke: metric }}
         strokeWidth="3.25"
         strokeLinecap="round"
       />
       <path
         d="M9 25 C16 19 21 13 25 7"
         fill="none"
-        stroke={motive}
+        style={{ stroke: motive }}
         strokeWidth="3.25"
         strokeLinecap="round"
       />

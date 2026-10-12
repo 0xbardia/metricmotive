@@ -14,7 +14,7 @@ export function TrajectoryViz() {
   const selected = MARKERS.find((m) => m.id === open);
 
   return (
-    <figure className="control-room" aria-labelledby={captionId}>
+    <figure className="control-room glass-dark" aria-labelledby={captionId}>
       <figcaption id={captionId} className="sr-only">
         Chart of two trajectories over one run, from Motive Lock to adjudication. The vertical axis is
         count of records; the horizontal axis is time through the run. The ochre metric line climbs

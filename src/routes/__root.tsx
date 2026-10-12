@@ -11,6 +11,7 @@ import { SiteFooter, SiteHeader } from "@/components/chrome";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import fontsCss from "../fonts.css?url";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "MetricMotive";
@@ -30,22 +31,12 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "stylesheet", href: fontsCss },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/favicon.svg" },
-      {
-        rel: "preconnect",
-        href: "https://fonts.googleapis.com",
-      },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap",
-      },
+      { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/fraunces-var.woff2", crossOrigin: "anonymous" },
+      { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/source-sans-3-var.woff2", crossOrigin: "anonymous" },
     ],
   }),
   component: RootDocument,

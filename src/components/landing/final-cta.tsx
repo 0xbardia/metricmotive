@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 
 export function FinalCtaSection() {
   return (
-    <section className="bg-bone text-carbon">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-20 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
+    <section data-tone="light" className="bg-bone ambient text-carbon">
+      <div className="glass mx-auto my-12 flex max-w-6xl flex-col gap-8 rounded-lg px-6 py-12 sm:px-10 lg:flex-row lg:items-end lg:justify-between">
         <Reveal>
           <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-graphite">
             Shipped · Developer Layer · Agent Integrations · Open Motive Protocol

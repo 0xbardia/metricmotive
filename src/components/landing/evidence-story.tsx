@@ -9,7 +9,7 @@ export function EvidenceStorySection() {
   const selected = HOSTED_GAMING.timeline[selectedIndex];
 
   return (
-    <section id="use-cases" className="bg-bone text-carbon">
+    <section id="use-cases" data-tone="light" className="bg-bone text-carbon">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <Reveal>

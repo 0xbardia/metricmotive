@@ -22,7 +22,7 @@ export function GenLayerProofSection() {
   const reads = `${readCount}/${readCount}`;
 
   return (
-    <section id="contract" className="bg-carbon text-bone">
+    <section id="contract" data-tone="dark" className="bg-carbon text-bone">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <Reveal>
           <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ochre">

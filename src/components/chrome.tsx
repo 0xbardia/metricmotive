@@ -56,10 +56,12 @@ export function SiteHeader({
       frame = 0;
       setScrolled(window.scrollY > 16);
       if (invert) {
+        // elementsFromPoint skips the sticky jump strip that sits under the header on phones.
         const underHeader = document
-          .elementFromPoint(window.innerWidth / 2, Math.min(80, window.innerHeight - 1))
-          ?.closest("section");
-        if (underHeader) setSectionDark(underHeader.classList.contains("bg-carbon"));
+          .elementsFromPoint(window.innerWidth / 2, Math.min(80, window.innerHeight - 1))
+          .map((el) => el.closest("section[data-tone]"))
+          .find(Boolean);
+        if (underHeader) setSectionDark((underHeader as HTMLElement).dataset.tone === "dark");
       }
     };
     const onScroll = () => {
@@ -104,7 +106,7 @@ export function SiteHeader({
       data-invert={invert}
       data-scrolled={scrolled}
       data-tone={dark ? "dark" : "light"}
-      className={cn("site-header sticky top-0 z-30", dark ? "text-bone" : "text-carbon")}
+      className={cn("site-header sticky top-0 z-(--z-header)", dark ? "glass-dark text-bone" : "glass text-carbon")}
     >
       <div className="header-inner mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link to="/" aria-label="MetricMotive home">

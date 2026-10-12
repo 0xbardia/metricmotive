@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function LandingHero() {
   return (
-    <section className="hero-section bg-carbon text-bone" aria-labelledby="landing-title">
+    <section data-tone="dark" className="hero-section ambient-dark bg-carbon text-bone" aria-labelledby="landing-title">
       <div className="hero-grid mx-auto grid min-h-[100svh] max-w-6xl items-center gap-10 px-4 pb-8 pt-24 sm:px-6 sm:pb-12 lg:gap-16 lg:pb-16 lg:pt-20">
         <div className="hero-copy">
           <div className="hero-kicker font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ochre">

@@ -8,7 +8,7 @@ import { LEGACY_DEPLOYMENT } from "@/lib/contract";
 
 export function ReceiptSection() {
   return (
-    <section id="receipt" className="bg-cream text-carbon">
+    <section id="receipt" data-tone="light" className="bg-cream ambient text-carbon">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <Reveal>
@@ -28,7 +28,7 @@ export function ReceiptSection() {
           </Reveal>
         </div>
         <Reveal delay={80}>
-          <article className="receipt-sheet mt-10">
+          <article className="receipt-sheet glass mt-10">
             <div className="receipt-layout">
               <aside className="receipt-index">
                 <Badge tone="brand">Certification receipt</Badge>

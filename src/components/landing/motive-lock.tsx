@@ -16,7 +16,7 @@ export function MotiveLockSection() {
   }
 
   return (
-    <section id="how-it-works" className="bg-carbon text-bone">
+    <section id="how-it-works" data-tone="dark" className="bg-carbon text-bone">
       <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
         <Reveal>
           <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ochre">

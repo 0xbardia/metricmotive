@@ -18,6 +18,19 @@ const SECTIONS = [
  */
 export function LandingSectionNav() {
   const [active, setActive] = useState<string>(SECTIONS[0].id);
+  const [tone, setTone] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    const update = () => {
+      const el = document
+        .elementFromPoint(window.innerWidth / 2, Math.min(110, window.innerHeight - 1))
+        ?.closest<HTMLElement>("section[data-tone]");
+      if (el) setTone(el.dataset.tone === "dark" ? "dark" : "light");
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -40,6 +53,7 @@ export function LandingSectionNav() {
     <>
       <nav
         className="landing-rail"
+        data-tone={tone}
         aria-label="Landing sections"
       >
         <ol>
@@ -58,7 +72,7 @@ export function LandingSectionNav() {
         </ol>
       </nav>
 
-      <nav className="landing-jump" aria-label="Landing sections">
+      <nav className="landing-jump" data-tone={tone} aria-label="Landing sections">
         {SECTIONS.map((section) => (
           <a key={section.id} href={`#${section.id}`} data-active={active === section.id}>
             {section.label}

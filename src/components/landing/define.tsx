@@ -3,7 +3,7 @@ import { HOSTED_GAMING } from "@/components/landing/cert-case";
 
 export function DefineSection() {
   return (
-    <section id="product" className="bg-bone text-carbon">
+    <section id="product" data-tone="light" className="bg-bone text-carbon">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <Reveal>
           <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-graphite">

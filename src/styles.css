@@ -1,12 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@rainbow-me/rainbowkit/styles.css";
 
 @theme {
   --font-sans: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
 
+  /* ---- Colors (D5: palette unchanged) ---- */
   --color-carbon: #171816;
   --color-bone: #f3f0e6;
   --color-ochre: #d79a2b;
@@ -20,17 +20,20 @@
   --color-ochre-soft: #f3e4c4;
   --color-sage-soft: #dde5d6;
   --color-brick-soft: #f0d8d2;
-  /* Text-strength semantics. The --*-soft tokens above are background fills and
-     are deliberately low-contrast; these are the matching AA-safe text tones.
+  /* Text-strength semantics. The --*-soft tokens are background fills and are
+     deliberately low-contrast; these are the matching AA-safe text tones.
      Brand ochre as *text* on bone fails AA, so light surfaces use brand-text. */
   --color-brand-text: #8a5a12;
   --color-danger-text: #a0452f;
-  --color-sage-text: #5c6c52;
+  --color-sage-text: #566649;
   /* Elevated variants for dark (carbon) surfaces, where the light tones fail. */
-  --color-warning-on-dark: #e2b25c;
   --color-danger-on-dark: #d98c76;
   --color-sage-on-dark: #a8bb9c;
-  --color-warning-soft: #f7ecd6;
+  /* Warning is separated from brand ochre (C-15): burnt orange, never ochre. */
+  --color-warning: #b4632a;
+  --color-warning-text: #8f4a1c;
+  --color-warning-soft: #f6e1d2;
+  --color-warning-on-dark: #e8a77a;
   --color-background: #f3f0e6;
   --color-foreground: #171816;
   --color-muted: #5e5f59;
@@ -45,18 +48,96 @@
   --radius-xl: 28px;
 
   --shadow-border:
-    0px 0px 0px 1px rgba(23, 24, 22, 0.08), 0px 1px 2px -1px rgba(23, 24, 22, 0.06),
-    0px 2px 4px 0px rgba(23, 24, 22, 0.04);
+    0px 0px 0px 1px color-mix(in srgb, var(--color-carbon) 8%, transparent),
+    0px 1px 2px -1px color-mix(in srgb, var(--color-carbon) 6%, transparent),
+    0px 2px 4px 0px color-mix(in srgb, var(--color-carbon) 4%, transparent);
   --shadow-border-hover:
-    0px 0px 0px 1px rgba(23, 24, 22, 0.12), 0px 1px 2px -1px rgba(23, 24, 22, 0.08),
-    0px 2px 8px 0px rgba(23, 24, 22, 0.08);
+    0px 0px 0px 1px color-mix(in srgb, var(--color-carbon) 12%, transparent),
+    0px 1px 2px -1px color-mix(in srgb, var(--color-carbon) 8%, transparent),
+    0px 2px 8px 0px color-mix(in srgb, var(--color-carbon) 8%, transparent);
 
+  /* ---- Liquid Glass material (a layer, not a palette) ---- */
+  --glass-bg-bone: color-mix(in srgb, var(--color-bone) 62%, transparent);
+  --glass-bg-carbon: color-mix(in srgb, var(--color-carbon) 58%, transparent);
+  --glass-bg-bone-strong: color-mix(in srgb, var(--color-bone) 88%, transparent);
+  --glass-bg-carbon-strong: color-mix(in srgb, var(--color-carbon) 82%, transparent);
+  --glass-bg-bone-solid: color-mix(in srgb, var(--color-bone) 94%, transparent);
+  --glass-bg-carbon-solid: color-mix(in srgb, var(--color-carbon) 92%, transparent);
+  --glass-border-bone: inset 0 0 0 1px color-mix(in srgb, white 55%, transparent);
+  --glass-border-carbon: inset 0 0 0 1px color-mix(in srgb, var(--color-bone) 12%, transparent);
+  --glass-specular-bone: linear-gradient(
+    135deg,
+    color-mix(in srgb, white 35%, transparent) 0%,
+    transparent 42%
+  );
+  --glass-specular-carbon: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-bone) 10%, transparent) 0%,
+    transparent 40%
+  );
+  --glass-shadow:
+    0 1px 1px color-mix(in srgb, var(--color-carbon) 4%, transparent),
+    0 8px 24px -8px color-mix(in srgb, var(--color-carbon) 18%, transparent),
+    0 24px 48px -24px color-mix(in srgb, var(--color-carbon) 22%, transparent);
+  --glass-blur: 16px; /* 8px at <=640px, see @layer base */
+  --glass-saturate: 140%; /* maximum */
+
+  /* ---- Ambient mesh: gives glass something to refract ---- */
+  --ambient-mesh-bone:
+    radial-gradient(60% 50% at 12% 8%, color-mix(in srgb, var(--color-ochre) 10%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 90% 20%, color-mix(in srgb, var(--color-sage) 8%, transparent), transparent 70%),
+    radial-gradient(70% 50% at 50% 100%, color-mix(in srgb, var(--color-ochre) 10%, transparent), transparent 72%);
+  --ambient-mesh-carbon:
+    radial-gradient(60% 50% at 12% 8%, color-mix(in srgb, var(--color-ochre) 18%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 90% 20%, color-mix(in srgb, var(--color-sage) 14%, transparent), transparent 70%),
+    radial-gradient(70% 50% at 50% 100%, color-mix(in srgb, var(--color-ochre) 18%, transparent), transparent 72%);
+
+  /* ---- Spacing ---- */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-section: clamp(4rem, 8vw, 8rem);
+  --space-gutter: 1rem; /* 2rem at >=768px, see @layer base */
+
+  /* ---- Type ---- */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.35;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.2;
+  --text-3xl: clamp(2rem, 4vw, 2.75rem);
+  --text-3xl--line-height: 1.1;
+  --text-display: clamp(2.75rem, 7vw, 5.5rem);
+  --text-display--line-height: 1.02;
+
+  /* ---- Z-index ---- */
+  --z-jump: 20;
+  --z-rail: 25;
+  --z-header: 30;
+  --z-modal: 50;
+
+  /* ---- Layout ---- */
+  --header-h: 68px;
+
+  /* ---- Motion ---- */
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-stagger: 64ms;
   --motion-micro: 100ms;
   --motion-quick: 180ms;
   --motion-fast: 280ms;
+  --motion-glass: 280ms;
   --motion-medium: 360ms;
   --motion-slow: 520ms;
   --motion-emphasis: 640ms;
@@ -168,51 +249,49 @@
 }
 
 .site-header {
-  --header-surface: rgba(243, 240, 230, 0.68);
-  --header-line: rgba(23, 24, 22, 0.14);
+  --header-surface: var(--glass-bg-bone);
+  --header-line: color-mix(in srgb, var(--color-carbon) 14%, transparent);
+  min-height: var(--header-h);
   border-bottom: 1px solid var(--header-line);
   background-color: var(--header-surface);
-  -webkit-backdrop-filter: blur(18px) saturate(125%);
-  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   transition:
-    background-color var(--motion-fast) var(--ease-out-soft),
-    border-color var(--motion-fast) var(--ease-out-soft),
-    box-shadow var(--motion-fast) var(--ease-out-soft);
+    background-color var(--motion-glass) var(--ease-out-soft),
+    border-color var(--motion-glass) var(--ease-out-soft),
+    box-shadow var(--motion-glass) var(--ease-out-soft);
 }
 
 .site-header[data-invert="true"] {
-  margin-bottom: -69px;
+  margin-bottom: calc(-1 * var(--header-h) - 1px);
 }
 
-.site-header[data-invert="true"][data-scrolled="false"] {
-  --header-surface: rgba(23, 24, 22, 0.28);
-  --header-line: transparent;
-}
-
+/* Tone contract (C-11): light = bone glass + carbon text, dark = carbon glass
+   + bone text. Scrolled states are the more opaque "strong" glass. */
 .site-header[data-tone="dark"] {
-  --header-surface: rgba(23, 24, 22, 0.28);
+  --header-surface: var(--glass-bg-carbon);
   --header-line: transparent;
 }
 
 .site-header[data-tone="light"] {
-  --header-surface: rgba(243, 240, 230, 0.42);
+  --header-surface: var(--glass-bg-bone);
   --header-line: transparent;
 }
 
 .site-header[data-scrolled="true"][data-tone="dark"] {
-  --header-surface: rgba(23, 24, 22, 0.82);
-  --header-line: rgba(243, 240, 230, 0.12);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  --header-surface: var(--glass-bg-carbon-strong);
+  --header-line: color-mix(in srgb, var(--color-bone) 12%, transparent);
+  box-shadow: var(--glass-shadow);
 }
 
 .site-header[data-scrolled="true"][data-tone="light"] {
-  --header-surface: rgba(243, 240, 230, 0.88);
-  --header-line: rgba(23, 24, 22, 0.1);
-  box-shadow: 0 8px 22px rgba(23, 24, 22, 0.06);
+  --header-surface: var(--glass-bg-bone-strong);
+  --header-line: color-mix(in srgb, var(--color-carbon) 10%, transparent);
+  box-shadow: var(--glass-shadow);
 }
 
 .header-inner {
-  min-height: 68px;
+  min-height: var(--header-h);
   transition:
     min-height var(--motion-fast) var(--ease-out-soft),
     padding var(--motion-fast) var(--ease-out-soft);
@@ -231,12 +310,38 @@
   transform: scale(0.94);
 }
 
-@media (max-width: 640px) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .site-header {
-    -webkit-backdrop-filter: blur(12px) saturate(112%);
-    backdrop-filter: blur(12px) saturate(112%);
+    --header-surface: var(--glass-bg-bone-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .site-header[data-tone="dark"],
+  .site-header[data-scrolled="true"][data-tone="dark"] {
+    --header-surface: var(--glass-bg-carbon-solid);
   }
 }
+
+@media (prefers-reduced-transparency: reduce) {
+  .site-header,
+  .site-header[data-tone="light"],
+  .site-header[data-scrolled="true"][data-tone="light"] {
+    --header-surface: var(--glass-bg-bone-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .site-header[data-tone="dark"],
+  .site-header[data-scrolled="true"][data-tone="dark"] {
+    --header-surface: var(--glass-bg-carbon-solid);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
+}
+
 
 .mobile-nav {
   border-top-color: var(--header-line);
@@ -488,10 +593,10 @@
 
 .state-node {
   display: inline-flex;
-  border: 1px solid rgba(243, 240, 230, 0.2);
+  border: 1px solid color-mix(in srgb, var(--color-bone) 20%, transparent);
   border-radius: 2px;
   padding: 0.25rem 0.45rem;
-  color: rgba(243, 240, 230, 0.76);
+  color: color-mix(in srgb, var(--color-bone) 76%, transparent);
   letter-spacing: 0.06em;
   transition:
     border-color var(--motion-quick) var(--ease-out-soft),
@@ -500,13 +605,13 @@
 }
 
 .state-node-armed {
-  border-color: rgba(215, 154, 43, 0.75);
-  background: rgba(215, 154, 43, 0.1);
+  border-color: color-mix(in srgb, var(--color-ochre) 75%, transparent);
+  background: color-mix(in srgb, var(--color-ochre) 10%, transparent);
   color: var(--color-ochre);
 }
 
 .state-arrow {
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .reveal.is-in .state-node {
@@ -614,51 +719,6 @@
   font-family: var(--font-sans) !important;
 }
 
-.hero-grid {
-  grid-template-columns: 1fr;
-}
-
-.hero-copy {
-  order: 1;
-}
-
-.hero-viz {
-  order: 2;
-}
-
-.hero-cta {
-  order: 3;
-}
-
-@media (min-width: 1024px) {
-  .hero-grid {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    grid-template-rows: auto auto;
-  }
-
-  .hero-copy {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .hero-cta {
-    grid-column: 1;
-    grid-row: 2;
-    align-self: start;
-  }
-
-  .hero-viz {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-  }
-}
-
-.control-room {
-  border: 1px solid rgba(243, 240, 230, 0.12);
-  padding: 1.25rem 1.25rem 1.1rem;
-  animation: viz-enter var(--motion-emphasis) var(--ease-out-soft) 180ms both;
-}
-
 .metric-path {
   animation-delay: 280ms;
 }
@@ -667,55 +727,6 @@
   animation-delay: 80ms;
 }
 
-.evidence-mark {
-  position: absolute;
-  display: flex;
-  min-height: 44px;
-  min-width: 44px;
-  translate: -50% -50%;
-  align-items: center;
-  gap: 0.35rem;
-  opacity: 0;
-  animation: fade-label 520ms var(--ease-out-soft) forwards;
-}
-
-.evidence-mark-dot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 18%, transparent);
-}
-
-.evidence-mark-label {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-bone);
-  white-space: nowrap;
-}
-
-.evidence-mark-metric {
-  color: var(--color-ochre);
-}
-
-.evidence-mark-motive {
-  color: var(--color-sage);
-}
-
-.evidence-mark-fault {
-  color: var(--color-brick);
-}
-
-@media (max-width: 1023px) {
-  .evidence-mark-secondary {
-    display: none;
-  }
-  .evidence-mark-label {
-    font-size: 0.58rem;
-  }
-}
 
 .verdict-cascade {
   display: flex;
@@ -725,7 +736,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(243, 240, 230, 0.55);
+  color: color-mix(in srgb, var(--color-bone) 55%, transparent);
 }
 
 .verdict-cascade li {
@@ -746,13 +757,13 @@
 }
 
 .verdict-cascade-final {
-  color: var(--color-brick);
+  color: var(--color-danger-on-dark);
   animation-delay: 1.75s !important;
 }
 
 .lock-stage {
   padding: 1.5rem 0 0;
-  border-top: 1px solid rgba(243, 240, 230, 0.14);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 14%, transparent);
 }
 
 .lock-spec {
@@ -811,7 +822,7 @@
 }
 
 .pipeline-step {
-  border-top: 1px solid rgba(243, 240, 230, 0.16);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 16%, transparent);
   padding-top: 0.9rem;
 }
 
@@ -822,13 +833,13 @@
 }
 
 .consensus-lane {
-  border: 1px solid rgba(243, 240, 230, 0.2);
+  border: 1px solid color-mix(in srgb, var(--color-bone) 20%, transparent);
   padding: 0.35rem 0.55rem;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(243, 240, 230, 0.7);
+  color: color-mix(in srgb, var(--color-bone) 70%, transparent);
 }
 
 .proof-strip dt {
@@ -836,33 +847,13 @@
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .proof-strip dd {
   margin-top: 0.35rem;
   font-family: var(--font-mono);
   font-size: 0.8rem;
-}
-
-.receipt-sheet {
-  background: var(--color-bone);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-border);
-}
-
-.receipt-sheet dt {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-graphite);
-}
-
-@media (max-width: 639px) {
-  .evidence-mark {
-    min-width: 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -897,7 +888,7 @@
   top: 0;
   bottom: 0;
   left: max(1rem, calc((100vw - 72rem) / 2));
-  border-left: 1px solid rgba(243, 240, 230, 0.06);
+  border-left: 1px solid color-mix(in srgb, var(--color-bone) 6%, transparent);
 }
 
 .hero-section::after {
@@ -905,7 +896,7 @@
   bottom: 10%;
   width: min(30vw, 22rem);
   height: 1px;
-  background: rgba(215, 154, 43, 0.55);
+  background: color-mix(in srgb, var(--color-ochre) 55%, transparent);
   transform-origin: right;
   animation: hero-rule-in 900ms var(--ease-out-soft) 700ms both;
 }
@@ -920,6 +911,7 @@
 }
 
 .hero-copy {
+  order: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -958,7 +950,7 @@
   height: 0.42rem;
   border-radius: 999px;
   background: var(--color-ochre);
-  box-shadow: 0 0 0 4px rgba(215, 154, 43, 0.12);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-ochre) 12%, transparent);
 }
 
 .signal-dot {
@@ -967,21 +959,21 @@
 
 .hero-kicker-case {
   margin-left: 0.35rem;
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .hero-headline-muted {
-  color: rgba(243, 240, 230, 0.68);
+  color: color-mix(in srgb, var(--color-bone) 68%, transparent);
 }
 
 .hero-meta {
-  border-top: 1px solid rgba(243, 240, 230, 0.13);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 13%, transparent);
   padding-top: 0.75rem;
 }
 
 .hero-meta span + span::before {
   margin-right: 1.25rem;
-  color: rgba(243, 240, 230, 0.55);
+  color: color-mix(in srgb, var(--color-bone) 55%, transparent);
   content: "/";
 }
 
@@ -999,7 +991,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgba(243, 240, 230, 0.5);
+  color: color-mix(in srgb, var(--color-bone) 50%, transparent);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.12em;
@@ -1017,10 +1009,7 @@
 
 .control-room {
   position: relative;
-  border: 1px solid rgba(243, 240, 230, 0.16);
-  background: rgba(23, 24, 22, 0.72);
   padding: 1.25rem;
-  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.16);
   animation: control-room-in var(--motion-emphasis) var(--ease-out-soft) 220ms both;
 }
 
@@ -1039,19 +1028,19 @@
   grid-template-columns: auto auto;
   align-items: center;
   gap: 0.3rem 0.45rem;
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .control-room-status-dot {
   width: 0.34rem;
   height: 0.34rem;
   background: var(--color-brick);
-  box-shadow: 0 0 0 3px rgba(168, 86, 69, 0.14);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brick) 14%, transparent);
 }
 
 .control-room-status span:last-child {
   grid-column: 1 / -1;
-  color: var(--color-brick);
+  color: var(--color-danger-on-dark);
 }
 
 .control-room-readouts > div {
@@ -1110,7 +1099,7 @@
 }
 
 .trajectory-text-axis {
-  fill: rgba(243, 240, 230, 0.55);
+  fill: color-mix(in srgb, var(--color-bone) 55%, transparent);
 }
 
 .trajectory-text-metric {
@@ -1122,6 +1111,7 @@
 }
 
 .evidence-mark {
+  position: absolute;
   left: var(--marker-x);
   top: var(--marker-y);
   z-index: 2;
@@ -1202,13 +1192,13 @@
 }
 
 .guard-dossier {
-  border-top: 1px solid rgba(243, 240, 230, 0.12);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 12%, transparent);
   padding-top: 0.75rem;
 }
 
 .verdict-cascade {
   gap: 0.45rem 0.75rem;
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .verdict-cascade li {
@@ -1229,13 +1219,13 @@
 }
 
 .verdict-cascade-final {
-  color: var(--color-brick);
+  color: var(--color-danger-on-dark);
   animation-delay: 1240ms !important;
 }
 
 .lock-demo {
-  border-top: 1px solid rgba(243, 240, 230, 0.16);
-  border-bottom: 1px solid rgba(243, 240, 230, 0.16);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-bone) 16%, transparent);
   padding-block: 1.25rem 1rem;
 }
 
@@ -1257,7 +1247,7 @@
 
 .lock-spec-pane {
   min-width: 0;
-  border-left: 2px solid rgba(243, 240, 230, 0.18);
+  border-left: 2px solid color-mix(in srgb, var(--color-bone) 18%, transparent);
   padding-left: 0.9rem;
   transition:
     border-color var(--motion-fast) var(--ease-out-soft),
@@ -1269,7 +1259,7 @@
 }
 
 .lock-spec-armed {
-  border-color: rgba(215, 154, 43, 0.4);
+  border-color: color-mix(in srgb, var(--color-ochre) 40%, transparent);
 }
 
 .lock-demo[data-locked="true"] .lock-spec-draft {
@@ -1281,7 +1271,7 @@
 }
 
 .lock-pane-label {
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .lock-spec-armed .lock-pane-label {
@@ -1313,7 +1303,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem 0.5rem;
-  border-top: 1px solid rgba(243, 240, 230, 0.1);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 10%, transparent);
   padding-top: 0.85rem;
   font-family: var(--font-mono);
   font-size: 0.68rem;
@@ -1321,9 +1311,9 @@
 }
 
 .lock-lifecycle-item {
-  border: 1px solid rgba(243, 240, 230, 0.18);
+  border: 1px solid color-mix(in srgb, var(--color-bone) 18%, transparent);
   padding: 0.25rem 0.45rem;
-  color: rgba(243, 240, 230, 0.54);
+  color: color-mix(in srgb, var(--color-bone) 54%, transparent);
   letter-spacing: 0.06em;
   transition:
     color var(--motion-quick) var(--ease-out-soft),
@@ -1332,8 +1322,8 @@
 }
 
 .lock-lifecycle-item[data-state="active"] {
-  border-color: rgba(215, 154, 43, 0.72);
-  background: rgba(215, 154, 43, 0.1);
+  border-color: color-mix(in srgb, var(--color-ochre) 72%, transparent);
+  background: color-mix(in srgb, var(--color-ochre) 10%, transparent);
   color: var(--color-ochre);
 }
 
@@ -1593,7 +1583,7 @@
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
   gap: 0.7rem;
-  border-top: 1px solid rgba(243, 240, 230, 0.18);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 18%, transparent);
   padding-top: 0.9rem;
 }
 
@@ -1606,8 +1596,8 @@
 }
 
 .consensus-figure {
-  border-top: 1px solid rgba(243, 240, 230, 0.16);
-  border-bottom: 1px solid rgba(243, 240, 230, 0.16);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-bone) 16%, transparent);
   padding-block: 1.25rem;
 }
 
@@ -1626,20 +1616,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid rgba(243, 240, 230, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-bone) 10%, transparent);
   padding-block: 0.6rem;
-  color: rgba(243, 240, 230, 0.7);
+  color: color-mix(in srgb, var(--color-bone) 70%, transparent);
   font-family: var(--font-mono);
   font-size: 0.68rem;
   letter-spacing: 0.04em;
 }
 
 .consensus-lane:first-child {
-  border-top: 1px solid rgba(243, 240, 230, 0.1);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 10%, transparent);
 }
 
 .consensus-lane-key {
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .consensus-lane > span:last-child {
@@ -1666,16 +1656,16 @@
 }
 
 .consensus-convergence-label {
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .proof-strip {
-  border-top: 1px solid rgba(243, 240, 230, 0.16);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 16%, transparent);
   padding-top: 1.25rem;
 }
 
 .proof-strip dt {
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.12em;
@@ -1693,20 +1683,20 @@
 .verdict-spectrum {
   display: grid;
   gap: 0;
-  border-top: 1px solid rgba(243, 240, 230, 0.14);
+  border-top: 1px solid color-mix(in srgb, var(--color-bone) 14%, transparent);
 }
 
 .verdict-cell {
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
   gap: 0.7rem;
-  border-bottom: 1px solid rgba(243, 240, 230, 0.14);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-bone) 14%, transparent);
   padding: 0.95rem 0;
 }
 
 .verdict-cell p:nth-of-type(1) {
   grid-column: 2;
-  color: rgba(243, 240, 230, 0.72);
+  color: color-mix(in srgb, var(--color-bone) 72%, transparent);
 }
 
 .verdict-cell p:nth-of-type(2) {
@@ -1729,10 +1719,7 @@
 }
 
 .receipt-sheet {
-  border: 1px solid var(--color-rule);
-  background: var(--color-bone);
   padding: 1.25rem;
-  box-shadow: 0 0.75rem 1.5rem rgba(23, 24, 22, 0.06);
 }
 
 .receipt-layout {
@@ -1929,7 +1916,7 @@
 
   .verdict-cell {
     display: block;
-    border-top: 1px solid rgba(243, 240, 230, 0.14);
+    border-top: 1px solid color-mix(in srgb, var(--color-bone) 14%, transparent);
     border-bottom: 0;
     padding: 0.9rem 0 0;
   }
@@ -2455,7 +2442,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .trajectory-legend li::before {
@@ -2475,7 +2462,7 @@
 }
 
 .trajectory-legend .is-target {
-  color: rgba(243, 240, 230, 0.62);
+  color: color-mix(in srgb, var(--color-bone) 62%, transparent);
 }
 
 .trajectory-legend .is-fault {
@@ -2499,7 +2486,7 @@
   }
 
   .trajectory-mobile-list li {
-    border-left: 2px solid rgba(243, 240, 230, 0.3);
+    border-left: 2px solid color-mix(in srgb, var(--color-bone) 30%, transparent);
     padding-left: 0.75rem;
   }
 
@@ -2516,112 +2503,238 @@
   }
 }
 
-/* Landing section navigation (L5): a small rail on desktop, a compact jump
-   strip on mobile. Sits below the sticky header so the two never overlap. */
-.landing-rail {
-  display: none;
+/* ---- Material layer. Lives in @layer components so Tailwind utilities can
+   still override it. Legacy component rules above stay unlayered on purpose:
+   moving them would let Tailwind utilities beat them (e.g. .header-inner vs
+   py-3), changing behaviour. ---- */
+@layer base {
+  @media (max-width: 640px) {
+    :root {
+      --glass-blur: 8px;
+    }
+  }
+  @media (min-width: 768px) {
+    :root {
+      --space-gutter: 2rem;
+    }
+  }
 }
 
-.landing-jump {
-  position: sticky;
-  top: 68px;
-  z-index: 20;
-  display: flex;
-  gap: 0.25rem;
-  overflow-x: auto;
-  border-bottom: 1px solid rgba(243, 240, 230, 0.14);
-  background: rgba(23, 24, 22, 0.86);
-  padding: 0.35rem 1rem;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  scrollbar-width: none;
-}
+@layer components {
+  .glass,
+  .glass-dark {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    transition:
+      background-color var(--motion-glass) var(--ease-out-soft),
+      box-shadow var(--motion-glass) var(--ease-out-soft);
+  }
 
-.landing-jump::-webkit-scrollbar {
-  display: none;
-}
+  .glass {
+    background-color: var(--glass-bg-bone);
+    background-image: var(--glass-specular-bone);
+    box-shadow: var(--glass-border-bone), var(--glass-shadow);
+    color: var(--color-carbon);
+  }
 
-.landing-jump a {
-  flex: none;
-  padding: 0.4rem 0.6rem;
-  color: rgba(243, 240, 230, 0.62);
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
+  .glass-dark {
+    background-color: var(--glass-bg-carbon);
+    background-image: var(--glass-specular-carbon);
+    box-shadow: var(--glass-border-carbon), var(--glass-shadow);
+    color: var(--color-bone);
+  }
 
-.landing-jump a[data-active="true"] {
-  color: var(--color-ochre);
-}
+  .ambient {
+    background-color: var(--color-bone);
+    background-image: var(--ambient-mesh-bone);
+  }
 
-@media (min-width: 1024px) {
+  .ambient-dark {
+    background-color: var(--color-carbon);
+    background-image: var(--ambient-mesh-carbon);
+  }
+
+  /* Landing section navigation: rail on desktop, jump strip below the header
+     on mobile. Both follow [data-tone] set by the section observer. */
+  .landing-rail {
+    display: none;
+    --nav-text: var(--color-bone);
+    --nav-text-active: var(--color-ochre);
+    --nav-dot: color-mix(in srgb, var(--color-bone) 50%, transparent);
+  }
+
   .landing-jump {
+    --nav-bg: var(--glass-bg-carbon);
+    /* Whenever the strip is unblurred (phones, fallbacks) it is opaque, or scrolling text shows through. */
+    --nav-bg-opaque: var(--color-carbon);
+    --nav-line: color-mix(in srgb, var(--color-bone) 14%, transparent);
+    --nav-text: color-mix(in srgb, var(--color-bone) 72%, transparent);
+    --nav-text-active: var(--color-ochre);
+    position: sticky;
+    top: var(--header-h);
+    z-index: var(--z-jump);
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--nav-line);
+    background-color: var(--nav-bg);
+    padding: 0.35rem 1rem;
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    scrollbar-width: none;
+    transition: background-color var(--motion-glass) var(--ease-out-soft);
+  }
+
+  .landing-jump[data-tone="light"] {
+    --nav-bg: var(--glass-bg-bone);
+    --nav-bg-opaque: var(--color-bone);
+    --nav-line: color-mix(in srgb, var(--color-carbon) 12%, transparent);
+    --nav-text: var(--color-graphite);
+    --nav-text-active: var(--color-brand-text);
+  }
+
+  .landing-rail[data-tone="light"] {
+    --nav-text: var(--color-carbon);
+    --nav-text-active: var(--color-brand-text);
+    --nav-dot: color-mix(in srgb, var(--color-carbon) 50%, transparent);
+  }
+
+  .landing-jump::-webkit-scrollbar {
     display: none;
   }
 
-  .landing-rail {
-    position: fixed;
-    top: 50%;
-    right: 1.25rem;
-    z-index: 25;
-    display: block;
-    transform: translateY(-50%);
-  }
-
-  .landing-rail ol {
-    display: grid;
-    gap: 0.6rem;
-  }
-
-  .landing-rail a {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: flex-end;
-  }
-
-  .landing-rail-dot {
-    order: 2;
-    display: block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border: 1px solid rgba(243, 240, 230, 0.5);
-    border-radius: 999px;
-    background: transparent;
-    transition: background-color var(--motion-quick) var(--ease-out-soft);
-  }
-
-  .landing-rail a[data-active="true"] .landing-rail-dot,
-  .landing-rail a:hover .landing-rail-dot {
-    background: var(--color-ochre);
-    border-color: var(--color-ochre);
-  }
-
-  .landing-rail-label {
-    order: 1;
-    overflow: hidden;
-    max-width: 0;
-    color: rgba(243, 240, 230, 0.75);
+  .landing-jump a {
+    flex: none;
+    padding: 0.4rem 0.6rem;
+    color: var(--nav-text);
     font-family: var(--font-mono);
     font-size: 0.625rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    white-space: nowrap;
-    transition: max-width var(--motion-quick) var(--ease-out-soft);
   }
 
-  .landing-rail a:hover .landing-rail-label,
-  .landing-rail a:focus-visible .landing-rail-label {
-    max-width: 7rem;
+  .landing-jump a[data-active="true"] {
+    color: var(--nav-text-active);
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .landing-jump,
-  .landing-rail-dot,
-  .landing-rail-label {
-    scroll-behavior: auto;
-    transition: none;
+  /* Mobile budget: header is the one live blur; the jump strip goes solid. */
+  @media (max-width: 640px) {
+    .landing-jump {
+      background-color: var(--nav-bg-opaque);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .landing-jump {
+      display: none;
+    }
+
+    .landing-rail {
+      position: fixed;
+      top: 50%;
+      right: 1.25rem;
+      z-index: var(--z-rail);
+      display: block;
+      transform: translateY(-50%);
+    }
+
+    .landing-rail ol {
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    .landing-rail a {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .landing-rail-dot {
+      order: 2;
+      display: block;
+      width: 0.5rem;
+      height: 0.5rem;
+      border: 1px solid var(--nav-dot);
+      border-radius: 999px;
+      background: transparent;
+      transition:
+        background-color var(--motion-quick) var(--ease-out-soft),
+        border-color var(--motion-quick) var(--ease-out-soft);
+    }
+
+    .landing-rail a[data-active="true"] .landing-rail-dot,
+    .landing-rail a:hover .landing-rail-dot {
+      background: var(--nav-text-active);
+      border-color: var(--nav-text-active);
+    }
+
+    .landing-rail-label {
+      order: 1;
+      overflow: hidden;
+      max-width: 0;
+      color: var(--nav-text);
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: max-width var(--motion-quick) var(--ease-out-soft);
+    }
+
+    .landing-rail a:hover .landing-rail-label,
+    .landing-rail a:focus-visible .landing-rail-label {
+      max-width: 7rem;
+    }
+  }
+
+  /* Solid fallbacks: no backdrop-filter support, or reduced transparency. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background-color: var(--glass-bg-bone-solid);
+    }
+    .glass-dark {
+      background-color: var(--glass-bg-carbon-solid);
+    }
+    .glass,
+    .glass-dark,
+    .landing-jump {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .landing-jump {
+      background-color: var(--nav-bg-opaque);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background-color: var(--glass-bg-bone-solid);
+    }
+    .glass-dark {
+      background-color: var(--glass-bg-carbon-solid);
+    }
+    .glass,
+    .glass-dark,
+    .landing-jump {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .landing-jump {
+      background-color: var(--nav-bg-opaque);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass,
+    .glass-dark,
+    .landing-jump,
+    .landing-rail-dot,
+    .landing-rail-label {
+      scroll-behavior: auto;
+      transition: none;
+    }
   }
 }

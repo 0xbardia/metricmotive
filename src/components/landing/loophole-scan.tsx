@@ -7,7 +7,7 @@ export function LoopholeScanSection() {
   const [protectedSpec, setProtectedSpec] = useState(false);
 
   return (
-    <section id="stress-test" className="bg-cream text-carbon">
+    <section id="stress-test" data-tone="light" className="bg-cream text-carbon">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <div className="scan-heading flex flex-wrap items-end justify-between gap-6">
           <Reveal>
