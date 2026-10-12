@@ -4,6 +4,8 @@ import { studioDevnet } from "genlayer-js/chains";
 import type { CalldataEncodable } from "genlayer-js/types";
 import type { Connector } from "wagmi";
 import { getActiveDeployment } from "../contract.ts";
+// Dependency-free module: the browser shows the same recovery text the server returns.
+import { FAILED_RECOVERY_MESSAGE } from "../server/operation-store.ts";
 import { isUserRejection, walletErrorMessage } from "./errors.ts";
 
 export type Eip1193Provider = {
@@ -179,7 +181,7 @@ export async function submitLifecycleWrite(
     const err = new LifecycleWriteError(
       "WRITE_NOT_SUCCESSFUL",
       failureKind === "failed"
-        ? "The transaction failed on GenLayer without a verifiable result."
+        ? FAILED_RECOVERY_MESSAGE
         : "The transaction was not successful. No on-chain state was created.",
     );
     err.failureKind = failureKind;
