@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { MarketingShell } from "@/components/marketing-shell";
+import { pageHead } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import {
@@ -10,7 +11,10 @@ import {
   type DocSection,
 } from "@/lib/docs-content";
 
-export const Route = createFileRoute("/docs")({ component: DocsPage });
+export const Route = createFileRoute("/docs")({
+  head: () => pageHead({ title: "Documentation", path: "/docs" }),
+  component: DocsPage,
+});
 
 function DocsPage() {
   const [active, setActive] = useState(DOC_SECTIONS[0].slug);
@@ -80,7 +84,7 @@ function DocsPage() {
           </div>
         </nav>
 
-        <main className="mt-10 min-w-0 lg:mt-0">
+        <div className="mt-10 min-w-0 lg:mt-0">
           <header className="border-b border-rule pb-8">
             <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-brand-text">
               MetricMotive
@@ -108,7 +112,7 @@ function DocsPage() {
           {DOC_SECTIONS.map((section) => (
             <DocSectionView key={section.slug} section={section} />
           ))}
-        </main>
+        </div>
       </div>
     </MarketingShell>
   );

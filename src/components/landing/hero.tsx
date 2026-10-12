@@ -1,57 +1,53 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowDown, ArrowRight } from "lucide-react";
-import { TrajectoryViz } from "@/components/landing/trajectory";
-import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { D1 } from "@/lib/d1-case";
+import { ROUTES, SITE_DESCRIPTION, SITE_TAGLINE } from "@/lib/site";
+import { ButtonLink, Kicker, LiveLink, TextLink } from "./parts";
 
 export function LandingHero() {
   return (
-    <section data-tone="dark" className="hero-section ambient-dark bg-carbon text-bone" aria-labelledby="landing-title">
-      <div className="hero-grid mx-auto grid min-h-[100svh] max-w-6xl items-center gap-10 px-4 pb-8 pt-24 sm:px-6 sm:pb-12 lg:gap-16 lg:pb-16 lg:pt-20">
-        <div className="hero-copy">
-          <div className="hero-kicker font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ochre">
-            <span className="signal-dot" aria-hidden="true" />
-            <span>Motive Control Room</span>
-            <span className="hero-kicker-case">Case 002 / resolved</span>
-          </div>
+    <section id="hero" data-tone="dark" aria-labelledby="landing-title" className="ambient-dark text-bone">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-[calc(var(--header-h)+var(--jump-h,2.5rem)+1.5rem)] sm:px-6 sm:pb-20 lg:pt-24 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+        <div>
+          <Kicker dark>For teams running AI agents</Kicker>
           <h1
             id="landing-title"
-            className="mt-4 max-w-xl font-display text-[2.35rem] font-semibold leading-[1.02] tracking-tight sm:mt-5 sm:text-5xl lg:text-[4.1rem]"
+            className="mt-4 max-w-xl font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl"
           >
-            Your agent hit the metric.
-            <span className="hero-headline-muted mt-2 block">Did it honor the motive?</span>
+            {SITE_TAGLINE}
           </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-bone/72 sm:mt-6">
-            The score went up. The outcome got worse.
-            <span className="block">Watch Guard #2 prove it.</span>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-bone/85 sm:text-lg">{SITE_DESCRIPTION}</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <ButtonLink to={ROUTES.demo} variant="ochre">
+              Try the demo
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </ButtonLink>
+            <ButtonLink to={ROUTES.builder} variant="outline-dark">
+              Create a Motive Guard
+            </ButtonLink>
+            <TextLink to={D1.receiptPath} dark>
+              See the on-chain receipt →
+            </TextLink>
+          </div>
+        </div>
+        <div className="glass-dark glass-flat rounded-lg p-5 sm:p-6">
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-bone/80">Studio Dev · Guard #{D1.guardId}</p>
+          <dl className="mt-4 space-y-2 text-base">
+            <div className="flex justify-between gap-4">
+              <dt className="text-bone/80">Target</dt>
+              <dd>At least {D1.metricTarget} meetings</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-bone/80">Booked</dt>
+              <dd className="font-mono">{D1.counts.booked}</dd>
+            </div>
+          </dl>
+          <p className="mt-5 inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-danger-on-dark px-3 py-1.5 text-sm font-medium text-danger-on-dark">
+            <span aria-hidden="true">✕</span> Metric gaming detected
           </p>
-        </div>
-        <div className="hero-viz">
-          <TrajectoryViz />
-        </div>
-        <div className="hero-cta">
-          <div className="hero-actions mt-8 flex flex-wrap items-center gap-3 sm:mt-9">
-            <Link to="/app/guards/new">
-              <Button variant="ochre" size="lg">
-                Create a Motive Guard
-                <ArrowRight className="size-4" />
-              </Button>
-            </Link>
-            <a href="#receipt">
-              <Button variant="ghost" size="lg" className="text-bone hover:bg-bone/10">
-                View a real receipt
-              </Button>
-            </a>
-          </div>
-          <div className="hero-meta mt-9 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-bone/62">
-            <span>Guard #2 / Metric gaming</span>
-            <span>Hosted certification case</span>
-            <span>Not user activity</span>
+          <div className="mt-3">
+            <LiveLink dark />
           </div>
         </div>
-        <a className="hero-scroll" href="#product">
-          <span>Follow the case</span>
-          <ArrowDown className="size-4" aria-hidden="true" />
-        </a>
       </div>
     </section>
   );

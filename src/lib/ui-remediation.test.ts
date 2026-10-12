@@ -742,7 +742,8 @@ describe("empty Run and manual evidence form (C2 / C5)", () => {
     const appBlock = /const APP_NAV = \[([\s\S]*?)\] as const;/.exec(chrome)![1];
     assert.notEqual(navBlock, appBlock, "marketing and app navigation must differ");
     assert.match(appBlock, /Cases/);
-    assert.match(navBlock, /Product/);
+    assert.match(navBlock, /LANDING_SECTIONS/);
+    assert.match(navBlock, /Docs/);
   });
 
   it("blocks a second submit while an async action is in flight (H0)", async () => {

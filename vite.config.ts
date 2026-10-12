@@ -208,7 +208,9 @@ export default defineConfig(({ command, isPreview }) => ({
     // Dev-only /__app-env, read by scripts/check-auth-invariant.mjs.
     appEnvPlugin(),
     tailwindcss(),
-    tanstackStart(),
+    // inlineCss: the stylesheet ships inside the HTML. Measured (Lighthouse mobile, alternating runs, same build):
+    // landing 88 vs 73 and receipt 85 vs 72 with it linked; the cost is ~14 kB gzip per full page load.
+    tanstackStart({ server: { build: { inlineCss: true } } }),
     ...(command === "build" || isPreview
       ? [
           nitro({

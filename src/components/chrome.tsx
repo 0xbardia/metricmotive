@@ -6,6 +6,7 @@ import { Wordmark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { GENLAYER } from "@/lib/domain";
+import { LANDING_SECTIONS } from "@/lib/site";
 import { lazy, Suspense } from "react";
 
 const WalletControl = lazy(() =>
@@ -13,9 +14,7 @@ const WalletControl = lazy(() =>
 );
 
 const NAV = [
-  { to: "/", hash: "product", label: "Product" },
-  { to: "/", hash: "how-it-works", label: "How it works" },
-  { to: "/", hash: "use-cases", label: "Use cases" },
+  ...LANDING_SECTIONS.map((s) => ({ to: "/", hash: s.id, label: s.title })),
   { to: "/docs", label: "Docs" },
 ] as const;
 
@@ -225,8 +224,8 @@ export function SiteFooter() {
           <p className="font-mono text-xs uppercase tracking-[0.14em] text-graphite">Product</p>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <Link to="/" hash="product">
-                Product
+              <Link to="/" hash="case">
+                A real case
               </Link>
             </li>
             <li>

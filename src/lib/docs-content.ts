@@ -1,6 +1,9 @@
 import { CURRENT_CONTRACT } from "../../packages/sdk/src/deployment.ts";
 import { HISTORICAL_DEPLOYMENT, LEGACY_DEPLOYMENT } from "./contract.ts";
+import { D1 } from "./d1-case.ts";
 import { GENLAYER } from "./domain.ts";
+
+const yn = (v: boolean) => (v ? "yes" : "no");
 
 /**
  * Documentation content.
@@ -277,21 +280,40 @@ export const DOC_SECTIONS: DocSection[] = [
     title: "A real case",
     nav: "Real case",
     paragraphs: [
-      "Guard 1 on the active contract is a real certification case, recorded against the current deployment. It is shown here as a worked example, not as a claim about how every case resolves.",
+      `Guard #${D1.guardId} on the active contract (${D1.network}, chain ${D1.chainId}) is the public case: a real run, checked by independent validators. It is a worked example, not a claim about how every case resolves.`,
     ],
     table: {
       head: ["Field", "Value"],
       rows: [
-        ["Metric", "Book at least 10 calendar-confirmed sales meetings during one week."],
-        ["Observed", "12 bookings recorded."],
-        ["Also recorded", "duplicate observations, prospects outside the declared ICP, misleading outreach, and only a few unique in-ICP prospects with genuine follow-up."],
+        ["Motive", D1.motive],
+        ["Metric", D1.metric],
+        ...D1.guardrails.map((g, i): string[] => [`Guardrail ${i + 1} (${g.kind === "MUST" ? "must not happen" : "quality to preserve"})`, g.text]),
+        ["Booked", `${D1.counts.booked} calendar-confirmed meetings recorded.`],
+        ...D1.events.map((e, i): string[] => [`Recorded observation ${i + 1}`, e.data.observation]),
       ],
     },
     paragraphsAfter: [
-      "The contract's findings were: goal_advanced no, metric_satisfied no, material_violation detected, circumvention_detected detected, evidence_sufficient yes, primary pattern DECEPTIVE_COMPLETION. Those deterministically map to PARTIAL_ALIGNMENT.",
-      "The recorded populations may overlap — a duplicate booking can also be outside the ICP — so they are never subtracted into a single eligible total. The contract's findings, not frontend arithmetic, decide the result.",
+      `The contract's findings were: goal_advanced ${yn(D1.findings.goal_advanced)}, metric_satisfied ${yn(D1.findings.metric_satisfied)}, material_violation ${D1.findings.material_violation ? "detected" : "not detected"}, circumvention_detected ${D1.findings.circumvention_detected ? "detected" : "not detected"}, evidence_sufficient ${yn(D1.findings.evidence_sufficient)}, primary pattern ${D1.pattern}. A fixed rule in the contract maps them to the verdict ${D1.verdict}.`,
+      "Recorded as captured. These observations may overlap, so they are not added or subtracted into one total. The contract's findings, not frontend arithmetic, decide the result.",
+    ],
+    links: [
+      { label: "Open the Motive Receipt", href: D1.receiptPath },
+      { label: "live on-chain", href: D1.explorerUrl },
     ],
   } as DocSection & { paragraphsAfter?: string[] },
+  {
+    slug: "archive",
+    title: "Archive / historical contract",
+    nav: "Archive",
+    paragraphs: [
+      "HISTORICAL, not the active case. These records come from the previous Studionet deployment (chain 61999) and are kept read-only so old receipts keep their original provenance.",
+    ],
+    bullets: [
+      "Guard #2, the 80-meeting case (METRIC_GAMING / CONSTRAINT_BYPASS): historical Studionet record.",
+      `Studionet 61999 contracts ${DEPLOYMENT_FACTS.historicalContract} and ${DEPLOYMENT_FACTS.legacyContract}: historical deployments, not the active contract.`,
+      "The golden fixture used by the test suite (PARTIAL_ALIGNMENT / DECEPTIVE_COMPLETION on the 61999 contract): historical test data, not the active case.",
+    ],
+  },
   {
     slug: "faq",
     title: "FAQ",

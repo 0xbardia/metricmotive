@@ -32,6 +32,7 @@ import type { RunEvent } from "./domain.ts";
  * database: every value is either a constant transcribed from the final report
  * or derived by a pure function.
  */
+// HISTORICAL fixture: previous Studionet (61999) deployment, not the active D1 case (Studio Dev Guard #1).
 const GOLDEN = {
   guardId: "grd_6d6278eb29c57b18",
   onchainId: "1",
@@ -45,7 +46,7 @@ const GOLDEN = {
   contract: "0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d",
 } as const;
 
-describe("golden case fixture is self-consistent", () => {
+describe("HISTORICAL golden case fixture (Studionet 61999) is self-consistent", () => {
   it("pins the exact on-chain identity recorded in the final report", () => {
     assert.equal(GOLDEN.onchainId, "1");
     assert.equal(GOLDEN.eventCount, 5);

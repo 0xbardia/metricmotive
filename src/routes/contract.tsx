@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingShell } from "@/components/marketing-shell";
+import { pageHead } from "@/lib/site";
 import { Reveal } from "@/components/motion";
 import { Badge } from "@/components/ui/badge";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
@@ -10,7 +11,10 @@ import { CERTIFIED_CASES } from "@/lib/cert-cases";
 import { GENLAYER } from "@/lib/domain";
 import { probeContractReadsFn } from "@/lib/server/actions";
 
-export const Route = createFileRoute("/contract")({ component: ContractPage });
+export const Route = createFileRoute("/contract")({
+  head: () => pageHead({ title: "Contract", path: "/contract" }),
+  component: ContractPage,
+});
 
 function ContractPage() {
   const probe = useQuery({
@@ -22,7 +26,7 @@ function ContractPage() {
 
   return (
     <MarketingShell>
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">
           Intelligent Contract
         </p>
@@ -154,7 +158,7 @@ function ContractPage() {
             </li>
           ))}
         </ul>
-      </main>
+      </div>
     </MarketingShell>
   );
 }

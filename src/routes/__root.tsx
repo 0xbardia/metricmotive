@@ -11,28 +11,21 @@ import { SiteFooter, SiteHeader } from "@/components/chrome";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
-import fontsCss from "../fonts.css?url";
-import appCss from "../styles.css?url";
-
-const APP_NAME = "MetricMotive";
+import { pageHead } from "@/lib/site";
+// The stylesheet is a plain import so Start can collect it and inline it into the server-rendered HTML
+// (`server.build.inlineCss` in vite.config.ts): one render-blocking request fewer on first load.
+import "../styles.css";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: APP_NAME },
-      {
-        name: "description",
-        content:
-          "Did the agent honor the motive, or only hit the metric? MetricMotive verifies agent runs with GenLayer consensus.",
-      },
       { name: "theme-color", content: "#171816" },
+      ...pageHead({ path: "/" }).meta,
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-      { rel: "stylesheet", href: fontsCss },
-      { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/favicon.svg" },
       { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/fraunces-var.woff2", crossOrigin: "anonymous" },

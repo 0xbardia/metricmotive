@@ -2,7 +2,7 @@
 
 **Your agent hit the metric. Did it honor the motive?**
 
-MetricMotive verifies whether autonomous agents achieved the user's real objective or merely gamed the metric they were optimizing.
+MetricMotive checks whether an AI agent served the goal you meant or only the number you measured, and writes the verdict on-chain as a public receipt.
 
 It is not a generic AI judge, escrow, reputation system, or chat wrapper. It is a Motive Guard. The core lifecycle is:
 
@@ -114,9 +114,9 @@ The verdict was produced by the deployed Intelligent Contract and the determinis
 
 Public receipt: https://metricmotive.xyz/verify/rct_14804bf62424284e
 
-## Historical certification cases (previous Studionet deployment)
+## Archive / historical contract (previous Studionet deployment)
 
-These cases certify only `0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8d7C`, not the current deployment.
+HISTORICAL, not the active case. The active case is Studio Dev Guard #1 above ([receipt](https://metricmotive.xyz/verify/rct_14804bf62424284e)). These cases certify only `0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8d7C`, not the current deployment.
 
 Labeled official cases, not user history:
 

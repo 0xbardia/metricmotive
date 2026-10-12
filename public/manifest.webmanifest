@@ -1,12 +1,17 @@
 {
   "name": "MetricMotive",
   "short_name": "MetricMotive",
-  "description": "Forensic verification for autonomous agents.",
+  "description": "MetricMotive checks whether an AI agent served the goal you meant or only the number you measured, and writes the verdict on-chain as a public receipt.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f3f0e6",
   "theme_color": "#171816",
   "icons": [
-    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" }
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
   ]
 }

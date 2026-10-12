@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ContractRouteImport } from './routes/contract'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as RoadmapRouteImport } from './routes/roadmap'
 import { Route as AppIndexRouteImport } from './routes/app/index'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const ContractRoute = ContractRouteImport.update({
   id: '/contract',
   path: '/contract',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -134,6 +140,7 @@ const ApiV1RunsIdFinishRoute = ApiV1RunsIdFinishRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contract': typeof ContractRoute
+  '/demo': typeof DemoRoute
   '/docs': typeof DocsRoute
   '/roadmap': typeof RoadmapRoute
   '/verify/$receiptId': typeof VerifyReceiptIdRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contract': typeof ContractRoute
+  '/demo': typeof DemoRoute
   '/docs': typeof DocsRoute
   '/roadmap': typeof RoadmapRoute
   '/verify/$receiptId': typeof VerifyReceiptIdRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/contract': typeof ContractRoute
+  '/demo': typeof DemoRoute
   '/docs': typeof DocsRoute
   '/roadmap': typeof RoadmapRoute
   '/verify/$receiptId': typeof VerifyReceiptIdRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/contract'
+    | '/demo'
     | '/docs'
     | '/roadmap'
     | '/verify/$receiptId'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/contract'
+    | '/demo'
     | '/docs'
     | '/roadmap'
     | '/verify/$receiptId'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/contract'
+    | '/demo'
     | '/docs'
     | '/roadmap'
     | '/verify/$receiptId'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContractRoute: typeof ContractRoute
+  DemoRoute: typeof DemoRoute
   DocsRoute: typeof DocsRoute
   RoadmapRoute: typeof RoadmapRoute
   VerifyReceiptIdRoute: typeof VerifyReceiptIdRoute
@@ -302,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/contract'
       fullPath: '/contract'
       preLoaderRoute: typeof ContractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -450,6 +470,7 @@ const ApiV1RunsRouteWithChildren = ApiV1RunsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContractRoute: ContractRoute,
+  DemoRoute: DemoRoute,
   DocsRoute: DocsRoute,
   RoadmapRoute: RoadmapRoute,
   VerifyReceiptIdRoute: VerifyReceiptIdRoute,

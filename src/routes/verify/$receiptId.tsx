@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { pageHead } from "@/lib/site";
 import { SiteFooter, SiteHeader } from "@/components/chrome";
 import { TechnicalDetails } from "@/components/product-ui";
 import { Badge } from "@/components/ui/badge";
@@ -15,16 +15,26 @@ import { getReceiptFn } from "@/lib/server/actions";
 import { formatUtc } from "@/lib/format";
 import { CTA } from "@/lib/terminology";
 
+type ReceiptLoad = { data: Awaited<ReturnType<typeof getReceiptFn>> | null; error: string | null };
+
 export const Route = createFileRoute("/verify/$receiptId")({
+  head: ({ params }) => pageHead({ title: "Motive Receipt", path: `/verify/${params.receiptId}` }),
+  // Loaded while the page is server-rendered, so the receipt is already in the first HTML: no loading state is
+  // swapped for content afterwards (that swap was a 0.58 layout shift and delayed the largest paint).
+  loader: async ({ params }): Promise<ReceiptLoad> => {
+    try {
+      return { data: await getReceiptFn({ data: { id: params.receiptId } }), error: null };
+    } catch (err) {
+      return { data: null, error: err instanceof Error ? err.message : "load failed" };
+    }
+  },
   component: ReceiptPage,
 });
 
 function ReceiptPage() {
-  const { receiptId } = Route.useParams();
-  const q = useQuery({
-    queryKey: ["receipt", receiptId],
-    queryFn: () => getReceiptFn({ data: { id: receiptId } }),
-  });
+  const router = useRouter();
+  // Explicit type: Route and ReceiptPage reference each other, which collapses inferred loader data to undefined.
+  const { data, error } = Route.useLoaderData() as ReceiptLoad;
   return (
     <div className="min-h-dvh bg-bone">
       <SiteHeader />
@@ -33,27 +43,26 @@ function ReceiptPage() {
         comfortable shell rather than the narrowest column in the product.
       */}
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
-        {q.isLoading ? <p className="text-sm text-graphite">Loading receipt…</p> : null}
-        {q.error ? (
+        {error ? (
           <div role="alert" className="paper-panel p-6">
             <p className="font-display text-2xl">
-              {q.error instanceof Error && /not found/i.test(q.error.message)
+              {/not found/i.test(error)
                 ? "This receipt does not exist."
-                : q.error instanceof Error && /authentication|control|access/i.test(q.error.message)
+                : /authentication|control|access/i.test(error)
                   ? "You don’t have access to this receipt."
                   : "We couldn’t load this receipt right now."}
             </p>
             <p className="mt-2 text-sm text-graphite">
-              {q.error instanceof Error && /authentication|control|access/i.test(q.error.message)
+              {/authentication|control|access/i.test(error)
                 ? "This receipt is private until its Guard is finalized publicly."
                 : "The recorded proof has not been changed. Try again."}
             </p>
-            <button type="button" className="mt-4 min-h-11 text-sm underline-offset-4 hover:underline" onClick={() => void q.refetch()}>
+            <button type="button" className="mt-4 min-h-11 text-sm underline-offset-4 hover:underline" onClick={() => void router.invalidate()}>
               Try again
             </button>
           </div>
         ) : null}
-        {q.data ? <ReceiptView data={q.data} /> : null}
+        {data ? <ReceiptView data={data} /> : null}
       </main>
       <SiteFooter />
     </div>

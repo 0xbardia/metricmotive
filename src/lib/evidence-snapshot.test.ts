@@ -46,6 +46,7 @@ function run(overrides: Partial<RunRecord> = {}): RunRecord {
 
 const source = (path: string) => readFileSync(path, "utf8");
 
+// Fixtures here (chain 61999) are HISTORICAL provenance data, not the active D1 case.
 describe("evidence snapshot canonicalization (root cause of the phantom mismatch)", () => {
   it("serializes a Date as its ISO string, never as an empty object", () => {
     const iso = "2026-09-18T00:30:22.338Z";

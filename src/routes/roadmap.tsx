@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingShell } from "@/components/marketing-shell";
+import { pageHead } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/roadmap")({ component: RoadmapPage });
+export const Route = createFileRoute("/roadmap")({
+  head: () => pageHead({ title: "Roadmap", path: "/roadmap" }),
+  component: RoadmapPage,
+});
 
 const PHASES: {
   id: string;
@@ -60,7 +64,7 @@ const PHASES: {
 function RoadmapPage() {
   return (
     <MarketingShell>
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <h1 className="font-display text-4xl tracking-tight">Roadmap</h1>
         <p className="mt-3 text-graphite">
           No fake dates. Status is Planned, In Progress, or Shipped.
@@ -87,7 +91,7 @@ function RoadmapPage() {
             </li>
           ))}
         </ol>
-      </main>
+      </div>
     </MarketingShell>
   );
 }
