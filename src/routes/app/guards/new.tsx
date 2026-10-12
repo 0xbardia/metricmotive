@@ -147,7 +147,8 @@ function NewGuardContent() {
   const [hydrated, setHydrated] = useState(!persistedGuardHint);
   useEffect(() => {
     if (hydratedRef.current) return;
-    if (persistedGuardQuery.isPending) return;
+    // Wait for wagmi's reconnect, or a returning owner would start empty.
+    if (persistedGuardQuery.isPending || walletSession.connecting) return;
     hydratedRef.current = true;
     const g = persistedGuardQuery.data?.guard;
     if (g && address && sameWallet(g.ownerAddress, address)) {
@@ -167,7 +168,7 @@ function NewGuardContent() {
       setGuardrails(init.draft.guardrails);
     }
     setHydrated(true);
-  }, [persistedGuardQuery.isPending, persistedGuardQuery.data, address, persistedGuardHint, navigate]);
+  }, [persistedGuardQuery.isPending, persistedGuardQuery.data, walletSession.connecting, address, persistedGuardHint, navigate]);
 
   // Keeps saving after an id exists, under a per-guard key.
   useEffect(() => {
