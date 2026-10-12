@@ -38,70 +38,64 @@ const PENDING_TX_KEY = "metricmotive.pending-transaction";
 const PENDING_TX_TTL_MS = 24 * 60 * 60_000;
 const CREATE_RESERVATION_PREFIX = "metricmotive.create-reservation:";
 
-export function loadCreateReservationToken(resourceId: string): string {
-  if (typeof window !== "undefined") {
-    try {
-      const saved = window.localStorage.getItem(`${CREATE_RESERVATION_PREFIX}${resourceId}`);
+function newToken(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `claim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+type TokenStore = Pick<Storage, "getItem" | "setItem">;
+const memoryTokens = new Map<string, string>();
+
+/**
+ * Per-TAB token: sessionStorage survives a reload of the same tab but is not shared
+ * with other tabs, so a second tab presents a different token and is refused by the
+ * server reservation. Falls back to an in-memory token if storage throws.
+ */
+export function tabToken(key: string, store?: TokenStore | null): string {
+  try {
+    const s = store ?? (typeof window !== "undefined" ? window.sessionStorage : null);
+    if (s) {
+      const saved = s.getItem(key);
       if (saved) return saved;
-    } catch {
-      // A browser storage failure should not make the wallet write unsafe; the
-      // server reservation remains the authoritative duplicate gate.
+      const token = newToken();
+      s.setItem(key, token);
+      return token;
     }
+  } catch {
+    // fall through to memory
   }
-  const token =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `claim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  if (typeof window !== "undefined") {
-    try {
-      window.localStorage.setItem(`${CREATE_RESERVATION_PREFIX}${resourceId}`, token);
-    } catch {
-      // Best effort only; the current tab still holds the token in its caller.
-    }
-  }
+  let token = memoryTokens.get(key);
+  if (!token) memoryTokens.set(key, (token = newToken()));
   return token;
+}
+
+export function loadCreateReservationToken(resourceId: string): string {
+  return tabToken(`${CREATE_RESERVATION_PREFIX}${resourceId}`);
 }
 
 const OPERATION_RESERVATION_PREFIX = "metricmotive.op-reservation:";
 
-/** Stable per-browser token so a reload resumes its own reservation (same token = idempotent). */
+/** Stable per-tab token so a reload resumes its own reservation (same token = idempotent). */
 export function loadOperationReservationToken(resourceId: string, operation: string): string {
-  const key = `${OPERATION_RESERVATION_PREFIX}${operation}:${resourceId}`;
+  return tabToken(`${OPERATION_RESERVATION_PREFIX}${operation}:${resourceId}`);
+}
+
+function forgetToken(key: string): void {
+  memoryTokens.delete(key);
   try {
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
-    if (saved) return saved;
-  } catch {
-    // Server reservation stays authoritative.
-  }
-  const token =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `claim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  try {
-    if (typeof window !== "undefined") window.localStorage.setItem(key, token);
+    if (typeof window !== "undefined") window.sessionStorage.removeItem(key);
   } catch {
     // Best effort only.
   }
-  return token;
 }
 
 export function clearOperationReservationToken(resourceId: string, operation: string): void {
-  try {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(`${OPERATION_RESERVATION_PREFIX}${operation}:${resourceId}`);
-    }
-  } catch {
-    // Best effort only.
-  }
+  forgetToken(`${OPERATION_RESERVATION_PREFIX}${operation}:${resourceId}`);
 }
 
 export function clearCreateReservationToken(resourceId: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(`${CREATE_RESERVATION_PREFIX}${resourceId}`);
-  } catch {
-    // Best effort only.
-  }
+  forgetToken(`${CREATE_RESERVATION_PREFIX}${resourceId}`);
 }
 
 const pendingKey = (resourceId: string, action: string) =>
@@ -178,6 +172,24 @@ export function clearPendingTx(resourceId?: string, action?: string): void {
   } catch {
     // best effort
   }
+}
+
+/** Blocked terminal kinds: no retry, only the server recovery message. */
+export function isBlockedFailure(state: TxState): boolean {
+  return state.phase === "failed" && (state.failureKind === "mismatch" || state.failureKind === "failed");
+}
+
+/**
+ * A failed state may be replaced by another failed state (fresh server message, or a
+ * reverted guess refined to failed/mismatch) but a blocked failure never softens back
+ * to reverted, and a failed state never regresses to a non-failed one.
+ */
+export function canReplaceFailure(previous: TxState, next: TxState): boolean {
+  return (
+    previous.phase === "failed" &&
+    next.phase === "failed" &&
+    !(isBlockedFailure(previous) && !isBlockedFailure(next))
+  );
 }
 
 export function txBusy(state: TxState): boolean {

@@ -60,3 +60,18 @@ describe("copy and busy (B-09, B-17)", () => {
     assert.equal(v?.busy, false);
   });
 });
+
+describe("blocked failure kinds", () => {
+  const failed = (failureKind: TxState["failureKind"]): TxState => ({
+    phase: "failed", action: "arm_guard", hash: HASH, error: "recover", failureKind,
+  });
+  it("mismatch/failed are blocked with no retry; reverted retries via a fresh write", async () => {
+    const { isBlockedFailure } = await import("./wallet/tx-state.ts");
+    for (const k of ["mismatch", "failed"] as const) {
+      assert.equal(isBlockedFailure(failed(k)), true);
+      assert.equal(operationViewFromTx(failed(k))!.retryMode, "none");
+      assert.equal(operationViewFromTx(failed(k))!.message, "recover");
+    }
+    assert.equal(isBlockedFailure(failed("reverted")), false);
+  });
+});

@@ -37,6 +37,8 @@ export type LifecycleWriteDescriptor = {
 export class LifecycleWriteError extends Error {
   readonly code: "INSUFFICIENT_GEN_FOR_FEES" | "FEE_ESTIMATION_FAILED" | "HISTORICAL_DEPLOYMENT_READ_ONLY" | "WRITE_NOT_SUCCESSFUL";
   readonly feeValue?: bigint;
+  /** Terminal classification for WRITE_NOT_SUCCESSFUL, mirroring server verifyTransaction. */
+  failureKind?: "reverted" | "failed";
   constructor(
     code: LifecycleWriteError["code"],
     message: string,
@@ -46,6 +48,15 @@ export class LifecycleWriteError extends Error {
     this.code = code;
     this.feeValue = feeValue;
   }
+}
+
+/** Same split as reconciliation.verifyTransaction: UNDETERMINED / no execution result = failed; else reverted. */
+export function classifyDecidedFailure(transaction: unknown): "reverted" | "failed" {
+  const tx = (transaction ?? {}) as { statusName?: unknown; status?: unknown; txExecutionResultName?: unknown };
+  const status = String(tx.statusName ?? tx.status ?? "");
+  if (status === "UNDETERMINED") return "failed";
+  if (status === "FINALIZED" && !tx.txExecutionResultName) return "failed";
+  return "reverted";
 }
 
 export type FeeEstimate = {
@@ -150,10 +161,15 @@ export async function submitLifecycleWrite(
 
   const transaction = await deps.waitForFinalization(hash);
   if (!deps.isSuccessful(transaction)) {
-    throw new LifecycleWriteError(
+    const failureKind = classifyDecidedFailure(transaction);
+    const err = new LifecycleWriteError(
       "WRITE_NOT_SUCCESSFUL",
-      "The transaction was not successful. No on-chain state was created.",
+      failureKind === "failed"
+        ? "The transaction failed on GenLayer without a verifiable result."
+        : "The transaction was not successful. No on-chain state was created.",
     );
+    err.failureKind = failureKind;
+    throw err;
   }
   return { hash, transaction, feeValue: estimate.feeValue, estimate };
 }

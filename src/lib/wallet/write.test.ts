@@ -262,3 +262,19 @@ test("chain-actions routes every product write through writeIntelligentContract"
     assert.match(source, new RegExp(`functionName: "${method}"`));
   }
 });
+
+test("decided failure classification mirrors server verifyTransaction", async () => {
+  const { classifyDecidedFailure } = await import("./write.ts");
+  assert.equal(classifyDecidedFailure({ statusName: "UNDETERMINED" }), "failed");
+  assert.equal(classifyDecidedFailure({ statusName: "CANCELED" }), "reverted");
+  assert.equal(classifyDecidedFailure({ statusName: "FINALIZED", txExecutionResultName: "FINISHED_WITH_ERROR" }), "reverted");
+  assert.equal(classifyDecidedFailure({ statusName: "FINALIZED" }), "failed");
+  const err = await submitLifecycleWrite(
+    { account: ACCOUNT, write, chainId: 61997 },
+    deps({
+      waitForFinalization: async () => ({ statusName: "UNDETERMINED" }),
+      isSuccessful: () => false,
+    }),
+  ).catch((e) => e);
+  assert.equal(err.failureKind, "failed");
+});

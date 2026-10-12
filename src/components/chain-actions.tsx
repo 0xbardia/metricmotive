@@ -38,6 +38,8 @@ import {
   IDLE_TX,
   loadPendingTx,
   persistPendingTx,
+  canReplaceFailure,
+  isBlockedFailure,
   clearCreateReservationToken,
   loadCreateReservationToken,
   clearOperationReservationToken,
@@ -158,6 +160,7 @@ function useTransactionReconciliation({
     setTxState((previous) => {
       const previousView = operationViewFromTx(previous);
       const nextView = operationViewFromTx(next);
+      if (canReplaceFailure(previous, next)) return { ...next, resourceId: guardId };
       if (
         previousView &&
         nextView &&
@@ -341,7 +344,7 @@ function useTransactionReconciliation({
     busy: txBusy(tx),
     reconcileBusy,
     reconcileOnce,
-    hasUnresolved: txBusy(tx) || isRecoverable(tx),
+    hasUnresolved: txBusy(tx) || isRecoverable(tx) || isBlockedFailure(tx),
     hash: knownHash,
   };
 }
@@ -591,7 +594,7 @@ async function runWrite(opts: {
         action: opts.action,
         hash: submittedHash,
         error: err.message,
-        failureKind: "reverted",
+        failureKind: err.failureKind ?? "reverted",
       });
       return false;
     }

@@ -42,3 +42,26 @@ describe("pending tx storage", () => {
     assert.equal(store.has("metricmotive.pending-transaction"), false);
   });
 });
+
+describe("failure refinement and per-tab tokens", () => {
+  const failed = (failureKind?: TxState["failureKind"]): TxState => ({
+    phase: "failed", action: "arm_guard", hash: "0xabc", error: "x", failureKind,
+  });
+  it("reverted guess may be refined; blocked failures never soften or regress", async () => {
+    const { canReplaceFailure } = await import("./tx-state.ts");
+    assert.equal(canReplaceFailure(failed("reverted"), failed("failed")), true);
+    assert.equal(canReplaceFailure(failed("reverted"), failed("mismatch")), true);
+    assert.equal(canReplaceFailure(failed("mismatch"), failed("mismatch")), true);
+    assert.equal(canReplaceFailure(failed("failed"), failed("reverted")), false);
+    assert.equal(canReplaceFailure(failed("failed"), { ...failed(), phase: "confirming" }), false);
+  });
+  it("two tabs get different tokens; same tab keeps its token", async () => {
+    const { tabToken } = await import("./tx-state.ts");
+    const mk = () => { const m = new Map<string, string>(); return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) }; };
+    const a = mk(), b = mk();
+    assert.equal(tabToken("k", a), tabToken("k", a));
+    assert.notEqual(tabToken("k", a), tabToken("k", b));
+    const throwing = { getItem: () => { throw new Error("x"); }, setItem: () => { throw new Error("x"); } };
+    assert.equal(tabToken("m", throwing), tabToken("m", throwing));
+  });
+});
