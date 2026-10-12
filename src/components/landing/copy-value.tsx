@@ -13,11 +13,14 @@ export function CopyValue({
   value,
   label,
   compact = true,
+  onDark = true,
   className,
 }: {
   value: string;
   label: string;
   compact?: boolean;
+  /** Landing identifiers sit on carbon by default; pass false on light surfaces. */
+  onDark?: boolean;
   className?: string;
 }) {
   return (
@@ -26,7 +29,7 @@ export function CopyValue({
         {compact ? midEllipsis(value) : value}
       </span>
       <span className="sr-only">{value}</span>
-      <CopyButton value={value} label={label} compact />
+      <CopyButton value={value} label={label} compact className={onDark ? "text-bone/70 hover:text-bone" : undefined} />
     </span>
   );
 }

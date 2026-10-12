@@ -82,7 +82,7 @@ function DocsPage() {
 
         <main className="mt-10 min-w-0 lg:mt-0">
           <header className="border-b border-rule pb-8">
-            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-ochre">
+            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-brand-text">
               MetricMotive
             </p>
             <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">Documentation</h1>

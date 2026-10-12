@@ -115,7 +115,7 @@ function ContractPage() {
           })}
         </ul>
         {probe.error ? (
-          <p className="mt-3 text-sm text-brick" role="alert">
+          <p className="mt-3 text-sm text-danger-text" role="alert">
             {probe.error instanceof Error ? probe.error.message : "Read probe failed"}
           </p>
         ) : null}
@@ -133,7 +133,7 @@ function ContractPage() {
         <ul className="mt-4 space-y-4">
           {CERTIFIED_CASES.map((c) => (
             <li key={c.onchainId} className="paper-panel p-5">
-              <p className="font-mono text-xs text-ochre">{c.label}</p>
+              <p className="font-mono text-xs text-brand-text">{c.label}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <VerdictBadge verdict={c.verdict} size="lg" />
               </div>

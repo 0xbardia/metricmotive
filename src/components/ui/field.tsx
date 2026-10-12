@@ -12,7 +12,7 @@ export function Label({ className, ...props }: ComponentProps<"label">) {
 }
 
 const fieldClass =
-  "w-full min-h-11 rounded-md bg-card px-3 py-2 text-base text-carbon shadow-[var(--shadow-border)] placeholder:text-graphite transition-[box-shadow] duration-[var(--motion-quick)] ease-[var(--ease-out-soft)] focus-visible:outline-2 focus-visible:outline-ochre disabled:opacity-50";
+  "w-full min-h-11 rounded-md bg-card px-3 py-2 text-base text-carbon shadow-[0_0_0_1px_var(--color-border-strong)] placeholder:text-graphite transition-[box-shadow] duration-[var(--motion-quick)] ease-[var(--ease-out-soft)] focus-visible:outline-2 focus-visible:outline-ochre disabled:opacity-50";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(fieldClass, className)} {...props} />;
@@ -35,7 +35,7 @@ export function FieldError({ children, id }: { children?: string | null; id?: st
   return (
     <div aria-live="polite">
       {children ? (
-        <p id={id ? fieldIds(id).error : undefined} className="mt-1.5 text-sm text-brick">
+        <p id={id ? fieldIds(id).error : undefined} className="mt-1.5 text-sm text-danger-text">
           {children}
         </p>
       ) : null}

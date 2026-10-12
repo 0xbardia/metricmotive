@@ -45,6 +45,11 @@ function browserSource() {
     },
   };
   window.__mmConnected = false;
+  window.__mmDisconnect = () => {
+    window.__mmConnected = false;
+    emit("accountsChanged", []);
+    emit("disconnect", { code: 4900, message: "disconnected" });
+  };
   window.ethereum = provider;
   const info = { uuid: "e2e-0000-0000-0000-000000000001", name: "E2E Test Wallet", icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMzMzIi8+PC9zdmc+", rdns: "io.metricmotive.e2e" };
   const announce = () => window.dispatchEvent(new CustomEvent("eip6963:announceProvider", { detail: Object.freeze({ info, provider }) }));
@@ -85,6 +90,8 @@ export async function installWallet(context, { appDir, mockUrl, rpcUrl, timeScal
     wallet._hold = new Promise((r) => (release = r));
     return () => { release(); };
   };
+  /** Drop the wallet connection in `page` without reloading (EIP-1193 accountsChanged([]) + disconnect). */
+  wallet.disconnect = (page) => page.evaluate(() => window.__mmDisconnect());
   wallet.rejectNext = () => { wallet._reject = true; };
   wallet.callsFrom = (tab, ...methods) => wallet.calls.filter((c) => c.tab === tab && (!methods.length || methods.includes(c.method)));
 

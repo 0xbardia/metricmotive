@@ -123,7 +123,7 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
 
       {/* 2. Read the result — the prominent plain-language summary */}
       <section className="mt-10 paper-panel p-6 sm:p-8" aria-labelledby="receipt-reading">
-        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-ochre">Summary</p>
+        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-brand-text">Summary</p>
         <h2 id="receipt-reading" className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
           Read the result
         </h2>
@@ -236,11 +236,11 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
         </h2>
         <div className="mt-5 grid gap-8 md:grid-cols-2">
           <div className="border-t-2 border-sage pt-4">
-            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage">Motive</p>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage-text">Motive</p>
             <p className="mt-3 font-display text-2xl leading-tight">{String(snap.motive ?? data.guard?.motive ?? "")}</p>
           </div>
           <div className="border-t-2 border-ochre pt-4">
-            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-ochre">Metric</p>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-brand-text">Metric</p>
             <p className="mt-3 font-display text-2xl leading-tight">{String(snap.metric ?? data.guard?.metric ?? "")}</p>
           </div>
         </div>

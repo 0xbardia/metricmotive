@@ -69,7 +69,7 @@ function RoadmapPage() {
           {PHASES.map((p) => (
             <li key={p.id} className="paper-panel p-6">
               <div className="flex items-center justify-between gap-3">
-                <p className="font-mono text-xs text-ochre">Phase {p.id}</p>
+                <p className="font-mono text-xs text-brand-text">Phase {p.id}</p>
                 <Badge
                   tone={
                     p.status === "Shipped" ? "sage" : p.status === "In Progress" ? "ochre" : "graphite"

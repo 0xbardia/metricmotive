@@ -291,7 +291,7 @@ function NewGuardContent() {
         <div className="mt-8 max-w-3xl stagger-in" key={step}>
           {step === 0 ? (
             <section aria-labelledby="define-title">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
                 Start with intent
               </p>
               <h2 id="define-title" className="mt-2 font-display text-3xl tracking-tight">
@@ -357,7 +357,7 @@ function NewGuardContent() {
 
           {step === 1 ? (
             <section aria-labelledby="protect-title">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
                 Protect the outcome
               </p>
               <h2 id="protect-title" className="mt-2 font-display text-3xl tracking-tight">
@@ -381,7 +381,7 @@ function NewGuardContent() {
                     <button
                       key={suggestion.label}
                       type="button"
-                      className="min-h-11 rounded-sm border border-rule bg-card px-3 text-sm text-carbon transition-colors hover:border-ochre hover:bg-ochre-soft"
+                      className="min-h-11 h-auto max-w-full whitespace-normal py-2 text-left rounded-sm border border-border-strong bg-card px-3 text-sm text-carbon transition-colors hover:bg-ochre-soft"
                       onClick={() => addSuggestion(suggestion)}
                     >
                       + {suggestion.label}
@@ -542,7 +542,7 @@ function NewGuardContent() {
             <section aria-labelledby="review-title">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
                     Review before publishing
                   </p>
                   <h2 id="review-title" className="mt-2 font-display text-3xl tracking-tight">
@@ -559,13 +559,13 @@ function NewGuardContent() {
               <div className="mt-7 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
                 <div className="space-y-6">
                   <div className="border-t border-rule pt-4">
-                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage">
+                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage-text">
                       Motive
                     </p>
                     <p className="mt-2 font-display text-2xl leading-tight">{motive}</p>
                   </div>
                   <div className="border-t border-rule pt-4">
-                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-ochre">
+                    <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-brand-text">
                       Metric
                     </p>
                     <p className="mt-2 font-display text-2xl leading-tight">{metric}</p>
@@ -624,6 +624,7 @@ function NewGuardContent() {
                                 key={guardrail.text}
                                 size="sm"
                                 variant="outline"
+                                className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-left"
                                 onClick={() =>
                                   addSuggestion({
                                     label: guardrail.text,
@@ -693,7 +694,7 @@ function NewGuardContent() {
 
           {step === 3 ? (
             <section aria-labelledby="publish-title">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-ochre">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
                 Make the objective durable
               </p>
               <h2 id="publish-title" className="mt-2 font-display text-3xl tracking-tight">
@@ -777,7 +778,7 @@ function NewGuardContent() {
             ) : null}
           </div>
           {step === 3 && id && guardQ.data?.guard.status === "ARMED" ? (
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-sage">
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-sage-text">
               <Check className="size-4" aria-hidden="true" /> Guard locked.
               <Button
                 size="sm"

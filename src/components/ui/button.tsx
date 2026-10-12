@@ -12,7 +12,7 @@ const buttonVariants = cva(
         ochre: "bg-ochre text-carbon hover:bg-ochre/90 shadow-[var(--shadow-border)]",
         ghost: "bg-transparent text-carbon hover:bg-cream",
         outline:
-          "bg-transparent text-carbon shadow-[var(--shadow-border)] hover:shadow-[var(--shadow-border-hover)]",
+          "bg-transparent text-carbon shadow-[0_0_0_1px_var(--color-border-strong)] hover:bg-carbon/5 hover:shadow-[0_0_0_1px_var(--color-carbon)]",
         inverse: "bg-bone text-carbon hover:bg-cream",
       },
       size: {

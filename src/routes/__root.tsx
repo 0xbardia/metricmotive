@@ -48,7 +48,7 @@ function NotFoundPage() {
     <div className="min-h-dvh bg-bone text-carbon">
       <SiteHeader />
       <main className="mx-auto flex min-h-[60vh] max-w-3xl flex-col justify-center px-4 py-16 sm:px-6">
-        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-ochre">
+        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-brand-text">
           404 / case file missing
         </p>
         <h1 className="mt-3 font-display text-4xl tracking-tight">This route does not exist.</h1>

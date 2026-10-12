@@ -39,6 +39,8 @@
   --color-muted: #5e5f59;
   --color-card: #faf8f1;
   --color-border: #d4d0c4;
+  /* Interactive control boundaries (>=3:1 on bone 3.36, card 3.60, cream 3.01). */
+  --color-border-strong: #868279;
   --color-ring: #d79a2b;
 
   --radius-xs: 4px;
@@ -118,6 +120,10 @@
   --text-2xl--line-height: 1.2;
   --text-3xl: clamp(2rem, 4vw, 2.75rem);
   --text-3xl--line-height: 1.1;
+  --text-4xl: clamp(2.25rem, 4.6vw, 3.25rem);
+  --text-4xl--line-height: 1.1;
+  --text-5xl: clamp(3rem, 5.4vw, 4rem);
+  --text-5xl--line-height: 1.05;
   --text-display: clamp(2.75rem, 7vw, 5.5rem);
   --text-display--line-height: 1.02;
 
@@ -1255,7 +1261,8 @@
 }
 
 .lock-spec-draft {
-  opacity: 0.65;
+  /* Dimmed, not faded out: its label must stay >= 4.5:1 on carbon (opacity >= 0.76). */
+  opacity: 0.8;
 }
 
 .lock-spec-armed {
@@ -1263,7 +1270,7 @@
 }
 
 .lock-demo[data-locked="true"] .lock-spec-draft {
-  opacity: 0.35;
+  opacity: 0.8;
 }
 
 .lock-demo[data-locked="true"] .lock-spec-armed {
@@ -1351,7 +1358,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: var(--color-brick);
+  color: var(--color-danger-text);
   font-family: var(--font-display);
   font-size: 2rem;
 }
@@ -1371,11 +1378,11 @@
 }
 
 .scan-status {
-  color: var(--color-brick);
+  color: var(--color-danger-text);
 }
 
 .scan-board[data-protected="true"] .scan-status {
-  color: var(--color-sage);
+  color: var(--color-sage-text);
 }
 
 .scan-toggle {
@@ -1386,7 +1393,7 @@
 
 .scan-toggle:hover {
   border-color: var(--color-ochre);
-  color: var(--color-ochre);
+  color: var(--color-brand-text);
 }
 
 .scan-trace {
@@ -1449,7 +1456,7 @@
 }
 
 .guardrail-list b {
-  color: var(--color-sage);
+  color: var(--color-sage-text);
   font-weight: 500;
 }
 
@@ -1710,7 +1717,7 @@
 }
 
 .verdict-cell[data-active="true"] p:nth-of-type(1) {
-  color: var(--color-brick);
+  color: var(--color-danger-on-dark);
 }
 
 .verdict-cell-index {
@@ -2249,7 +2256,7 @@
 }
 
 .flow-rail-step[data-state="complete"] {
-  color: var(--color-sage);
+  color: var(--color-sage-text);
 }
 
 .flow-rail-number {
@@ -2260,7 +2267,7 @@
 }
 
 .flow-rail-step[data-state="current"] .flow-rail-number {
-  color: var(--color-ochre);
+  color: var(--color-brand-text);
 }
 
 .product-status {
@@ -2355,7 +2362,7 @@
 }
 
 .flow-rail-step[data-state="complete"] .flow-rail-number {
-  color: var(--color-sage);
+  color: var(--color-sage-text);
 }
 
 /* Provenance chain (Capture → Canonicalize → Hash → Commit → Verify) */

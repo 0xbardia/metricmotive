@@ -57,7 +57,7 @@ export function CopyButton({
       aria-label={feedback ? `${feedback} ${label}` : `Copy ${label}`}
     >
       {state === "copied" ? (
-        <Check className="size-3.5 text-sage" aria-hidden="true" />
+        <Check className="size-3.5 text-sage-text" aria-hidden="true" />
       ) : (
         <Copy className="size-3.5" aria-hidden="true" />
       )}

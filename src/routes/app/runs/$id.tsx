@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
+import { useWalletSession } from "@/lib/wallet/session";
 import { AppShell } from "@/components/app-shell";
 import { PrivateReadError } from "@/components/app-home-content";
 import { AdvisoryNote } from "@/components/chrome";
@@ -22,6 +23,7 @@ import { getGuardLifecyclePresentation, isEvidenceCommitted, isEvidenceCommittin
 import { CTA } from "@/lib/terminology";
 import { appendEventFn, driftFn, finishRunFn, getRunFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
+import { requireWallet } from "@/lib/wallet/require-wallet";
 import { WalletProviders } from "@/lib/wallet/provider";
 
 export const Route = createFileRoute("/app/runs/$id")({ component: RunPage });
@@ -63,6 +65,7 @@ function RunPageContent() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const { address, connector } = useAccount();
+  const { connect } = useWalletSession();
   const q = useQuery({
     queryKey: ["run", id, address ?? null],
     queryFn: async () => {
@@ -127,8 +130,8 @@ function RunPageContent() {
 
   const append = useMutation({
     mutationFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet before recording evidence.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet before recording evidence.");
+      await ensureWalletSession(w.address, w.connector);
       auditUiAction({ actionName: "evidence_event_recorded", resourceId: id });
       let event: RunEvent;
       if (advanced) {
@@ -165,8 +168,8 @@ function RunPageContent() {
 
   const finish = useMutation({
     mutationFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet before finishing this Run.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet before finishing this Run.");
+      await ensureWalletSession(w.address, w.connector);
       auditUiAction({ actionName: "run_finished", resourceId: id });
       return finishRunFn({ data: { runId: id, outcome: { recorded: true } } });
     },
@@ -211,8 +214,8 @@ function RunPageContent() {
 
   const drift = useMutation({
     mutationFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet before requesting analysis.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet before requesting analysis.");
+      await ensureWalletSession(w.address, w.connector);
       auditUiAction({ actionName: "motive_drift_requested", resourceId: id });
       return driftFn({ data: { runId: id } });
     },
@@ -258,7 +261,7 @@ function RunPageContent() {
               <IdBadge value={run.id} kind="run" inline />
             </div>
           </div>
-          <Badge tone={finished ? "success" : "warning"}>{finished ? "Run finished" : "Run in progress"}</Badge>
+          <Badge tone={finished ? "success" : "brand"}>{finished ? "Run finished" : "Run in progress"}</Badge>
         </div>
 
         <Stepper
@@ -293,7 +296,7 @@ function RunPageContent() {
                 onReset={resetEventForm}
               >
                 <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.13em] text-ochre">Manual evidence</p>
+                  <p className="font-mono text-xs uppercase tracking-[0.13em] text-brand-text">Manual evidence</p>
                   <h2 id="capture-title" className="mt-2 font-display text-3xl tracking-tight">Record an observation.</h2>
                   <p className="mt-2 text-sm leading-relaxed text-graphite">Use plain language. MetricMotive turns this into a structured event while preserving the source you choose.</p>
                 </div>
@@ -485,7 +488,7 @@ function FinishedRunReview({
 
       {canCommit ? (
         <section aria-labelledby="verify-title">
-          <p className="font-mono text-xs uppercase tracking-[0.13em] text-ochre">Verification</p>
+          <p className="font-mono text-xs uppercase tracking-[0.13em] text-brand-text">Verification</p>
           <h2 id="verify-title" className="mt-2 font-display text-3xl tracking-tight">Commit evidence, then ask GenLayer.</h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">First the evidence is committed to the locked Guard. Then GenLayer validators evaluate whether the metric was achieved faithfully.</p>
           <div className="mt-5"><SubmitEvidenceChain guardId={guard.id} runId={run.id} onchainId={guard.onchainId} txEvidence={guard.txEvidence} onUpdated={onUpdated} /></div>

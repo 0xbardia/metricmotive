@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Play } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { useAccount } from "wagmi";
+import { useWalletSession } from "@/lib/wallet/session";
 import { AppShell } from "@/components/app-shell";
 import { PrivateReadError } from "@/components/app-home-content";
 import { AdvisoryNote } from "@/components/chrome";
@@ -29,6 +30,7 @@ import {
 import { CTA } from "@/lib/terminology";
 import { createV2Fn, getGuardFn, remediateFn, startRunFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
+import { requireWallet } from "@/lib/wallet/require-wallet";
 import { WalletProviders } from "@/lib/wallet/provider";
 
 export const Route = createFileRoute("/app/guards/$id")({ component: GuardPage });
@@ -44,6 +46,7 @@ function GuardPage() {
 function GuardPageContent() {
   const { id } = Route.useParams();
   const { address, connector } = useAccount();
+  const { connect } = useWalletSession();
   const [actionError, setActionError] = useState<string | null>(null);
   // B-06: the stepper shows Lock while the lock transaction is in flight.
   const [lockInFlight, setLockInFlight] = useState(false);
@@ -59,8 +62,8 @@ function GuardPageContent() {
 
   const start = useMutation({
     mutationFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet before starting a Run.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet before starting a Run.");
+      await ensureWalletSession(w.address, w.connector);
       auditUiAction({ actionName: "run_started", resourceId: id });
       return startRunFn({ data: { guardId: id, agentRef: "manual" } });
     },
@@ -69,8 +72,8 @@ function GuardPageContent() {
   });
   const remediate = useMutation({
     mutationFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet before requesting a review.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet before requesting a review.");
+      await ensureWalletSession(w.address, w.connector);
       auditUiAction({ actionName: "remediation_requested", resourceId: id });
       return remediateFn({ data: { id } });
     },
@@ -81,8 +84,8 @@ function GuardPageContent() {
     mutationFn: async () => {
       const guard = q.data?.guard;
       if (!guard) throw new Error("Guard is not loaded.");
-      if (!address || !connector) throw new Error("Connect a wallet before creating a new version.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet before creating a new version.");
+      await ensureWalletSession(w.address, w.connector);
       auditUiAction({ actionName: "create_v2_draft", resourceId: guard.id });
       const plan = remediate.data?.plan;
       return createV2Fn({
@@ -162,7 +165,7 @@ function GuardPageContent() {
               "PUBLISHED · NOT LOCKED" rather than implying it is already frozen.
             */}
             {guard.status === "RESOLVED" ? null : (
-              <Badge tone={lifecycle.lockState === "LOCKED" ? "graphite" : "warning"}>
+              <Badge tone={lifecycle.lockState === "LOCKED" ? "graphite" : "brand"}>
                 {lifecycle.lockLabel}
               </Badge>
             )}
@@ -189,8 +192,8 @@ function GuardPageContent() {
           <p className="font-mono text-xs uppercase tracking-[0.14em] text-graphite">The specification</p>
           <h2 id="definition-title" className="mt-2 font-display text-3xl tracking-tight">What the agent was meant to do.</h2>
           <div className="mt-6 grid gap-8 md:grid-cols-2">
-            <div className="border-t-2 border-sage pt-4"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage">Motive · intended outcome</p><p className="mt-3 font-display text-2xl leading-tight">{guard.motive}</p></div>
-            <div className="border-t-2 border-ochre pt-4"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-ochre">Metric · measurable proxy</p><p className="mt-3 font-display text-2xl leading-tight">{guard.metric}</p></div>
+            <div className="border-t-2 border-sage pt-4"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage-text">Motive · intended outcome</p><p className="mt-3 font-display text-2xl leading-tight">{guard.motive}</p></div>
+            <div className="border-t-2 border-ochre pt-4"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-brand-text">Metric · measurable proxy</p><p className="mt-3 font-display text-2xl leading-tight">{guard.metric}</p></div>
           </div>
           <div className="mt-8 border-t border-rule pt-5"><div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-display text-2xl">Guardrails</h3><span className="text-sm text-graphite">What must not be sacrificed</span></div><ul className="mt-4 grid gap-2 md:grid-cols-2">{guard.guardrails.length ? guard.guardrails.map((guardrail) => <li key={`${guardrail.kind}-${guardrail.text}`} className="border-l-2 border-sage bg-card px-4 py-3 text-sm"><Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{guardrail.kind}</Badge><span className="ml-2">{guardrail.text}</span></li>) : <li className="text-sm text-graphite">No guardrails recorded.</li>}</ul></div>
         </section>
@@ -216,7 +219,7 @@ function GuardPageContent() {
           </section>
         ) : null}
 
-        <section className="mt-12" aria-labelledby="runs-title"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="font-mono text-xs uppercase tracking-[0.14em] text-graphite">Capture history</p><h2 id="runs-title" className="mt-2 font-display text-3xl tracking-tight">Runs</h2></div><span className="font-mono text-xs text-graphite">{data.runs.length} run{data.runs.length === 1 ? "" : "s"}</span></div>{data.runs.length ? <ul className="mt-4 divide-y divide-rule border-y border-rule">{data.runs.map((run) => <li key={run.id}><Link to="/app/runs/$id" params={{ id: run.id }} className="group flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Badge tone={run.status === "FINISHED" ? "success" : "warning"}>{run.status === "FINISHED" ? "Finished" : "In progress"}</Badge><span className="font-mono text-xs text-graphite">{run.events.length} event{run.events.length === 1 ? "" : "s"}</span></div><p className="mt-1 truncate font-mono text-sm">{run.id}</p></div><span className="flex items-center gap-2 text-sm text-graphite">{formatUtc(run.startedAt)}<ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span></Link></li>)}</ul> : <p className="mt-4 border-y border-rule py-5 text-sm text-graphite">No Runs yet. Once the motive is locked, start a Run to capture what the agent does.</p>}</section>
+        <section className="mt-12" aria-labelledby="runs-title"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="font-mono text-xs uppercase tracking-[0.14em] text-graphite">Capture history</p><h2 id="runs-title" className="mt-2 font-display text-3xl tracking-tight">Runs</h2></div><span className="font-mono text-xs text-graphite">{data.runs.length} run{data.runs.length === 1 ? "" : "s"}</span></div>{data.runs.length ? <ul className="mt-4 divide-y divide-rule border-y border-rule">{data.runs.map((run) => <li key={run.id}><Link to="/app/runs/$id" params={{ id: run.id }} className="group flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Badge tone={run.status === "FINISHED" ? "success" : "brand"}>{run.status === "FINISHED" ? "Finished" : "In progress"}</Badge><span className="font-mono text-xs text-graphite">{run.events.length} event{run.events.length === 1 ? "" : "s"}</span></div><p className="mt-1 truncate font-mono text-sm">{run.id}</p></div><span className="flex items-center gap-2 text-sm text-graphite">{formatUtc(run.startedAt)}<ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span></Link></li>)}</ul> : <p className="mt-4 border-y border-rule py-5 text-sm text-graphite">No Runs yet. Once the motive is locked, start a Run to capture what the agent does.</p>}</section>
 
         <TechnicalDetails className="mt-12" title="Technical details · contract proof">
           <dl>
@@ -273,7 +276,7 @@ function nextAction({
   onUpdated: () => void | Promise<void>;
 }) {
   if (lifecycleKind === "publish-and-lock") return <CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onLockInFlight={onLockInFlight} onUpdated={onUpdated} />;
-  if (lifecycleKind === "start-run") return <div className="flex flex-wrap items-center gap-3"><Button loading={start.isPending} loadingLabel="Starting Run…" disabled={start.isPending} onClick={async () => { const result = await start.mutateAsync(); window.location.href = `/app/runs/${result.run.id}`; }}><Play className="size-4" />{CTA.startRun}</Button></div>;
+  if (lifecycleKind === "start-run") return <div className="flex flex-wrap items-center gap-3"><Button loading={start.isPending} loadingLabel="Starting Run…" disabled={start.isPending} onClick={async () => { try { const result = await start.mutateAsync(); window.location.href = `/app/runs/${result.run.id}`; } catch { /* onError shows the message */ } }}><Play className="size-4" />{CTA.startRun}</Button></div>;
   const recoveryRun = evidenceRecoveryRun(data);
   if (isEvidenceCommitting(guard) && recoveryRun) {
     return <SubmitEvidenceChain guardId={guard.id} runId={recoveryRun.id} onchainId={guard.onchainId} txEvidence={guard.txEvidence} onUpdated={onUpdated} />;

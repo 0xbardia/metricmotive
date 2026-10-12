@@ -33,7 +33,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-sm px-2 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em]",
+        "inline-flex shrink-0 items-center whitespace-nowrap rounded-sm px-2 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em]",
         tone === "ink" ? inkOverride : roleClass(role),
         className,
       )}

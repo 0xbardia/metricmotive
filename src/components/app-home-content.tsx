@@ -11,6 +11,7 @@ import { useWalletSession } from "@/lib/wallet/session";
 import { classifyReadError, nextPrivateReadStep } from "@/lib/private-read";
 import { listGuardsFn, reconcileCreateFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
+import { requireWallet } from "@/lib/wallet/require-wallet";
 import { WalletProviders } from "@/lib/wallet/provider";
 import type { Guard } from "@/lib/domain";
 
@@ -26,13 +27,14 @@ export function AppHomeWithWallet() {
 
 function AppHomeContent() {
   const { address, connector } = useAccount();
+  const { connect } = useWalletSession();
   const queryClient = useQueryClient();
   const q = useQuery({
     queryKey: ["guards", address],
     enabled: Boolean(address && connector),
     queryFn: async () => {
-      if (!address || !connector) throw new Error("Connect a wallet to view your Guards.");
-      await ensureWalletSession(address, connector);
+      const w = requireWallet({ address, connector }, connect, "Connect a wallet to view your Guards.");
+      await ensureWalletSession(w.address, w.connector);
       return listGuardsFn();
     },
   });
@@ -97,7 +99,7 @@ function AppHomeContent() {
                 ["Gaming", stats?.counts.METRIC_GAMING ?? 0, "brick"],
                 ["Partial", stats?.counts.PARTIAL_ALIGNMENT ?? 0, "ochre"],
                 ["Unclear", stats?.counts.INSUFFICIENT_EVIDENCE ?? 0, "graphite"],
-              ].map(([label, value, tone]) => <div key={String(label)} className="border-t border-rule pt-3"><p className="font-mono text-[0.64rem] uppercase tracking-[0.1em] text-graphite">{label}</p><p className={`mt-1 font-display text-3xl tabular-nums ${tone === "brick" ? "text-[var(--color-danger-text)]" : tone === "sage" ? "text-[var(--color-sage-text)]" : tone === "ochre" ? "text-ochre" : "text-carbon"}`}>{value}</p></div>)}
+              ].map(([label, value, tone]) => <div key={String(label)} className="border-t border-rule pt-3"><p className="font-mono text-[0.64rem] uppercase tracking-[0.1em] text-graphite">{label}</p><p className={`mt-1 font-display text-3xl tabular-nums ${tone === "brick" ? "text-[var(--color-danger-text)]" : tone === "sage" ? "text-[var(--color-sage-text)]" : tone === "ochre" ? "text-brand-text" : "text-carbon"}`}>{value}</p></div>)}
             </div>
           </section>
           {guards.length === 0 ? (

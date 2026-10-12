@@ -121,7 +121,7 @@ export function SiteHeader({
               data-active={pathname === item.to && !("hash" in item) ? "true" : "false"}
               className={cn(
                 "nav-link text-sm",
-                pathname === item.to && !("hash" in item) ? "text-ochre" : "",
+                pathname === item.to && !("hash" in item) ? (dark ? "text-ochre" : "text-brand-text") : "",
               )}
             >
               {item.label}

@@ -104,7 +104,7 @@ export function EvidenceStorySection() {
               <div>
                 <dt className="text-graphite">Fingerprint</dt>
                 <dd className="mt-1">
-                  <CopyValue value={HOSTED_GAMING.evidenceHash} label="evidence fingerprint" />
+                  <CopyValue value={HOSTED_GAMING.evidenceHash} label="evidence fingerprint" onDark={false} />
                 </dd>
               </div>
               <div>

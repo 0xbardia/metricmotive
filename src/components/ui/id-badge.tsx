@@ -78,7 +78,7 @@ export function ExplorerLink({ href, label = "View on Explorer" }: { href: strin
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="shrink-0 text-[0.625rem] uppercase tracking-[0.12em] text-ochre underline-offset-4 hover:underline"
+      className="shrink-0 text-[0.625rem] uppercase tracking-[0.12em] text-brand-text underline-offset-4 hover:underline"
     >
       {label}
       <span aria-hidden="true"> ↗</span>

@@ -30,13 +30,13 @@ export function LockSummary({
     <div className={className}>
       <dl className="grid gap-4 md:grid-cols-2">
         <div className="border-t-2 border-sage pt-3">
-          <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage">
+          <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage-text">
             Motive · {locked ? "frozen" : "to be frozen"}
           </dt>
           <dd className="mt-2 text-base leading-snug">{motive || "—"}</dd>
         </div>
         <div className="border-t-2 border-ochre pt-3">
-          <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-ochre">
+          <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-brand-text">
             Metric · {locked ? "frozen" : "to be frozen"}
           </dt>
           <dd className="mt-2 text-base leading-snug">{metric || "—"}</dd>

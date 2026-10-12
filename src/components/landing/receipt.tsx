@@ -92,15 +92,15 @@ export function ReceiptSection() {
             <div className="receipt-proof mt-8 grid gap-3 border-t border-rule pt-4 font-mono text-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-graphite">Contract</span>
-                <CopyValue value={LEGACY_DEPLOYMENT.contractAddress} label="contract" />
+                <CopyValue value={LEGACY_DEPLOYMENT.contractAddress} label="contract" onDark={false} />
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-graphite">Evidence fingerprint</span>
-                <CopyValue value={HOSTED_GAMING.evidenceHash} label="fingerprint" />
+                <CopyValue value={HOSTED_GAMING.evidenceHash} label="fingerprint" onDark={false} />
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-graphite">Evaluate tx</span>
-                <CopyValue value={HOSTED_GAMING.evaluateTx} label="evaluate transaction" />
+                <CopyValue value={HOSTED_GAMING.evaluateTx} label="evaluate transaction" onDark={false} />
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-graphite">Guard ID</span>
