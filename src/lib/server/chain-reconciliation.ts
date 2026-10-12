@@ -30,7 +30,7 @@ import {
 } from "./repo";
 import { asPattern, asStatus, asVerdict, parseFindings, readChainGuard } from "./chain-read";
 import { sameWallet } from "./security";
-import { FAILED_RECOVERY_MESSAGE, markTransactionFailed } from "./operation-store";
+import { FAILED_RECOVERY_MESSAGE, MISMATCH_RECOVERY_MESSAGE, markTransactionFailed } from "./operation-store";
 import { getSql } from "@/lib/db";
 
 export type TransactionReconciliation = {
@@ -419,7 +419,12 @@ export async function reconcileTransaction(
         guard: current,
         txHash: transaction.txHash,
         onchainId: current.onchainId ?? transaction.expectedGuardId ?? undefined,
-        message: kind === "failed" ? FAILED_RECOVERY_MESSAGE : error.message,
+        message:
+          kind === "failed"
+            ? FAILED_RECOVERY_MESSAGE
+            : kind === "mismatch"
+              ? `${error.message} ${MISMATCH_RECOVERY_MESSAGE}`
+              : error.message,
       } satisfies TransactionReconciliation;
     }
     if (isTemporaryChainError(error)) {

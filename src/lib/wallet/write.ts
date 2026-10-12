@@ -1,4 +1,5 @@
 import { createClient, isSuccessful } from "genlayer-js";
+import { executionResultNumberToName, transactionsStatusNumberToName } from "genlayer-js/types";
 import { studioDevnet } from "genlayer-js/chains";
 import type { CalldataEncodable } from "genlayer-js/types";
 import type { Connector } from "wagmi";
@@ -52,10 +53,23 @@ export class LifecycleWriteError extends Error {
 
 /** Same split as reconciliation.verifyTransaction: UNDETERMINED / no execution result = failed; else reverted. */
 export function classifyDecidedFailure(transaction: unknown): "reverted" | "failed" {
-  const tx = (transaction ?? {}) as { statusName?: unknown; status?: unknown; txExecutionResultName?: unknown };
-  const status = String(tx.statusName ?? tx.status ?? "");
+  // Same field resolution as genlayer-js isSuccessful: getTransaction returns a
+  // numeric status and simplifyTransactionReceipt renames statusName to status_name.
+  const tx = (transaction ?? {}) as Record<string, unknown>;
+  const rawStatus = tx.statusName ?? tx.status_name ?? tx.status;
+  const status = String(
+    rawStatus !== undefined && /^\d+$/.test(String(rawStatus))
+      ? transactionsStatusNumberToName[String(rawStatus) as keyof typeof transactionsStatusNumberToName]
+      : rawStatus ?? "",
+  );
+  const execution =
+    tx.txExecutionResultName ??
+    tx.tx_execution_result_name ??
+    (tx.txExecutionResult === undefined
+      ? undefined
+      : executionResultNumberToName[String(tx.txExecutionResult) as keyof typeof executionResultNumberToName]);
   if (status === "UNDETERMINED") return "failed";
-  if (status === "FINALIZED" && !tx.txExecutionResultName) return "failed";
+  if (status === "FINALIZED" && !execution) return "failed";
   return "reverted";
 }
 

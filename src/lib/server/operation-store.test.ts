@@ -73,7 +73,8 @@ describe("replacement decision", () => {
     assert.notEqual(FAILED_RECOVERY_MESSAGE, MISMATCH_RECOVERY_MESSAGE);
     // chain-reconciliation returns this constant as the reconcile message and repo.ts surfaces decision.message.
     const src = (f: string) => readFileSync(new URL(f, import.meta.url), "utf8");
-    assert.match(src("./chain-reconciliation.ts"), /message: kind === "failed" \? FAILED_RECOVERY_MESSAGE/);
+    assert.match(src("./chain-reconciliation.ts"), /kind === "failed"\s*\?\s*FAILED_RECOVERY_MESSAGE/);
+    assert.match(src("./chain-reconciliation.ts"), /kind === "mismatch"\s*\?\s*`\$\{error\.message\} \$\{MISMATCH_RECOVERY_MESSAGE\}`/);
     assert.match(src("./repo.ts"), /reason === "failed"/);
   });
   it("proven revert -> replace; same hash -> same; none -> free", () => {

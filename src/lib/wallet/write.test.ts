@@ -243,7 +243,7 @@ test("UI failure copy no longer hardcodes Studionet", () => {
     phase: "failed",
     action: "create_guard",
     hash: null,
-    error: "no",
+    error: null,
   });
   assert.equal(view?.message, "The transaction was not accepted. No on-chain state was created.");
   assert.doesNotMatch(view?.message ?? "", /Studionet/);
@@ -277,4 +277,13 @@ test("decided failure classification mirrors server verifyTransaction", async ()
     }),
   ).catch((e) => e);
   assert.equal(err.failureKind, "failed");
+});
+
+test("classifies simplified genlayer-js receipts (numeric status, status_name)", async () => {
+  const { classifyDecidedFailure } = await import("./write.ts");
+  assert.equal(classifyDecidedFailure({ status: 6, status_name: "UNDETERMINED" }), "failed");
+  assert.equal(classifyDecidedFailure({ status: 6 }), "failed");
+  assert.equal(classifyDecidedFailure({ status: 7 }), "failed");
+  assert.equal(classifyDecidedFailure({ status: 7, txExecutionResult: 2 }), "reverted");
+  assert.equal(classifyDecidedFailure({ status: 8, status_name: "CANCELED" }), "reverted");
 });

@@ -75,3 +75,15 @@ describe("blocked failure kinds", () => {
     assert.equal(isBlockedFailure(failed("reverted")), false);
   });
 });
+
+describe("pre-submit refusal copy", () => {
+  it("shows the server's refusal reason when nothing was sent", () => {
+    const view = operationViewFromTx({
+      phase: "failed",
+      action: "arm_guard",
+      hash: null,
+      error: "This step is already in progress in another tab or session.",
+    });
+    assert.equal(view?.message, "This step is already in progress in another tab or session.");
+  });
+});

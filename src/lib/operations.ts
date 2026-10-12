@@ -283,9 +283,10 @@ function copyFor(
             : {
                 status: "Transaction failed",
                 title: "Transaction failed",
+                // A pre-submit refusal (reservation held elsewhere, fees) carries its own reason.
                 message: tx.hash
                   ? "The transaction did not complete. Review the details before trying again."
-                  : "The transaction was not accepted. No on-chain state was created.",
+                  : tx.error ?? "The transaction was not accepted. No on-chain state was created.",
               };
     default:
       return { status: "Status", title: titles.request, message: "" };
