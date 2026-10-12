@@ -182,6 +182,23 @@ function operationTypeOf(action: string): OperationType {
   }
 }
 
+/** Poll attempts before an unresolved hash is shown as delayed. */
+export const POLL_CAP = 20;
+
+/**
+ * What the confirmation poll does after a reconcile read. A read never sends:
+ * "stop-delayed" parks the operation in confirmation_delayed with Check again.
+ */
+export function pollOutcome(
+  result: { state: string; retryable?: boolean } | null,
+  attempt: number,
+  cap: number = POLL_CAP,
+): "continue" | "stop-final" | "stop-delayed" {
+  if (result && ["reconciled", "mismatch", "reverted"].includes(result.state)) return "stop-final";
+  if (result?.retryable === false || attempt >= cap) return "stop-delayed";
+  return "continue";
+}
+
 /**
  * A submitted-but-unreconciled transaction is recoverable, not failed: the
  * hash is preserved and Check again only re-reads it.
@@ -290,7 +307,7 @@ export function operationViewFromTx(state: TxState): OperationView | null {
    * A hash whose finality could not be READ is delayed. `confirming` with no
    * error is normal in-flight confirmation; an error marks a temporary delay.
    */
-  const delayed = hasHash && state.phase === "confirming" && Boolean(state.error);
+  const delayed = hasHash && state.phase === "confirming" && (Boolean(state.error) || Boolean(state.delayed));
   const operationState: OperationState = delayed
     ? "confirmation_delayed"
     : PHASE_STATE[state.phase];

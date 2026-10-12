@@ -200,8 +200,20 @@ test("persisted deployment routes RPC, reconciles colliding Guard IDs, and prese
     };
     chainGuard = { ...chainGuard, id: "13", owner: wallet, motive: revertedGuard.motive, metric: revertedGuard.metric, definition_hash: revertedGuard.definitionHash, status: "DRAFT" };
     const reverted = await reconcileTransaction(revertedGuard.id, "arm_guard", wallet, { txHash: revertedHash });
-    assert.equal(reverted.state, "mismatch");
+    assert.equal(reverted.state, "reverted");
     assert.equal((await repo.getGuard(revertedGuard.id)).status, "DRAFT");
+    // A server-proven revert may be replaced by the owner; the old row is archived.
+    const replacementHash = `0x${"9".repeat(64)}`;
+    await repo.recordChainTransaction(revertedGuard.id, {
+      operation: "arm_guard",
+      txHash: replacementHash,
+      originatingWallet: wallet,
+      chainId: DEPLOYMENT.chainId,
+      contractAddress: DEPLOYMENT.contractAddress,
+      submittedAt: new Date().toISOString(),
+    }, wallet);
+    assert.equal((await repo.getChainTransaction(revertedGuard.id, "arm_guard")).txHash, replacementHash);
+    assert.equal((await sql.query("select tx_hash from guard_transaction_history where guard_id=$1", [revertedGuard.id]))[0].tx_hash, revertedHash);
 
     const unknownGuard = await repo.insertGuard({
       ownerAddress: wallet,

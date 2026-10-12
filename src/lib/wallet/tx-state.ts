@@ -20,6 +20,8 @@ export type TxState = {
   hash: string | null;
   error: string | null;
   failureKind?: TxFailureKind;
+  /** Polling gave up (cap or non-retryable). Still unresolved: offers Check again, never a resend. */
+  delayed?: boolean;
   originAddress?: string | null;
   originChainId?: number | null;
   resourceId?: string | null;
@@ -58,6 +60,39 @@ export function loadCreateReservationToken(resourceId: string): string {
     }
   }
   return token;
+}
+
+const OPERATION_RESERVATION_PREFIX = "metricmotive.op-reservation:";
+
+/** Stable per-browser token so a reload resumes its own reservation (same token = idempotent). */
+export function loadOperationReservationToken(resourceId: string, operation: string): string {
+  const key = `${OPERATION_RESERVATION_PREFIX}${operation}:${resourceId}`;
+  try {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+    if (saved) return saved;
+  } catch {
+    // Server reservation stays authoritative.
+  }
+  const token =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `claim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  try {
+    if (typeof window !== "undefined") window.localStorage.setItem(key, token);
+  } catch {
+    // Best effort only.
+  }
+  return token;
+}
+
+export function clearOperationReservationToken(resourceId: string, operation: string): void {
+  try {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(`${OPERATION_RESERVATION_PREFIX}${operation}:${resourceId}`);
+    }
+  } catch {
+    // Best effort only.
+  }
 }
 
 export function clearCreateReservationToken(resourceId: string): void {

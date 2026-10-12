@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import {
   type EvidenceManifest,
   type Guardrail,
@@ -27,7 +28,9 @@ import {
   receiptForGuard,
   recordChainTransaction,
   recordActionAudit,
+  releaseChainOperation,
   releaseCreateGuard,
+  reserveChainOperation,
   reserveCreateGuard,
   requireGuard,
   requireOwnedGuard,
@@ -39,7 +42,7 @@ import {
   updateDraft,
   isPublicGuard,
 } from "./repo";
-import { reconcileTransaction } from "./chain-reconciliation";
+import { proveFailedTransaction, reconcileTransaction } from "./chain-reconciliation";
 import { CONFIRMATION_UNAVAILABLE_MESSAGE, type ChainOperation } from "@/lib/reconciliation";
 import { sameWallet, normalizeWalletAddress } from "./security";
 import { getWalletSession, requireWalletAddress } from "./wallet-auth.server";
@@ -562,7 +565,29 @@ export const reserveCreateGuardFn = createServerFn({ method: "POST" })
   .validator((input: unknown) => parseInput(createReservationRequestSchema, input, "Create reservation is invalid"))
   .handler(async ({ data }) => {
     const ownerAddress = await requireWalletAddress();
-    return reserveCreateGuard(parseId(data.id, "Guard id"), data.reservationToken, ownerAddress);
+    const id = parseId(data.id, "Guard id");
+    await proveFailedTransaction(id, "create_guard", ownerAddress);
+    return reserveCreateGuard(id, data.reservationToken, ownerAddress);
+  });
+
+const operationReservationRequestSchema = createReservationRequestSchema.extend({
+  operation: z.enum(["arm_guard", "submit_evidence", "evaluate_guard"]),
+});
+
+export const reserveOperationFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => parseInput(operationReservationRequestSchema, input, "Operation reservation is invalid"))
+  .handler(async ({ data }) => {
+    const ownerAddress = await requireWalletAddress();
+    const id = parseId(data.id, "Guard id");
+    await proveFailedTransaction(id, data.operation, ownerAddress);
+    return reserveChainOperation(id, data.operation, data.reservationToken, ownerAddress);
+  });
+
+export const releaseOperationFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => parseInput(operationReservationRequestSchema, input, "Operation reservation is invalid"))
+  .handler(async ({ data }) => {
+    await releaseChainOperation(parseId(data.id, "Guard id"), data.operation, data.reservationToken, await requireWalletAddress());
+    return { released: true };
   });
 
 export const releaseCreateGuardFn = createServerFn({ method: "POST" })

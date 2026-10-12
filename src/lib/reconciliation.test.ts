@@ -262,3 +262,17 @@ test("Guard 10 exact chain definition reconciles with the contract fingerprint",
     (error: unknown) => error instanceof ReconciliationError && error.code === "MISMATCH",
   );
 });
+
+test("empty execution -> failure; failed execution is REVERTED", async () => {
+  const target = await expected();
+  const finalized = transaction("FINALIZED");
+  const noExecution = { ...finalized, consensus_data: { leader_receipt: [{ result: { status: "return", payload: { readable: JSON.stringify("3") } } }] } };
+  await assert.rejects(
+    verifyCreateTransaction(noExecution, target),
+    (error: unknown) => error instanceof ReconciliationError && error.code === "MALFORMED" && /no execution result/.test(error.message),
+  );
+  await assert.rejects(
+    verifyCreateTransaction({ ...finalized, consensus_data: { leader_receipt: [{ execution_result: "ERROR" }] } }, target),
+    (error: unknown) => error instanceof ReconciliationError && error.code === "REVERTED",
+  );
+});

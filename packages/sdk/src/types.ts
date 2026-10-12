@@ -63,6 +63,8 @@ export type ChainGuard = {
 };
 
 export type MetricMotiveClientOptions = {
+  /** Test seam: supplies the genlayer-js client instead of createClient. */
+  clientFactory?: () => unknown;
   /** Active Studionet deployment. Set explicitly for historical resources. */
   contractAddress?: `0x${string}`;
   /** Optional HTTP API base, e.g. http://127.0.0.1:8080. Used by startRun/recordEvent/completeRun. */

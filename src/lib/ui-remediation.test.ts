@@ -196,7 +196,8 @@ describe("lifecycle presentation (C0 / C3 / C4)", () => {
       assert.match(source, new RegExp(`functionName: "${action}"`));
     }
     assert.match(source, /confirmationBackoffMs\(attempt\)/);
-    assert.match(source, /attempt >= 20/);
+    assert.match(source, /pollOutcome\(result \?\? null, attempt\)/);
+    assert.match(operations, /POLL_CAP = 20/);
     assert.match(operations, /No new transaction will be sent/);
     assert.match(source, /hasUnresolved: txBusy\(tx\) \|\| isRecoverable\(tx\)/);
   });

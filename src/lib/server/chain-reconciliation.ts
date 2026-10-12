@@ -30,9 +30,11 @@ import {
 } from "./repo";
 import { asPattern, asStatus, asVerdict, parseFindings, readChainGuard } from "./chain-read";
 import { sameWallet } from "./security";
+import { markTransactionFailed } from "./operation-store";
+import { getSql } from "@/lib/db";
 
 export type TransactionReconciliation = {
-  state: "pending" | "unavailable" | "mismatch" | "reconciled";
+  state: "pending" | "unavailable" | "mismatch" | "reverted" | "reconciled";
   operation: ChainOperation;
   guard: Guard;
   txHash: string;
@@ -102,6 +104,7 @@ function legacyTransaction(local: Guard, operation: ChainOperation): ChainTransa
     expectedEvidenceHash: operation === "submit_evidence" ? local.evidenceHash : null,
     submittedAt: local.txCreateSubmittedAt ?? local.updatedAt,
     reconciledAt: null,
+    failureKind: null,
   };
 }
 
@@ -397,8 +400,20 @@ export async function reconcileTransaction(
   const task = runReconciliation(local, transaction, actorAddress).catch(async (error: unknown) => {
     const current = (await getGuard(local.id)) ?? local;
     if (error instanceof ReconciliationError) {
+      // Stamp server-verified failure so the owner may replace a proven revert
+      // (D4). Never derived from client input; MALFORMED proves nothing.
+      if (error.code === "REVERTED" || error.code === "MISMATCH") {
+        await markTransactionFailed(
+          await getSql(),
+          local.id,
+          operation,
+          transaction.txHash,
+          error.code === "REVERTED" ? "reverted" : "mismatch",
+          error.message,
+        ).catch(() => undefined);
+      }
       return {
-        state: "mismatch",
+        state: error.code === "REVERTED" ? "reverted" : "mismatch",
         operation,
         guard: current,
         txHash: transaction.txHash,
@@ -434,4 +449,15 @@ export async function reconcileTransaction(
 
 export async function reconcileCreateGuard(id: string, actorAddress: string): Promise<CreateReconciliation> {
   return reconcileTransaction(id, "create_guard", actorAddress) as Promise<CreateReconciliation>;
+}
+
+/**
+ * Before a reservation, let the server read the recorded hash itself so a
+ * revert is proven from chain data (stamped by reconcileTransaction), not from
+ * anything the browser claims. Failures here mean "undecided": nothing changes.
+ */
+export async function proveFailedTransaction(id: string, operation: ChainOperation, actorAddress: string): Promise<void> {
+  const recorded = await getChainTransaction(id, operation);
+  if (!recorded || recorded.reconciledAt || recorded.failureKind) return;
+  await reconcileTransaction(id, operation, actorAddress).catch(() => undefined);
 }

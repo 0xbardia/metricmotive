@@ -36,6 +36,16 @@ import { AppError } from "@/lib/errors";
 import { newId } from "@/lib/ids";
 import { getActiveDeployment, guardDeployment, requireActiveWrite, resolvedDeployment } from "@/lib/contract";
 import { sameWallet } from "./security";
+import {
+  clearOperationSlot,
+  releaseOperationSlot,
+  replacementDecision,
+  reservedByOther,
+  reserveOperationSlot,
+  supersedeFailedTransaction,
+  type FailureKind,
+  type OperationReservation,
+} from "./operation-store";
 import { parseOutcome, parseRunEvent } from "../validation";
 
 type GuardRow = {
@@ -299,16 +309,25 @@ export async function reserveCreateGuard(
   claimToken: string,
   actorAddress: string,
 ): Promise<CreateGuardReservation> {
-  const guard = await requireOwnedGuard(id, actorAddress);
+  let guard = await requireOwnedGuard(id, actorAddress);
   const target = guardDeployment(guard);
   const connection = await getSql();
   await connection.query(
     `update guards set contract_address=$1, chain_id=$2, network=$3 where id=$4 and contract_address is null`,
     [target.contractAddress, target.chainId, target.network, id],
   );
+  if (!guard.onchainId) {
+    // A server-proven reverted create is archived so the owner can re-submit.
+    const failed = await getChainTransaction(id, "create_guard");
+    if (failed && replacementDecision(failed, null).action === "replace") {
+      await supersedeFailedTransaction(connection, id, "create_guard", failed.txHash, null);
+      guard = await requireOwnedGuard(id, actorAddress);
+    }
+  }
   if (guard.onchainId || guard.txCreate) {
     const existing = await getChainTransaction(id, "create_guard");
     if (existing) {
+      const blocked = replacementDecision(existing, null);
       return {
         idempotencyKey: createGuardIdempotencyKey({
           wallet: guard.ownerAddress,
@@ -321,7 +340,9 @@ export async function reserveCreateGuard(
         state: existing.reconciledAt ? "RECONCILED" : "SUBMITTED",
         txHash: existing.txHash,
         canSubmit: false,
-        message: "This Guard already has a create transaction. Confirmation can resume without submitting another transaction.",
+        message: blocked.action === "blocked" && blocked.reason === "mismatch"
+          ? blocked.message
+          : "This Guard already has a create transaction. Confirmation can resume without submitting another transaction.",
       };
     }
     throw new AppError("CONFLICT", "This Guard is already created or has a pending create transaction", 409);
@@ -405,6 +426,55 @@ export async function releaseCreateGuard(
        where guard_id=$1 and claim_token=$2 and tx_hash is null and state='RESERVED'`,
     [id, claimToken],
   );
+}
+
+export type OperationReservationResult = OperationReservation & {
+  txHash: string | null;
+  failureKind: FailureKind | null;
+};
+
+/**
+ * Pre-signature reservation for arm/evidence/evaluate (mirrors
+ * reserveCreateGuard). A recorded, undecided hash is never replaced; a
+ * server-proven reverted one is archived first so the slot can be taken again.
+ */
+export async function reserveChainOperation(
+  id: string,
+  operation: "arm_guard" | "submit_evidence" | "evaluate_guard",
+  claimToken: string,
+  actorAddress: string,
+): Promise<OperationReservationResult> {
+  const guard = await requireOwnedGuard(id, actorAddress);
+  if (guard.isExample) throw new AppError("FORBIDDEN", "Example guards cannot be mutated", 403);
+  requireActiveWrite(resolvedDeployment(guard));
+  if (!claimToken.trim()) throw new AppError("VALIDATION", "Reservation token is required", 400);
+  if (!guard.onchainId) throw new AppError("INVALID_STATE", "Create the Guard on Studionet first", 409);
+  const sql = await getSql();
+  const existing = await getChainTransaction(id, operation);
+  const decision = replacementDecision(existing, null);
+  if (existing && decision.action === "blocked") {
+    return { canSubmit: false, state: "BUSY", message: decision.message, txHash: existing.txHash, failureKind: existing.failureKind };
+  }
+  if (existing && decision.action === "replace") {
+    await supersedeFailedTransaction(sql, id, operation, existing.txHash, null);
+  }
+  const reservation = await reserveOperationSlot(sql, {
+    guardId: id,
+    operation,
+    wallet: actorAddress,
+    token: claimToken,
+  });
+  return { ...reservation, txHash: null, failureKind: null };
+}
+
+export async function releaseChainOperation(
+  id: string,
+  operation: "arm_guard" | "submit_evidence" | "evaluate_guard",
+  claimToken: string,
+  actorAddress: string,
+): Promise<void> {
+  await requireOwnedGuard(id, actorAddress);
+  await releaseOperationSlot(await getSql(), id, operation, claimToken);
 }
 
 export async function updateDraft(
@@ -943,6 +1013,8 @@ export type ChainTransaction = {
   expectedEvidenceHash: string | null;
   submittedAt: string;
   reconciledAt: string | null;
+  /** Server-verified failure stamp; only "reverted" may be superseded. */
+  failureKind: FailureKind | null;
 };
 
 type ChainTransactionRow = {
@@ -956,6 +1028,7 @@ type ChainTransactionRow = {
   expected_evidence_hash: string | null;
   submitted_at: string;
   reconciled_at: string | null;
+  failure_kind: string | null;
 };
 
 function mapChainTransaction(row: ChainTransactionRow): ChainTransaction {
@@ -970,6 +1043,7 @@ function mapChainTransaction(row: ChainTransactionRow): ChainTransaction {
     expectedEvidenceHash: row.expected_evidence_hash,
     submittedAt: row.submitted_at,
     reconciledAt: row.reconciled_at,
+    failureKind: row.failure_kind === "reverted" || row.failure_kind === "mismatch" ? row.failure_kind : null,
   };
 }
 
@@ -981,7 +1055,7 @@ export async function getChainTransaction(
   const rows = await sql.query<ChainTransactionRow>(
     `select guard_id, operation, tx_hash, originating_wallet, chain_id,
             contract_address, expected_guard_id, expected_evidence_hash,
-            submitted_at, reconciled_at
+            submitted_at, reconciled_at, failure_kind
        from guard_transactions where guard_id=$1 and operation=$2 limit 1`,
     [guardId, operation],
   );
@@ -991,7 +1065,7 @@ export async function getChainTransaction(
     `select guard_id, 'create_guard' as operation, tx_hash,
             wallet as originating_wallet, chain_id, contract_address,
             null::text as expected_guard_id, null::text as expected_evidence_hash,
-            created_at as submitted_at, reconciled_at
+            created_at as submitted_at, reconciled_at, failure_kind
        from create_guard_intents
       where guard_id=$1 and tx_hash is not null limit 1`,
     [guardId],
@@ -1042,12 +1116,23 @@ export async function recordChainTransaction(
   }
 
   const txHash = input.txHash.toLowerCase();
-  const existing = await getChainTransaction(id, input.operation);
-  if (!existing && input.operation !== "create_guard") requireActiveWrite(resource);
-  if (existing) {
-    if (existing.txHash.toLowerCase() !== txHash) {
-      throw new AppError("CONFLICT", "This Guard operation already has a different transaction", 409);
+  let existing = await getChainTransaction(id, input.operation);
+  if (existing && existing.txHash.toLowerCase() !== txHash) {
+    // Only a server-proven revert may be replaced; the old row moves to history.
+    const decision = replacementDecision(existing, txHash);
+    if (decision.action !== "replace") {
+      throw new AppError("CONFLICT", decision.action === "blocked" ? decision.message : "This Guard operation already has a different transaction", 409);
     }
+    if (input.operation !== "create_guard") requireActiveWrite(resource);
+    await supersedeFailedTransaction(await getSql(), id, input.operation, existing.txHash, input.txHash);
+    existing = await getChainTransaction(id, input.operation);
+  }
+  if (!existing && input.operation !== "create_guard") requireActiveWrite(resource);
+  if (!existing && input.operation !== "create_guard" && input.reservationToken
+      && await reservedByOther(await getSql(), id, input.operation, input.reservationToken)) {
+    throw new AppError("CONFLICT", "This Guard operation is reserved by another session", 409);
+  }
+  if (existing) {
     if (
       input.expectedEvidenceHash &&
       existing.expectedEvidenceHash &&
@@ -1143,7 +1228,7 @@ export async function recordChainTransaction(
        where lower(guard_transactions.tx_hash)=lower(excluded.tx_hash)
        returning guard_id, operation, tx_hash, originating_wallet, chain_id,
                  contract_address, expected_guard_id, expected_evidence_hash,
-                 submitted_at, reconciled_at`,
+                 submitted_at, reconciled_at, failure_kind`,
       [
         id,
         input.operation,
@@ -1157,6 +1242,8 @@ export async function recordChainTransaction(
       ],
     );
     if (!inserted[0]) throw new AppError("CONFLICT", "This Guard operation already has a different transaction", 409);
+    // The recorded hash is the lock now; the hashless reservation has done its job.
+    if (input.operation !== "create_guard") await clearOperationSlot(sql, id, input.operation);
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError("CONFLICT", "This transaction is already recorded for another operation", 409);

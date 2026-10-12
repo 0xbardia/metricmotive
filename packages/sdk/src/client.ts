@@ -34,9 +34,10 @@ function executionOf(receipt: unknown): string {
   return "";
 }
 
-function isSuccess(execution: string): boolean {
+function isSuccess(execution: string, requireExecution: boolean): boolean {
+  if (!execution) return !requireExecution;
   const u = execution.toUpperCase();
-  return !execution || u === "SUCCESS" || u.includes("FINISHED_WITH_RETURN") || u === "OK";
+  return u === "SUCCESS" || u.includes("FINISHED_WITH_RETURN") || u === "OK";
 }
 
 /**
@@ -53,15 +54,18 @@ export class MetricMotiveClient {
   private readonly account: MetricMotiveClientOptions["account"];
   private readonly memory = new MemoryRecorder();
   private readonly http: HttpRecorder | null;
+  private readonly clientFactory: MetricMotiveClientOptions["clientFactory"];
 
   constructor(opts: MetricMotiveClientOptions = {}) {
     this.contractAddress = (opts.contractAddress ?? CONTRACT_ADDRESS) as `0x${string}`;
     this.apiUrl = opts.apiUrl ? opts.apiUrl.replace(/\/$/, "") : null;
     this.account = opts.account;
+    this.clientFactory = opts.clientFactory;
     this.http = this.apiUrl ? new HttpRecorder(this.apiUrl, opts.webhookSecret) : null;
   }
 
   private chainClient() {
+    if (this.clientFactory) return this.clientFactory() as ReturnType<typeof createClient>;
     const deployment = deploymentForContractAddress(this.contractAddress);
     return createClient({
       chain: genLayerChainForDeployment(deployment),
@@ -94,13 +98,43 @@ export class MetricMotiveClient {
       );
     }
     const client = this.chainClient();
+    const noTx = "No transaction was sent.";
+    const accountAddress = (typeof this.account === "string" ? this.account : this.account?.address) as `0x${string}`;
+    let estimate: { distribution?: unknown; feeValue?: unknown };
+    try {
+      estimate = await client.estimateTransactionFeesForWrite({
+        account: this.account as never,
+        address: this.contractAddress,
+        functionName,
+        args: args as CalldataEncodable[],
+      });
+    } catch {
+      throw new MetricMotiveError("FEE_ESTIMATION_FAILED", `Could not estimate transaction fees. ${noTx}`, "chain");
+    }
+    const feeValue = estimate.feeValue == null ? null : BigInt(estimate.feeValue as bigint);
+    if (feeValue == null || feeValue <= 0n || estimate.distribution == null) {
+      throw new MetricMotiveError("FEE_ESTIMATION_FAILED", `Could not estimate transaction fees. ${noTx}`, "chain");
+    }
+    let balance: bigint;
+    try {
+      balance = BigInt(await client.request({ method: "eth_getBalance", params: [accountAddress, "latest"] } as never) as string);
+    } catch {
+      throw new MetricMotiveError("BALANCE_CHECK_FAILED", `Could not read the account balance. ${noTx}`, "chain");
+    }
+    if (balance < feeValue) {
+      throw new MetricMotiveError(
+        "INSUFFICIENT_GEN_FOR_FEES",
+        `Account has insufficient GEN to pay transaction fees (${feeValue} required). ${noTx}`,
+        "chain",
+      );
+    }
     let hash: `0x${string}`;
     try {
       hash = (await client.writeContract({
         address: this.contractAddress,
         functionName,
         args: args as CalldataEncodable[],
-        value: 0n,
+        fees: { distribution: estimate.distribution as never, feeValue },
       })) as `0x${string}`;
     } catch (err) {
       throw new MetricMotiveError(
@@ -127,7 +161,7 @@ export class MetricMotiveClient {
       );
     }
     const execution = executionOf(receipt);
-    if (!isSuccess(execution)) {
+    if (!isSuccess(execution, wait === "finalized")) {
       throw new MetricMotiveError(
         "EXECUTION_FAILED",
         `Transaction landed but execution failed (${execution}). A hash is not a successful write.`,

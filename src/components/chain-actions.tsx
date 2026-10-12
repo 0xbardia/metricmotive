@@ -18,9 +18,11 @@ import {
   getGuardDeploymentFn,
   prepareEvidenceFn,
   releaseCreateGuardFn,
+  releaseOperationFn,
   reconcileTransactionFn,
   recordTransactionFn,
   reserveCreateGuardFn,
+  reserveOperationFn,
 } from "@/lib/server/actions";
 import type { ChainOperation } from "@/lib/reconciliation";
 import {
@@ -37,11 +39,13 @@ import {
   persistPendingTx,
   clearCreateReservationToken,
   loadCreateReservationToken,
+  clearOperationReservationToken,
+  loadOperationReservationToken,
   type TxState,
   txBusy,
 } from "@/lib/wallet/tx-state";
 import { confirmationBackoffMs } from "@/lib/reconciliation";
-import { advance, isRecoverable, operationViewFromTx } from "@/lib/operations";
+import { advance, isRecoverable, operationViewFromTx, pollOutcome } from "@/lib/operations";
 
 const UI_ACTION_NAMES: Partial<Record<ChainOperation, string>> = {
   create_guard: "publish_guard",
@@ -61,6 +65,28 @@ function useWriteGate() {
   return { address, connector, chainId, switchChainAsync };
 }
 
+/**
+ * Double-submit guard whose state also drives `disabled`/loading (a bare ref
+ * never re-renders). Callers must `end()` on EVERY terminal outcome.
+ */
+function useIntent() {
+  const ref = useRef(false);
+  const [active, setActive] = useState(false);
+  return {
+    active,
+    begin(): boolean {
+      if (ref.current) return false;
+      ref.current = true;
+      setActive(true);
+      return true;
+    },
+    end() {
+      ref.current = false;
+      setActive(false);
+    },
+  };
+}
+
 type ReconciliationResult = Awaited<ReturnType<typeof reconcileTransactionFn>>;
 type OnUpdated = () => void | Promise<void>;
 
@@ -70,6 +96,7 @@ function transactionState(
   address: string | undefined,
   error: string | null,
   failureKind?: TxState["failureKind"],
+  delayed?: boolean,
 ): TxState {
   return {
     phase: "confirming",
@@ -77,6 +104,7 @@ function transactionState(
     hash,
     error,
     failureKind,
+    delayed,
     originAddress: address ?? null,
     originChainId: ACTIVE_CHAIN_ID,
   };
@@ -101,6 +129,7 @@ function useTransactionReconciliation({
   const [reconcileBusy, setReconcileBusy] = useState(false);
   const hashRef = useRef<string | null>(null);
   const completedRef = useRef(false);
+  const delayedRef = useRef(false);
   const inFlight = useRef<Promise<ReconciliationResult | null> | null>(null);
   const reconcileRef = useRef<(() => Promise<ReconciliationResult | null>) | null>(null);
   const onUpdatedRef = useRef(onUpdated);
@@ -202,14 +231,14 @@ function useTransactionReconciliation({
             originChainId: ACTIVE_CHAIN_ID,
           });
           await onUpdatedRef.current();
-        } else if (result.state === "mismatch") {
+        } else if (result.state === "mismatch" || result.state === "reverted") {
           setTx({
             ...transactionState(
               operation,
               resultHash,
               gate.address,
               result.message ?? "Transaction reconciliation stopped.",
-              "mismatch",
+              result.state === "reverted" ? "reverted" : "mismatch",
             ),
             phase: "failed",
           });
@@ -222,6 +251,8 @@ function useTransactionReconciliation({
               result.state === "unavailable"
                 ? (result.message ?? "Confirmation temporarily unavailable.")
                 : null,
+              undefined,
+              delayedRef.current,
             ),
           );
         }
@@ -253,6 +284,7 @@ function useTransactionReconciliation({
     let cancelled = false;
     let attempt = 0;
     let timer: number | undefined;
+    delayedRef.current = false;
     let resume: (() => void) | undefined;
 
     const waitUntilVisible = () => {
@@ -279,9 +311,18 @@ function useTransactionReconciliation({
       await waitUntilVisible();
       if (cancelled) return;
       const result = await reconcileRef.current?.();
-      if (cancelled || result?.state === "reconciled" || result?.state === "mismatch") return;
+      if (cancelled) return;
       attempt += 1;
-      if (attempt >= 20) return;
+      const next = pollOutcome(result ?? null, attempt);
+      if (next === "stop-final") return;
+      if (next === "stop-delayed") {
+        // Park as delayed: the hash is kept, "Check again" re-reads, nothing is re-sent.
+        delayedRef.current = true;
+        if (!completedRef.current && hashRef.current && result?.state !== "unavailable") {
+          setTx(transactionState(operation, hashRef.current, gate.address, null, undefined, true));
+        }
+        return;
+      }
       timer = window.setTimeout(() => void poll(), confirmationBackoffMs(attempt));
     };
     void poll();
@@ -331,7 +372,7 @@ async function recordTransaction(
 
 class ConfirmationStateError extends Error {
   constructor(
-    readonly state: "pending" | "unavailable" | "mismatch",
+    readonly state: "pending" | "unavailable" | "mismatch" | "reverted",
     message: string,
   ) {
     super(message);
@@ -349,6 +390,63 @@ async function requireReconciled(
       result.message ?? "Confirmation temporarily unavailable.",
     );
   return result;
+}
+
+type ReservableOperation = "arm_guard" | "submit_evidence" | "evaluate_guard";
+
+/**
+ * Server reservation BEFORE the wallet is asked to sign (mirrors create). A
+ * second tab gets the refusal here, with no signature requested.
+ */
+async function reserveOperation(
+  guardId: string,
+  operation: ReservableOperation,
+  address: string | undefined,
+  setTx: (s: TxState) => void,
+  onUpdated: OnUpdated,
+): Promise<string | null> {
+  const reservationToken = loadOperationReservationToken(guardId, operation);
+  try {
+    const reservation = await reserveOperationFn({
+      data: { id: guardId, operation, reservationToken },
+    });
+    if (reservation.canSubmit) return reservationToken;
+    if (reservation.txHash && reservation.failureKind !== "mismatch") {
+      setTx(transactionState(operation, reservation.txHash, address, null));
+      await onUpdated();
+    } else {
+      setTx({
+        phase: "failed",
+        action: operation,
+        hash: reservation.txHash,
+        error: reservation.message ?? "This step is already in progress in another session.",
+        failureKind: reservation.failureKind ?? undefined,
+      });
+    }
+  } catch (err) {
+    setTx({
+      phase: "failed",
+      action: operation,
+      hash: null,
+      error: walletErrorMessage(err, "Could not reserve this step"),
+    });
+  }
+  return null;
+}
+
+async function settleOperationReservation(
+  guardId: string,
+  operation: ReservableOperation,
+  token: string,
+  submitted: boolean,
+) {
+  // Rejection / pre-submit failure frees the slot; a recorded hash replaces it.
+  if (!submitted) {
+    await releaseOperationFn({ data: { id: guardId, operation, reservationToken: token } }).catch(
+      () => undefined,
+    );
+  }
+  clearOperationReservationToken(guardId, operation);
 }
 
 async function runWrite(opts: {
@@ -449,13 +547,13 @@ async function runWrite(opts: {
       await opts.confirm(result.hash);
     } catch (confirmationError) {
       if (confirmationError instanceof ConfirmationStateError) {
-        if (confirmationError.state === "mismatch") {
+        if (confirmationError.state === "mismatch" || confirmationError.state === "reverted") {
           setWriteState({
             phase: "failed",
             action: opts.action,
             hash: submittedHash,
             error: confirmationError.message,
-            failureKind: "mismatch",
+            failureKind: confirmationError.state,
           });
         } else {
           setWriteState({
@@ -595,13 +693,12 @@ export function CreateAndLock({
   const created = Boolean(onchainId);
   const tx = created ? armRecovery.tx : createRecovery.tx;
   const busy = txBusy(tx);
-  const createIntentRef = useRef(false);
-  const armIntentRef = useRef(false);
+  const createIntent = useIntent();
+  const armIntent = useIntent();
   if (historical) return <HistoricalReadOnlyNotice />;
 
   async function create() {
-    if (busy || createRecovery.hasUnresolved || createIntentRef.current) return;
-    createIntentRef.current = true;
+    if (busy || createRecovery.hasUnresolved || !createIntent.begin()) return;
     const reservationToken = loadCreateReservationToken(guardId);
     let reserved = false;
     let submitted = false;
@@ -670,13 +767,12 @@ export function CreateAndLock({
         );
         clearCreateReservationToken(guardId);
       }
-      if (!submitted) createIntentRef.current = false;
+      createIntent.end();
     }
   }
 
   async function lock() {
-    if (busy || armRecovery.hasUnresolved || createRecovery.hasUnresolved || armIntentRef.current)
-      return;
+    if (busy || armRecovery.hasUnresolved || createRecovery.hasUnresolved) return;
     if (!onchainId) {
       armRecovery.setTx({
         phase: "failed",
@@ -686,28 +782,36 @@ export function CreateAndLock({
       });
       return;
     }
-    armIntentRef.current = true;
+    if (!armIntent.begin()) return;
     let submitted = false;
-    await runWrite({
-      gate,
-      setTx: armRecovery.setTx,
-      action: "arm_guard",
-      functionName: "arm_guard",
-      args: [Number(onchainId)],
-      wait: "accepted",
-      resourceId: guardId,
-      persistHash: async (hash) => {
-        submitted = true;
-        if (!gate.address) throw new Error("Wallet disconnected");
-        await recordTransaction(guardId, "arm_guard", gate.address, hash, onchainId);
-      },
-      onSubmitted: onUpdated,
-      confirm: async () => {
-        await requireReconciled(guardId, "arm_guard");
-        await onUpdated();
-      },
-    });
-    if (!submitted) armIntentRef.current = false;
+    let token: string | null = null;
+    try {
+      token = await reserveOperation(guardId, "arm_guard", gate.address, armRecovery.setTx, onUpdated);
+      if (!token) return;
+      const claim = token;
+      await runWrite({
+        gate,
+        setTx: armRecovery.setTx,
+        action: "arm_guard",
+        functionName: "arm_guard",
+        args: [Number(onchainId)],
+        wait: "accepted",
+        resourceId: guardId,
+        persistHash: async (hash) => {
+          submitted = true;
+          if (!gate.address) throw new Error("Wallet disconnected");
+          await recordTransaction(guardId, "arm_guard", gate.address, hash, onchainId, claim);
+        },
+        onSubmitted: onUpdated,
+        confirm: async () => {
+          await requireReconciled(guardId, "arm_guard");
+          await onUpdated();
+        },
+      });
+    } finally {
+      if (token) await settleOperationReservation(guardId, "arm_guard", token, submitted);
+      armIntent.end();
+    }
   }
 
   return (
@@ -767,9 +871,9 @@ export function CreateAndLock({
                 </TechnicalDetails>
                 <Button
                   className="mt-2"
-                  loading={createIntentRef.current || (busy && tx.action === "create_guard")}
+                  loading={createIntent.active || (busy && tx.action === "create_guard")}
                   loadingLabel="Preparing publish…"
-                  disabled={busy || createRecovery.hasUnresolved || createIntentRef.current}
+                  disabled={busy || createRecovery.hasUnresolved || createIntent.active}
                   onClick={() => void create()}
                   data-action="create-guard"
                 >
@@ -810,9 +914,9 @@ export function CreateAndLock({
             {/* The locked CTA exists only while no lock has been submitted (N11). */}
             {armRecovery.hasUnresolved ? null : (
               <Button
-                loading={busy && tx.action === "arm_guard"}
+                loading={armIntent.active || (busy && tx.action === "arm_guard")}
                 loadingLabel="Locking…"
-                disabled={busy || armRecovery.hasUnresolved}
+                disabled={busy || armRecovery.hasUnresolved || armIntent.active}
                 onClick={() => void lock()}
                 data-action="lock-motive"
               >
@@ -867,7 +971,7 @@ export function SubmitEvidenceChain({
     null,
   );
   const [preparing, setPreparing] = useState(false);
-  const submitIntentRef = useRef(false);
+  const submitIntent = useIntent();
   if (historical) return <HistoricalReadOnlyNotice />;
 
   async function prepare() {
@@ -914,7 +1018,7 @@ export function SubmitEvidenceChain({
   }
 
   async function submit() {
-    if (busy || recovery.hasUnresolved || submitIntentRef.current) return;
+    if (busy || recovery.hasUnresolved) return;
     if (!prepared) {
       await prepare();
       return;
@@ -934,36 +1038,44 @@ export function SubmitEvidenceChain({
       });
       return;
     }
-    submitIntentRef.current = true;
+    if (!submitIntent.begin()) return;
     let submitted = false;
-    await runWrite({
-      gate,
-      setTx: recovery.setTx,
-      action: "submit_evidence",
-      functionName: "submit_evidence",
-      args: [Number(onchainId), prepared.encoded],
-      wait: "accepted",
-      resourceId: guardId,
-      persistHash: async (hash) => {
-        submitted = true;
-        if (!gate.address) throw new Error("Wallet disconnected");
-        await recordTransaction(
-          guardId,
-          "submit_evidence",
-          gate.address,
-          hash,
-          onchainId,
-          undefined,
-          prepared.commitmentHash,
-        );
-      },
-      onSubmitted: onUpdated,
-      confirm: async () => {
-        await requireReconciled(guardId, "submit_evidence");
-        await onUpdated();
-      },
-    });
-    if (!submitted) submitIntentRef.current = false;
+    let token: string | null = null;
+    try {
+      token = await reserveOperation(guardId, "submit_evidence", gate.address, recovery.setTx, onUpdated);
+      if (!token) return;
+      const claim = token;
+      await runWrite({
+        gate,
+        setTx: recovery.setTx,
+        action: "submit_evidence",
+        functionName: "submit_evidence",
+        args: [Number(onchainId), prepared.encoded],
+        wait: "accepted",
+        resourceId: guardId,
+        persistHash: async (hash) => {
+          submitted = true;
+          if (!gate.address) throw new Error("Wallet disconnected");
+          await recordTransaction(
+            guardId,
+            "submit_evidence",
+            gate.address,
+            hash,
+            onchainId,
+            claim,
+            prepared.commitmentHash,
+          );
+        },
+        onSubmitted: onUpdated,
+        confirm: async () => {
+          await requireReconciled(guardId, "submit_evidence");
+          await onUpdated();
+        },
+      });
+    } finally {
+      if (token) await settleOperationReservation(guardId, "submit_evidence", token, submitted);
+      submitIntent.end();
+    }
   }
 
   return (
@@ -1037,9 +1149,9 @@ export function SubmitEvidenceChain({
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
-                loading={busy || submitIntentRef.current}
+                loading={busy || submitIntent.active}
                 loadingLabel="Committing evidence…"
-                disabled={busy || submitIntentRef.current}
+                disabled={busy || submitIntent.active}
                 onClick={() => void submit()}
                 data-action="submit-evidence"
               >
@@ -1111,11 +1223,11 @@ export function VerifyWithGenLayer({
     onUpdated,
   });
   const busy = recovery.busy;
-  const verifyIntentRef = useRef(false);
+  const verifyIntent = useIntent();
   if (historical) return <HistoricalReadOnlyNotice />;
 
   async function verify() {
-    if (busy || recovery.hasUnresolved || verifyIntentRef.current) return;
+    if (busy || recovery.hasUnresolved) return;
     if (!onchainId) {
       recovery.setTx({
         phase: "failed",
@@ -1125,28 +1237,36 @@ export function VerifyWithGenLayer({
       });
       return;
     }
-    verifyIntentRef.current = true;
+    if (!verifyIntent.begin()) return;
     let submitted = false;
-    await runWrite({
-      gate,
-      setTx: recovery.setTx,
-      action: "evaluate_guard",
-      functionName: "evaluate_guard",
-      args: [Number(onchainId)],
-      wait: "finalized",
-      resourceId: guardId,
-      persistHash: async (hash) => {
-        submitted = true;
-        if (!gate.address) throw new Error("Wallet disconnected");
-        await recordTransaction(guardId, "evaluate_guard", gate.address, hash, onchainId);
-      },
-      onSubmitted: onUpdated,
-      confirm: async () => {
-        await requireReconciled(guardId, "evaluate_guard");
-        await onUpdated();
-      },
-    });
-    if (!submitted) verifyIntentRef.current = false;
+    let token: string | null = null;
+    try {
+      token = await reserveOperation(guardId, "evaluate_guard", gate.address, recovery.setTx, onUpdated);
+      if (!token) return;
+      const claim = token;
+      await runWrite({
+        gate,
+        setTx: recovery.setTx,
+        action: "evaluate_guard",
+        functionName: "evaluate_guard",
+        args: [Number(onchainId)],
+        wait: "finalized",
+        resourceId: guardId,
+        persistHash: async (hash) => {
+          submitted = true;
+          if (!gate.address) throw new Error("Wallet disconnected");
+          await recordTransaction(guardId, "evaluate_guard", gate.address, hash, onchainId, claim);
+        },
+        onSubmitted: onUpdated,
+        confirm: async () => {
+          await requireReconciled(guardId, "evaluate_guard");
+          await onUpdated();
+        },
+      });
+    } finally {
+      if (token) await settleOperationReservation(guardId, "evaluate_guard", token, submitted);
+      verifyIntent.end();
+    }
   }
 
   return (
@@ -1171,9 +1291,9 @@ export function VerifyWithGenLayer({
         ) : (
           <div className="space-y-2">
             <Button
-              loading={busy || verifyIntentRef.current}
+              loading={busy || verifyIntent.active}
               loadingLabel="Starting verification…"
-              disabled={busy || verifyIntentRef.current}
+              disabled={busy || verifyIntent.active}
               onClick={() => void verify()}
               data-action="verify-genlayer"
             >

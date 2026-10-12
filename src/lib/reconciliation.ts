@@ -23,9 +23,10 @@ export const CONFIRMATION_UNAVAILABLE_MESSAGE =
   "Transaction submitted. Confirmation temporarily unavailable.";
 
 export class ReconciliationError extends Error {
-  readonly code: "MISMATCH" | "MALFORMED";
+  /** REVERTED = chain data proves the write did not apply; the only replaceable failure. */
+  readonly code: "MISMATCH" | "MALFORMED" | "REVERTED";
 
-  constructor(code: "MISMATCH" | "MALFORMED", message: string) {
+  constructor(code: "MISMATCH" | "MALFORMED" | "REVERTED", message: string) {
     super(message);
     this.name = "ReconciliationError";
     this.code = code;
@@ -342,14 +343,21 @@ export async function verifyTransaction(
 
   const status = transactionStatus(tx);
   if (status !== "FINALIZED") {
-    if (status === "CANCELED" || status === "UNDETERMINED") {
+    if (status === "CANCELED") {
+      throw new ReconciliationError("REVERTED", `The transaction ended with status ${status}.`);
+    }
+    if (status === "UNDETERMINED") {
       throw new ReconciliationError("MALFORMED", `The transaction ended with status ${status}.`);
     }
     return { state: "pending", status };
   }
   const execution = executionResult(tx);
-  if (execution && execution !== "SUCCESS" && !execution.includes("FINISHED_WITH_RETURN") && execution !== "OK") {
-    throw new ReconciliationError("MALFORMED", `The finalized transaction did not execute successfully (${execution}).`);
+  if (!execution) {
+    // A finalized transaction without an execution result is unproven, never success.
+    throw new ReconciliationError("MALFORMED", "The finalized transaction has no execution result.");
+  }
+  if (execution !== "SUCCESS" && !execution.includes("FINISHED_WITH_RETURN") && execution !== "OK") {
+    throw new ReconciliationError("REVERTED", `The finalized transaction did not execute successfully (${execution}).`);
   }
 
   if (expected.operation !== "create_guard" && expected.operation !== "create_version") {
