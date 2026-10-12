@@ -185,7 +185,8 @@ function RunPageContent() {
     if (appendIntentRef.current || finishIntentRef.current) return;
     appendIntentRef.current = true;
     try {
-      await append.mutateAsync();
+      // The mutation's onError already shows the message; swallow the rejection so it is not an unhandled page error.
+      await append.mutateAsync().catch(() => undefined);
     } finally {
       appendIntentRef.current = false;
     }
@@ -195,7 +196,7 @@ function RunPageContent() {
     if (appendIntentRef.current || finishIntentRef.current) return;
     finishIntentRef.current = true;
     try {
-      await finish.mutateAsync();
+      await finish.mutateAsync().catch(() => undefined); // onError shows the message
     } finally {
       finishIntentRef.current = false;
     }

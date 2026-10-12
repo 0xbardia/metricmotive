@@ -1,7 +1,7 @@
 // B-11: wallet-gated actions open the RainbowKit connect modal when the wallet
 // has dropped, instead of only throwing. Mocked wallet + RPC; no real tx.
 import { afterEach, after, describe, it } from "node:test";
-import { LOCK_BUTTON, assert, closeBrowser, mock, newSession, poll, see, seededGuard, shot } from "./harness.mjs";
+import { LOCK_BUTTON, assert, closeBrowser, connectWallet, mock, newSession, poll, see, seededGuard, shot } from "./harness.mjs";
 
 let ctx;
 const scenario = (name, fn) =>
@@ -46,6 +46,9 @@ describe("B-11: connect modal on wallet-gated actions", () => {
     const { page, wallet } = await lockedGuard();
     await page.getByRole("button", { name: /^start a run$/i }).click();
     await page.waitForURL(/\/app\/runs\//, { timeout: 30_000 });
+    // "Start a Run" is a full page load and the injected wallet does not auto-reconnect: connect first,
+    // so the disconnect below really is a mid-session drop.
+    await connectWallet(page);
     await page.locator("#observation").fill("Prospect matched the declared audience");
     await page.getByRole("button", { name: /^add evidence$/i }).click();
     await page.locator('[data-action="finish-run"]').first().waitFor({ state: "visible", timeout: 20_000 });
