@@ -50,7 +50,7 @@ for (const path of paths) {
       const t = n.textContent.trim(); if (!t || !/\d/.test(t)) continue;
       const el = n.parentElement; if (!el || el.closest(".site-header, footer, script, style, noscript, .sr-only")) continue;
       const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;
-      out.push({ text: t, whole: (el.textContent || "").trim() });
+      out.push({ text: t, whole: (el.textContent || "").trim(), stepList: !!el.closest('ol[aria-label="Steps"]') });
     }
     return out;
   });
@@ -66,6 +66,7 @@ for (const path of paths) {
   const traced = new Map(), structural = new Map(), bad = [];
   for (const n of nodes) {
     if (/^0?\d{1,2}$/.test(n.text) && /^0\d$/.test(n.text)) { structural.set(n.text, (structural.get(n.text) || 0) + 1); continue; } // "01" labels
+    if (n.stepList && /^\d$/.test(n.text)) { structural.set(n.text, (structural.get(n.text) || 0) + 1); continue; } // demo step-list numbers
     if (/^Step \d+ of \d+$/.test(n.whole) || /^Step \d+ of \d+$/.test(n.text)) { structural.set(n.text, (structural.get(n.text) || 0) + 1); continue; }
     for (const m of n.text.matchAll(NUM)) {
       const src = sources.get(m[0]) || (identifierLike(n.text) ? idSources.get(m[0]) : undefined);
