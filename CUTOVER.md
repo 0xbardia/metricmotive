@@ -1,6 +1,6 @@
 # V2 production cut-over
 
-Run by a human operator only. Nothing in this file runs automatically. `v2.0.0-rc3` differs from the rehearsed `v2.0.0-rc1` only in `CUTOVER.md`, `docs/cutover-*.sql` and `scripts/compare-env-registry.mjs`. **Rehearsed end to end on 2026-10-13** against a
+Run by a human operator only. Nothing in this file runs automatically. `v2.0.0-rc4` differs from the rehearsed `v2.0.0-rc1` only in `CUTOVER.md`, `docs/cutover-*.sql` and `scripts/` helpers (no app code). **Rehearsed end to end on 2026-10-13** against a
 disposable PostgreSQL 17 and a V1-state copy of the app on a spare port; the timings below are from that run.
 
 The live site (`metricmotive.xyz`, PM2 process `metricmotive-web` on `127.0.0.1:4189`) serves `.vercel/output` from the
@@ -17,6 +17,9 @@ release directory**, then copy the output in. Every command that touches product
 5. `npm run preview` needs `node_modules/.nitro/last-build.json` (written by a build, here: `{"outputDir":"../../../.vercel/output"}`). The production tree already has it; a fresh tree does not.
 6. `npm run build` also runs `db:migrate` and `db:seed` when `DATABASE_URL` is set. Build with `DATABASE_URL` unset after the explicit migrate step so the build touches no database.
 
+## After the restart
+Post-cut-over PageSpeed on the real domain: `scripts/pagespeed-post.md`.
+
 ## Scope
 The cut-over ships the V2 **app** only. The V2 contract (`v2-contract`) stays unmerged and undeployed; the registry keeps `studio-dev-v1` as the only active deployment. A Studio Dev candidate is a separate decision after the cut-over succeeds.
 
@@ -24,13 +27,15 @@ The cut-over ships the V2 **app** only. The V2 contract (`v2-contract`) stays un
 Each step has the exact command, the expected output, an abort condition (stop and do not continue) and the rollback.
 
 ### P0. Read-only facts  [PROD, read-only]
+Prep (no production effect; creates only the release directory, step 1 builds in it): `cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc4 && git -C /root/mm-release-v2 describe --tags` (expect `v2.0.0-rc4`).
 ```sh
 cd /root/MetricMotive && set -a; . ./.env; set +a
-PGOPTIONS='-c default_transaction_read_only=on' psql "$DATABASE_URL" -X -f /root/mm-release-v2/docs/cutover-db-facts.sql
-pg_dump --version
+{ PGOPTIONS='-c default_transaction_read_only=on' psql "$DATABASE_URL" -X -f /root/mm-release-v2/docs/cutover-db-facts.sql; pg_dump --version; } 2>&1 | tee /root/p0-output.txt
 ```
+Paste `/root/p0-output.txt` (it contains no secrets).
 Expect: `server_version`, a database size, five tables with row counts and sizes, `0010_run_evidence_snapshot.sql` as the newest migration.
 Abort if: the newest migration is not `0010_run_evidence_snapshot.sql` (production is not at V1 schema: stop and tell me), or any of the five tables is missing.
+Validate: `node /root/mm-release-v2/scripts/check-p0-output.mjs /root/p0-output.txt`: PASS/ABORT; abort also if database size > free disk / 3 or `long_running` is not 0.
 Rollback: none (read-only).
 **pg_dump must be the same major version as the server or newer.** The host has pg_dump 18. If the server major is greater than 18, use the matching client image instead (needs `docker pull postgres:<major>-alpine` first):
 ```sh
@@ -40,20 +45,22 @@ docker run --rm --network host -e DATABASE_URL -v /root/metricmotive-backups:/ba
 
 ### P1. Environment matches the registry  [PROD, read-only; prints names only]
 ```sh
-cd /root/mm-release-v2 && (set -a; . /root/MetricMotive/.env; set +a; node --experimental-strip-types scripts/compare-env-registry.mjs)
+cd /root/mm-release-v2 && (set -a; . /root/MetricMotive/.env; set +a; node --experimental-strip-types scripts/compare-env-registry.mjs) 2>&1 | tee /root/p1-output.txt
 ```
-Expect: each `GENLAYER_*` line says `match` or `unset (the registry value is used)`, then `registry active deployment: studio-dev-v1`, exit 0.
-Abort if: any line says `MISMATCH` (the process would refuse to start: `scripts/check-deployment.mjs` runs on every start).
+Expect: each of the four `GENLAYER_*` lines says `match`, then `registry active deployment: studio-dev-v1`, exit 0.
+Abort if: any line says `MISMATCH` (the process would refuse to start: `scripts/check-deployment.mjs` runs on every start), or any line says `unset` (not a PASS; needs the operator's explicit OK).
+Validate: `node scripts/check-cutover-output.mjs p1 /root/p1-output.txt`; PASS only if all four lines read `match`.
 Rollback: none.
 
 ### 1. Release directory (not production)
 ```sh
-cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc3
-cd /root/mm-release-v2 && env -u DATABASE_URL npm ci --no-audit --no-fund && env -u DATABASE_URL npm run build
+cd /root/mm-release-v2 && git describe --tags   # created in the P0 prep; expect v2.0.0-rc4
+env -u DATABASE_URL npm ci --no-audit --no-fund && env -u DATABASE_URL npm run build
 ls .vercel/output/functions/__server.func/_libs | grep pglite
 ```
 Expect: `added 894 packages`; the build ends with `[migrate] DATABASE_URL not set - skipping` and `[seed] DATABASE_URL not set - skipping official examples.`; the `ls` lists `pglite.data` and `pglite.wasm`.
 Abort if: `npm ci` or the build exits non-zero, or the pglite files are missing.
+Validate: `node scripts/check-cutover-output.mjs 1 <file>` (paste the whole command output).
 Rollback: `git -C /root/MetricMotive worktree remove --force /root/mm-release-v2` (production untouched).
 Free disk first: this needs about 1.3 GB.
 
@@ -69,14 +76,17 @@ cat /root/metricmotive-backups/start-commit
 ```
 Expect: `pg_dump` prints nothing; the count is at least 11 (11 in the rehearsal); the last line is `c2ffa2e...` (the full hash).
 Abort if: `pg_dump` errors or warns about a version mismatch, the count is below 11, the dump is under a few KB, or the commit is not `c2ffa2e`.
+Validate: `node scripts/check-cutover-output.mjs 2 <file>`.
 Rollback: none (read-only); delete the files if you abort.
 
 ### 3. Migrate  [PROD, writes schema]
+Pre-check (read-only, immediately before): `psql "$DATABASE_URL" -Atc "select pid, state, now()-query_start, left(query,60) from pg_stat_activity where state <> 'idle' and pid <> pg_backend_pid()"`. Expect no rows. Abort if any query has been running more than a few seconds: it can queue the `ACCESS EXCLUSIVE` locks behind it (wait, then re-check; do not kill sessions without telling me). P0's `long_running` is the same check.
 ```sh
 cd /root/mm-release-v2 && set -a; . /root/MetricMotive/.env; set +a && npm run db:migrate
 ```
 Expect exactly: `[migrate] applied 0011_failed_tx_supersede.sql`, `applied 0012_tx_run_id.sql`, `applied 0013_chain_resolved_at.sql`, `[migrate] done - 3 migration(s) applied.`
 Abort if: anything else (an error, a different count, or `up to date` meaning someone already migrated: tell me).
+Validate: `node scripts/check-cutover-output.mjs 3 <file>`.
 Rollback: the V1 app keeps working on the migrated schema (rehearsed twice), so you can stop here safely; to undo the schema use section 7.
 Locks: see "Migration safety" below; all statements are metadata-only or create new tables.
 
@@ -86,13 +96,14 @@ psql "$DATABASE_URL" -At -f /root/mm-release-v2/docs/cutover-verify.sql
 ```
 Expect (in order): `0013_chain_resolved_at.sql`, `0012_tx_run_id.sql`, `0011_failed_tx_supersede.sql`, `0010_run_evidence_snapshot.sql`; then eight lines `create_guard_intents.failed_at`, `...failure_kind`, `...failure_reason`, `guard_transactions.failed_at`, `...failure_kind`, `...failure_reason`, `...run_id`, `guards.chain_resolved_at`; then `t|t`; then `0`, `0`, `0`, `0`.
 Abort if: any line differs. Existing rows must not have failures or reservations yet.
+Validate: `node scripts/check-cutover-output.mjs 4 <file>`.
 Rollback: section 7.
 
 ### 5. Deploy  [PROD, restarts the live process]
 Use a fresh shell (not the one that sourced `.env`), see "What `pm2 restart --update-env` does".
 ```sh
 cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
-git switch --detach v2.0.0-rc3
+git switch --detach v2.0.0-rc4
 test -f node_modules/.nitro/last-build.json || echo '{"outputDir":"../../../.vercel/output"}' > node_modules/.nitro/last-build.json
 mv .vercel/output ".vercel/output.v1-$ts" && cp -a /root/mm-release-v2/.vercel/output .vercel/output
 pm2 restart metricmotive-web --update-env
@@ -101,6 +112,7 @@ sleep 6; curl -fsS https://metricmotive.xyz/api/v1/ready; echo; pm2 status metri
 Expect: `{"status":"ready",...,"db":true,"contractConfigured":true,"chainId":61997,"network":"GenLayer Studio Dev","contractAddress":"0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703"}`; pm2 shows `online` with the restart counter up by one.
 Then: `/`, `/demo`, `/docs`, `/contract`, `/roadmap`, `/verify/rct_14804bf62424284e`, `/app`, `/app/guards/new` return 200; every `/assets/*.js` referenced by `/` returns 200 (use `grep -a`); `pm2 logs metricmotive-web --lines 50 --nostream` shows no errors.
 Abort and roll back if: ready is not 200 within 30 s, pm2 is not `online` or is restarting, the contract address or chain differs, any of the eight routes is not 200, or any asset is not 200.
+Validate: `node scripts/check-cutover-output.mjs 5 <file>` for the ready JSON and `pm2 status`; then `node scripts/cutover-verify.mjs --base https://metricmotive.xyz --release-dir /root/mm-release-v2` (read-only; routes, every asset 200 and byte-identical to the release build, chain 61997 and contract `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`, hydration without console errors on `/` and `/app`, Connect opens the modal without connecting). Run it from the release directory.
 Rollback: section 6 (about 5 s).
 
 ### 6. Roll back the app  [PROD]
@@ -112,6 +124,7 @@ pm2 restart metricmotive-web --update-env
 sleep 6; curl -fsS https://metricmotive.xyz/api/v1/ready
 ```
 Expect: ready 200 with the same contract address; `/` shows the V1 landing (the 80-meeting case).
+Validate: `node scripts/check-cutover-output.mjs 6 <file>`.
 Abort condition: none; if it is not ready, stop and paste the output (the dump and the V1 output copy are intact).
 
 ### 7. Roll back the schema  [PROD, only if required]
@@ -121,8 +134,9 @@ It deletes the superseded-transaction history, live reservations and the stored 
 \copy (select guard_id, operation, tx_hash, failure_kind, failure_reason, failed_at, run_id from guard_transactions where failure_kind is not null or run_id is not null) to '/root/metricmotive-backups/guard_transactions_extra.csv' csv header
 \copy (select id, chain_resolved_at from guards where chain_resolved_at is not null) to '/root/metricmotive-backups/guards_chain_resolved_at.csv' csv header
 ```
-then `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f /root/mm-release-v2/docs/cutover-rollback.sql`.
+then `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f /root/mm-release-v2/docs/cutover-rollback.sql`. Run the same long-running-query pre-check as step 3 first.
 Expect: `BEGIN`, `ALTER TABLE`/`DROP TABLE`/`DROP INDEX` lines, `DELETE 3`, `COMMIT`. Run `psql "$DATABASE_URL" -Atc "select count(*) from _migrations"` afterwards: the count equals the count before step 3.
+Validate: `node scripts/check-cutover-output.mjs 7 <file>`.
 Abort if: any error (the whole script is one transaction and rolls back).
 Full restore alternative: `pg_restore --clean --if-exists --no-owner -d "$DATABASE_URL" /root/metricmotive-backups/metricmotive-$ts.dump`.
 
