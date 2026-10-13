@@ -1,6 +1,6 @@
 # V2 production cut-over
 
-Run by a human operator only. Nothing in this file runs automatically. `v2.0.0-rc4` differs from the rehearsed `v2.0.0-rc1` only in `CUTOVER.md`, `docs/cutover-*.sql` and `scripts/` helpers (no app code). **Rehearsed end to end on 2026-10-13** against a
+Run by a human operator only. Nothing in this file runs automatically. `v2.0.0-rc5` differs from the rehearsed `v2.0.0-rc1` only in `CUTOVER.md`, `.env.example`, `docs/cutover-*.sql` and `scripts/` helpers (no app code). **Rehearsed end to end on 2026-10-13** against a
 disposable PostgreSQL 17 and a V1-state copy of the app on a spare port; the timings below are from that run.
 
 The live site (`metricmotive.xyz`, PM2 process `metricmotive-web` on `127.0.0.1:4189`) serves `.vercel/output` from the
@@ -27,7 +27,7 @@ The cut-over ships the V2 **app** only. The V2 contract (`v2-contract`) stays un
 Each step has the exact command, the expected output, an abort condition (stop and do not continue) and the rollback.
 
 ### P0. Read-only facts  [PROD, read-only]
-Prep (no production effect; creates only the release directory, step 1 builds in it): `cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc4 && git -C /root/mm-release-v2 describe --tags` (expect `v2.0.0-rc4`).
+Prep (no production effect; creates only the release directory, step 1 builds in it): `cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc5 && git -C /root/mm-release-v2 describe --tags` (expect `v2.0.0-rc5`).
 ```sh
 cd /root/MetricMotive && set -a; . ./.env; set +a
 { PGOPTIONS='-c default_transaction_read_only=on' psql "$DATABASE_URL" -X -f /root/mm-release-v2/docs/cutover-db-facts.sql; pg_dump --version; } 2>&1 | tee /root/p0-output.txt
@@ -43,6 +43,43 @@ docker run --rm --network host -e DATABASE_URL -v /root/metricmotive-backups:/ba
   sh -c 'pg_dump --format=custom --no-owner --file=/backups/metricmotive-'"$ts"'.dump "$DATABASE_URL" && pg_restore --list /backups/metricmotive-'"$ts"'.dump | grep -c "TABLE DATA"'
 ```
 
+### P0a. Align `.env` with the active deployment  [PROD, writes `.env`; before any restart]
+Why: `.env` still holds the historical Studionet pair (chain 61999, `0xe39e59f8…`). Replaying the start gate (`scripts/check-deployment.mjs`, same `set -eu` flow as `start-production.sh`) with that pair **exits 0** and logs the active address, `Deployment configuration verified: 0x4105…/61997`. The gate refuses only when the RPC string differs from the registry. The pair branch (`scripts/check-deployment.mjs:12-19`) accepts any registry row, `historical` and `legacy` included. So a successful restart proves nothing about `.env`; P1 is the check that refuses the historical pair. Fixing the gate is a separate decision, not part of this cut-over.
+
+Backup (before any edit; `.env` is mode 600, the backup keeps that):
+```sh
+cd /root/MetricMotive && mkdir -p /root/metricmotive-backups && ts=$(date -u +%Y%m%dT%H%M%SZ) && install -m 600 .env "/root/metricmotive-backups/env-pre-align-$ts" && cmp .env "/root/metricmotive-backups/env-pre-align-$ts" && echo "$ts" > /root/metricmotive-backups/env-pre-align-last && echo "backup $ts"
+```
+Set the four lines (removes any existing `GENLAYER_CONTRACT_ADDRESS`, `GENLAYER_CHAIN_ID`, `GENLAYER_NETWORK`, `GENLAYER_RPC_URL` lines; all other lines stay):
+```sh
+cd /root/MetricMotive && sed -i '/^GENLAYER_\(CONTRACT_ADDRESS\|CHAIN_ID\|NETWORK\|RPC_URL\)=/d' .env && cat >> .env <<'EOF'
+GENLAYER_CONTRACT_ADDRESS=0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703
+GENLAYER_CHAIN_ID=61997
+GENLAYER_NETWORK="GenLayer Studio Dev"
+GENLAYER_RPC_URL=https://studio-dev.genlayer.com/api
+EOF
+```
+The quotes on `GENLAYER_NETWORK` are required. Unquoted, `. ./.env` fails with `Studio: not found` (exit 127) and `start-production.sh` stops before the gate.
+
+Validate: run the P1 command below again. Expect four `match` lines and exit 0, then `node scripts/check-cutover-output.mjs p1 /root/p1-output.txt` prints PASS. P1=PASS is the only validator for this step.
+Abort if: the backup command fails, P1 is not PASS, or `.env` has a second line for any of the four names.
+Rollback: restore the backup. `.env` is read only when the process starts, so neither the edit nor the restore changes the running process before the next restart.
+```sh
+cd /root/MetricMotive && B="/root/metricmotive-backups/env-pre-align-$(cat /root/metricmotive-backups/env-pre-align-last)" && install -m 600 "$B" .env && cmp .env "$B" && echo restored
+```
+
+Check (read-only, code): the wallet-write path never reads the old `.env` values.
+```sh
+cd /root/mm-release-v2 && git grep -n -E 'GENLAYER_(CONTRACT_ADDRESS|CHAIN_ID|NETWORK|RPC_URL)' -- src packages server vite.config.ts; echo "exit $?"
+```
+Expect: no lines and `exit 1`. `git grep` reads tracked files only, so it never reads `.env`.
+The wallet-write path takes chain, address and RPC from `packages/sdk/src/deployment.ts` (`studio-dev-v1`) instead:
+- `src/lib/wallet/write.ts:98-102` (`assertActiveLifecycleTarget`) checks chain and address against `getActiveDeployment()`; `write.ts:218-225` runs it before submit.
+- `src/lib/wallet/chain.ts:5` and `src/lib/wallet/config.ts:28,42` take the chain, connector name and RPC from `getActiveDeployment()`.
+- `packages/sdk/src/client.ts:100-103` (`write()`) refuses any deployment that is not the active one (`HISTORICAL_DEPLOYMENT_READ_ONLY`).
+
+Only the start gate and P1 read the four variables. `scripts/studio-verify.mjs` and `scripts/hosted-gaming.mjs` also read `GENLAYER_CONTRACT_ADDRESS` and call `writeContract` with no active-deployment check. PM2 does not start them. Never run them from a shell that sourced `.env`.
+
 ### P1. Environment matches the registry  [PROD, read-only; prints names only]
 ```sh
 cd /root/mm-release-v2 && (set -a; . /root/MetricMotive/.env; set +a; node --experimental-strip-types scripts/compare-env-registry.mjs) 2>&1 | tee /root/p1-output.txt
@@ -54,7 +91,7 @@ Rollback: none.
 
 ### 1. Release directory (not production)
 ```sh
-cd /root/mm-release-v2 && git describe --tags   # created in the P0 prep; expect v2.0.0-rc4
+cd /root/mm-release-v2 && git switch --detach v2.0.0-rc5 && git describe --tags   # the P0 prep created the directory at rc4; expect v2.0.0-rc5
 env -u DATABASE_URL npm ci --no-audit --no-fund && env -u DATABASE_URL npm run build
 ls .vercel/output/functions/__server.func/_libs | grep pglite
 ```
@@ -103,7 +140,7 @@ Rollback: section 7.
 Use a fresh shell (not the one that sourced `.env`), see "What `pm2 restart --update-env` does".
 ```sh
 cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
-git switch --detach v2.0.0-rc4
+git switch --detach v2.0.0-rc5
 test -f node_modules/.nitro/last-build.json || echo '{"outputDir":"../../../.vercel/output"}' > node_modules/.nitro/last-build.json
 mv .vercel/output ".vercel/output.v1-$ts" && cp -a /root/mm-release-v2/.vercel/output .vercel/output
 pm2 restart metricmotive-web --update-env
