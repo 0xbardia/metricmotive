@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
@@ -48,6 +48,14 @@ function pgliteBootstrapPlugin(): Plugin {
       }
     },
   };
+}
+
+/** Copies PGLite's runtime files into `<server output>/_libs/` (see the nitro `compiled` hook below). */
+function copyPgliteAssets(serverDir: string) {
+  const from = fileURLToPath(new URL("./node_modules/@electric-sql/pglite/dist/", import.meta.url));
+  const to = `${serverDir}/_libs`;
+  mkdirSync(to, { recursive: true });
+  for (const file of ["pglite.data", "pglite.wasm", "initdb.wasm"]) copyFileSync(`${from}${file}`, `${to}/${file}`);
 }
 
 function securityHeadersPlugin(): Plugin {
@@ -219,6 +227,12 @@ export default defineConfig(({ command, isPreview }) => ({
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            hooks: {
+              // The bundled PGLite looks for its wasm/data files next to the server bundle. Nitro does not copy
+              // them, so a preview without DATABASE_URL (PGLite fallback) crashed at startup with ENOENT for
+              // _libs/pglite.data. Production uses Postgres and never reads them; QA previews and e2e do.
+              compiled: (nitro: { options: { output: { serverDir: string } } }) => copyPgliteAssets(nitro.options.output.serverDir),
+            },
           }),
         ]
       : []),

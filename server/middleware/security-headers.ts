@@ -3,6 +3,7 @@
  * applied here (Nitro / deployed) rather than on the sandbox 8080 server.
  * Keep the browser policy limited to origins MetricMotive actually uses.
  */
+import { buildCsp } from "../../src/lib/server/csp.ts";
 
 function apply(headers: Headers): void {
   headers.set("X-Content-Type-Options", "nosniff");
@@ -12,23 +13,8 @@ function apply(headers: Headers): void {
     "camera=(), microphone=(), geolocation=(), payment=()",
   );
   headers.set("X-DNS-Prefetch-Control", "off");
-  if (!headers.has("Content-Security-Policy")) {
-    headers.set(
-      "Content-Security-Policy",
-      [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline'",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com data:",
-        "img-src 'self' data: https:",
-        "connect-src 'self' https://studio-dev.genlayer.com https://explorer-studio-dev.genlayer.com https://studio.genlayer.com https://explorer-studio.genlayer.com https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://rpc.walletconnect.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://api.web3modal.org https://cca-lite.coinbase.com https://keys.coinbase.com https://api.coinbase.com",
-        "frame-src 'self' https://verify.walletconnect.com https://verify.walletconnect.org https://secure.walletconnect.com https://secure.walletconnect.org https://keys.coinbase.com https://*.walletconnect.com",
-        "frame-ancestors 'self'",
-        "base-uri 'self'",
-        "form-action 'self'",
-      ].join("; "),
-    );
-  }
+  // The server entry (src/server.ts) sets a nonce CSP on HTML; everything else gets the shared policy here.
+  if (!headers.has("Content-Security-Policy")) headers.set("Content-Security-Policy", buildCsp());
 }
 
 export default async function securityHeadersMiddleware(

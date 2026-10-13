@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// HISTORICAL: uses the genlayer-js `studionet` chain (61999). The active registry is packages/sdk/src/deployment.ts (61997).
 /**
  * Studionet read + write verification against the certified MetricMotive contract.
  * Private keys stay in /tmp, never in the repository.

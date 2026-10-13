@@ -1,5 +1,6 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { createServerEntry } from "@tanstack/react-start/server-entry";
+import { buildCsp, newNonce } from "@/lib/server/csp";
 
 /**
  * Public pages (landing, docs, demo, receipts) are content-first: their HTML already carries the content and the
@@ -19,6 +20,11 @@ const withoutPreloads = (manifest: SsrManifest): SsrManifest => ({
 });
 
 const fetch = createStartHandler((ctx) => {
+  // Per-request CSP nonce: the router stamps it on every inline script/style it renders and emits a csp-nonce meta for the client.
+  const nonce = newNonce();
+  ctx.router.options.ssr = { ...ctx.router.options.ssr, nonce };
+  // This entry owns the final CSP for HTML; the Nitro middleware only fills it in when absent.
+  ctx.responseHeaders.set("Content-Security-Policy", buildCsp(nonce));
   const { pathname } = new URL(ctx.request.url);
   const ssr = (ctx.router as unknown as { ssr?: object }).ssr;
   const original = ssr && Object.getOwnPropertyDescriptor(ssr, "manifest");

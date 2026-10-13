@@ -14,6 +14,10 @@ export {
   isSandboxPreviewGuestHost,
   resolveParentEmbedderOrigin,
 } from "./preview-embedder-origin";
+import { configureZod } from "./zod-config.ts";
+
+// Before any schema below is created (see zod-config.ts).
+configureZod();
 
 export const PREVIEW_BRIDGE_CHANNEL = "grok-preview-bridge" as const;
 export const PREVIEW_BRIDGE_VERSION = 1 as const;

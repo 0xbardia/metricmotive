@@ -40,7 +40,12 @@ Startup validates the certified contract address from `src/lib/contract.ts`. The
 
 ## Production deployment runbook
 
-The V1 host runs the built Nitro output through PM2 on `127.0.0.1:4189`.
+The host runs `deployment/start-production.sh`, which loads `.env`, runs
+`scripts/check-deployment.mjs`, then `exec npm run preview -- --host 127.0.0.1 --port 4189`
+(nginx proxies to it). PM2 process `metricmotive-web`, started by the `pm2-root` systemd unit,
+supervises that script. The process serves `.vercel/output` from the working tree, so a
+production build in that tree IS a deploy: build in a separate worktree and copy/switch only
+at cut-over (see `CUTOVER.md`).
 Keep the contract source frozen: do not run `studio:deploy` for an application
 release.
 

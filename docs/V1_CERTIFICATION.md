@@ -1,3 +1,5 @@
+> **HISTORICAL (V1).** Records the V1 certification run. The active deployment is defined in `packages/sdk/src/deployment.ts`. Hostnames and commands below are as of that run.
+
 # MetricMotive V1 certification matrix
 
 Source SHA-256: `0e5f3cc0103e5f785fe12b34ecd478dfc909014a40d803ccf98227bb77a7cee1`

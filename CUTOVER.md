@@ -72,6 +72,18 @@ curl -fsS https://metricmotive.xyz/api/v1/ready
 
 Then check that every `/assets/*.js` referenced by `/` returns 200.
 
+## Database requirement
+
+- The production build/preview needs `DATABASE_URL` (Postgres) at runtime.
+- Without it the app falls back to PGLite, which only works if the PGLite files are in
+  `.vercel/output/functions/__server.func/_libs/`. The build copies `pglite.data`,
+  `pglite.wasm` and `initdb.wasm` there; confirm with `ls` after building.
+- QA previews use a disposable Postgres or PGLite, never the production database.
+- Migrations 0011, 0012, 0013 are additive. 0013 adds `guards.chain_resolved_at`, filled lazily
+  from the chain for older receipts.
+- Order: backup -> migrate -> build in a separate worktree -> switch -> restart.
+- Restart the QA preview after every build (stale HTML points at old hashed assets).
+
 ## 5. Rollback
 
 App first (V1 code ignores the 0011 objects, so the schema can stay):

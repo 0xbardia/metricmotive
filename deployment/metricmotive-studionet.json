@@ -1,4 +1,5 @@
 {
+  "_historical": "HISTORICAL: the previous Studionet deployment (chain 61999). Not the active contract. The registry is packages/sdk/src/deployment.ts (Studio Dev, 61997). No code loads this file.",
   "contractAddress": "0xe39e59f8Dd78E416D9EE074Ca3f899C7Eb56Fb2d",
   "chainId": 61999,
   "network": "Studionet",

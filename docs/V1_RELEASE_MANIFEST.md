@@ -1,3 +1,5 @@
+> **HISTORICAL (V1, Studionet 61999).** This manifest describes the previous deployment. The active contract, chain and network are defined in `packages/sdk/src/deployment.ts` (Studio Dev, 61997). Do not use it as a release or deploy checklist.
+
 # MetricMotive V1 release manifest
 
 ## Identity

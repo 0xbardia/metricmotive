@@ -79,11 +79,11 @@ test("historical Guard write CTAs are disabled in chain-actions", () => {
 });
 
 test("CSP allows Studio Dev origins without new wildcards", () => {
+  // The policy has ONE definition (src/lib/server/csp.ts); the Nitro middleware and the server entry both build from it.
+  const policy = readFileSync("src/lib/server/csp.ts", "utf8");
   const prod = readFileSync("server/middleware/security-headers.ts", "utf8");
-  const http = readFileSync("src/lib/server/http-guard.ts", "utf8");
-  for (const source of [prod, http]) {
-    assert.match(source, /https:\/\/studio-dev\.genlayer\.com/);
-    assert.match(source, /https:\/\/explorer-studio-dev\.genlayer\.com/);
-    assert.doesNotMatch(source, /https:\/\/\*\.genlayer\.com/);
-  }
+  assert.match(policy, /https:\/\/studio-dev\.genlayer\.com/);
+  assert.match(policy, /https:\/\/explorer-studio-dev\.genlayer\.com/);
+  assert.doesNotMatch(policy, /https:\/\/\*\.genlayer\.com/);
+  assert.match(prod, /buildCsp/, "the middleware must build its CSP from the single definition");
 });

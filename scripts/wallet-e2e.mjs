@@ -6,6 +6,13 @@
  */
 import { chromium } from "playwright";
 
+// HISTORICAL: this script targets the previous Studionet deployment (chain 61999), not the
+// active registry (packages/sdk/src/deployment.ts, chain 61997). Refuses to run without opt-in.
+if (process.env.METRICMOTIVE_ALLOW_HISTORICAL !== "YES") {
+  console.error("Refusing to run: wallet-e2e.mjs targets the historical Studionet deployment (61999). The active deployment is defined in packages/sdk/src/deployment.ts. Set METRICMOTIVE_ALLOW_HISTORICAL=YES to run it anyway.");
+  process.exit(1);
+}
+
 const BASE = process.env.E2E_BASE_URL || "http://127.0.0.1:8080";
 const ACCOUNT_A = "0x1111111111111111111111111111111111111111";
 const ACCOUNT_B = "0x2222222222222222222222222222222222222222";

@@ -13,6 +13,10 @@ import type {
 } from "./domain.ts";
 import { LIMITS, GUARDRAIL_KINDS, PATTERNS } from "./domain.ts";
 import { AppError } from "./errors.ts";
+import { configureZod } from "./zod-config.ts";
+
+// Before any schema below is created (see zod-config.ts).
+configureZod();
 
 const primitive = z.union([z.string(), z.number().finite(), z.boolean(), z.null()]);
 export const jsonBagSchema = z

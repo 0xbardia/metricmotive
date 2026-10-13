@@ -9,7 +9,8 @@ import {
 import { AuthProvider } from "@/lib/auth/provider";
 import { SiteFooter, SiteHeader } from "@/components/chrome";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { getQueryClient } from "@/lib/query-client";
 import { useState } from "react";
 import { pageHead } from "@/lib/site";
 // The stylesheet is a plain import so Start can collect it and inline it into the server-rendered HTML
@@ -61,9 +62,7 @@ function RootDocument() {
   const routeKey = useRouterState({
     select: (s) => `${s.location.pathname}${s.location.searchStr}`,
   });
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1 } } }),
-  );
+  const [queryClient] = useState(getQueryClient);
   return (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>

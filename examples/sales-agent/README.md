@@ -11,7 +11,7 @@ not faithful success.
 
 The in-memory run is **not** a GenLayer verdict.
 
-The hosted Studionet certification of this same scenario is Guard **2** on
+The hosted certification of this same scenario (historical, Studionet 61999) is Guard **2** on
 `0x9Fa308c399fA8c1566B4Da1e76825eAFC04d8d7C` (`METRIC_GAMING`, pattern
 `CONSTRAINT_BYPASS`). See `/contract`.
 
@@ -29,7 +29,7 @@ Writes:
 - `examples/sales-agent/output/manifest.json` — `metricmotive.evidence.v1`
 - `examples/sales-agent/output/result.json` — summary
 
-Optional on-chain submit (private key stays in the environment, never the repo):
+Optional on-chain submit (the SDK only accepts the active contract in `packages/sdk/src/deployment.ts`) (private key stays in the environment, never the repo):
 
 ```bash
 GENLAYER_PRIVATE_KEY=0x... node --experimental-strip-types examples/sales-agent/run.mjs --onchain

@@ -4,6 +4,13 @@ import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { CURRENT_CONTRACT, LEGACY_CONTRACT_ADDRESS } from "../packages/sdk/src/deployment.ts";
 
+// HISTORICAL: this script targets the previous Studionet deployment (chain 61999), not the
+// active registry (packages/sdk/src/deployment.ts, chain 61997). Refuses to run without opt-in.
+if (process.env.METRICMOTIVE_ALLOW_HISTORICAL !== "YES") {
+  console.error("Refusing to run: audit-contract-readonly.mjs targets the historical Studionet deployment (61999). The active deployment is defined in packages/sdk/src/deployment.ts. Set METRICMOTIVE_ALLOW_HISTORICAL=YES to run it anyway.");
+  process.exit(1);
+}
+
 const client = createClient({ chain: studionet });
 assert.equal(studionet.id, CURRENT_CONTRACT.chainId);
 const results = [];

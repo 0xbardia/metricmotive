@@ -18,7 +18,7 @@ const spec = {
   openapi: "3.0.3",
   info: {
     title: "MetricMotive API",
-    version: "1.0.3",
+    version: "2.0.0",
     description: "Authenticated Run Recorder and Guard indexing. GenLayer remains authoritative for finalized verdicts. Mutation bodies are capped at 32 KiB.",
   },
   servers: [{ url: "https://metricmotive.xyz" }],

@@ -13,29 +13,24 @@ export class AppError extends Error {
   }
 }
 
-export function errorBody(err: unknown, requestId: string): ApiErrorBody {
+export function errorBody(
+  err: unknown,
+  requestId: string,
+  log: (...args: unknown[]) => void = console.error,
+): ApiErrorBody {
   if (err instanceof AppError) {
     return { error: { code: err.code, message: err.message }, requestId };
   }
-  if (err && typeof err === "object" && "code" in err && "message" in err) {
-    const rec = err as { code: unknown; message: unknown };
-    return {
-      error: {
-        code: String(rec.code ?? "UNKNOWN"),
-        message: String(rec.message ?? "Unexpected error"),
-      },
-      requestId,
-    };
-  }
+  // Anything else (driver, runtime, library) may carry internals: log it here, never return its text.
+  log(`[api-error] ${requestId}:`, err);
   if (err instanceof Error && /relation .* does not exist|column .* does not exist/i.test(err.message)) {
-    console.error(`[schema] ${requestId}:`, err.message);
     return {
       error: { code: "SCHEMA_NOT_READY", message: "MetricMotive couldn’t save this draft. Please retry." },
       requestId,
     };
   }
   return {
-    error: { code: "INTERNAL", message: "Unexpected error" },
+    error: { code: "INTERNAL", message: "Something went wrong. Try again." },
     requestId,
   };
 }

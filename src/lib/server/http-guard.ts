@@ -86,30 +86,3 @@ export function parseJsonText(text: string): unknown {
     throw new AppError("INVALID_JSON", "Request body must be JSON", 400);
   }
 }
-
-export function applySecurityHeaders(headers: Headers): void {
-  headers.set("X-Content-Type-Options", "nosniff");
-  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=()",
-  );
-  headers.set("X-DNS-Prefetch-Control", "off");
-  if (!headers.has("Content-Security-Policy")) {
-    headers.set(
-      "Content-Security-Policy",
-      [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline'",
-        "style-src 'self' 'unsafe-inline'",
-        "font-src 'self' data:",
-        "img-src 'self' data: https:",
-        "connect-src 'self' https://studio-dev.genlayer.com https://explorer-studio-dev.genlayer.com https://studio.genlayer.com https://explorer-studio.genlayer.com https://relay.walletconnect.com https://api.web3modal.org",
-        "frame-src 'self' https://verify.walletconnect.com https://walletconnect.com",
-        "frame-ancestors 'self'",
-        "base-uri 'self'",
-        "form-action 'self'",
-      ].join("; "),
-    );
-  }
-}
