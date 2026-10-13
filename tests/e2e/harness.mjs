@@ -85,12 +85,12 @@ export async function createGuardThroughUi(page) {
   await connectWallet(page);
   await page.locator("#motive").fill("Generate genuine qualified sales opportunities from the declared ICP.");
   await page.locator("#metric").fill("Book 80 meetings this week.");
-  await page.getByRole("button", { name: /save definition/i }).click();
+  await page.getByRole("button", { name: /save draft|save definition/i }).click();
   await page.getByRole("heading", { name: /what must not be sacrificed/i }).waitFor();
   await page.getByRole("button", { name: /^\+ No duplicate records/ }).click();
   await page.getByLabel("Edit guardrail 1").press("Enter").catch(() => undefined);
-  await page.getByRole("button", { name: /review guard/i }).click();
-  await page.getByRole("button", { name: /continue to publish/i }).click();
+  await page.getByRole("button", { name: /save and review|review guard/i }).click();
+  await page.getByRole("button", { name: /continue to lock|continue to publish/i }).click();
   await page.getByRole("button", { name: /publish definition/i }).click();
   await page.waitForURL(/\/app\/guards\/grd_/, { timeout: 30_000 });
   return page.url().match(/\/app\/guards\/(grd_[^/?#]+)/)[1];

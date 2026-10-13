@@ -87,17 +87,18 @@ describe("first-run visitor path", () => {
     for (let n = 1; n < total; n++) {
       const before = await progress.textContent();
       await next.click();
-      await page.getByText(`Step ${n + 1} of ${total}`).waitFor();
+      await page.getByText(`Step ${n + 1} of ${total}`, { exact: true }).waitFor(); // exact: the sr-only live region repeats it
       assert.notEqual(await progress.textContent(), before);
       const focusedIsHeading = await page.evaluate(() => /^H[1-6]$/.test(document.activeElement?.tagName ?? ""));
       assert.ok(focusedIsHeading, `focus on step heading after Next (step ${n + 1})`);
-      const live = await page.locator("[aria-live=polite]").filter({ has: page.locator("h2") }).first().innerText();
+      // the polite live region (sr-only) announces "Step n of 7: <title>" on every change
+      const live = await page.locator("[aria-live=polite]").filter({ hasText: /Step \d+ of \d+/ }).first().textContent();
       const h = await page.evaluate(() => document.activeElement?.textContent?.trim());
       assert.ok(live.includes(h), "aria-live region contains the new step heading");
     }
     // verdict is step 6 of 7: go back one, check, forward
     await back.click();
-    await page.getByText(`Step ${total - 1} of ${total}`).waitFor();
+    await page.getByText(`Step ${total - 1} of ${total}`, { exact: true }).waitFor();
     await page.getByRole("heading", { name: /verdict/i }).waitFor();
     assert.ok(await page.getByText(/metric gaming/i).first().isVisible(), "verdict badge/label");
     assert.ok(await page.getByText(/hit the metric but failed the motive|failed the motive/i).first().isVisible(), "one-sentence meaning");
@@ -106,22 +107,22 @@ describe("first-run visitor path", () => {
     await page.locator("body").click({ position: { x: 5, y: 5 } }).catch(() => undefined);
     await soft("Right/Left arrow keys step the replay", async () => {
       await page.keyboard.press("ArrowRight");
-      await page.getByText(`Step ${total} of ${total}`).waitFor({ timeout: 2000 });
+      await page.getByText(`Step ${total} of ${total}`, { exact: true }).waitFor({ timeout: 2000 });
       await page.keyboard.press("ArrowLeft");
-      await page.getByText(`Step ${total - 1} of ${total}`).waitFor({ timeout: 2000 });
+      await page.getByText(`Step ${total - 1} of ${total}`, { exact: true }).waitFor({ timeout: 2000 });
     });
     // skip to end
     await page.getByRole("button", { name: /^back/i }).click().catch(() => undefined);
     await soft("Skip to the end lands on last step", async () => {
       await page.getByRole("button", { name: /skip to the end/i }).click({ timeout: 2000 });
-      await page.getByText(`Step ${total} of ${total}`).waitFor({ timeout: 2000 });
+      await page.getByText(`Step ${total} of ${total}`, { exact: true }).waitFor({ timeout: 2000 });
     });
     await settle(page);
     assert.equal(await page.locator("[data-wallet]").count(), 0, "no wallet UI on /demo");
     await assertNoWalletCode(scripts, "/demo");
 
     // make sure we are on the last step
-    while (!(await page.getByText(`Step ${total} of ${total}`).count())) await next.click();
+    while (!(await page.getByText(`Step ${total} of ${total}`, { exact: true }).count())) await next.click();
 
     // 3. Builder, no wallet
     await page.getByRole("link", { name: /create a motive guard/i }).last().click();
@@ -136,7 +137,7 @@ describe("first-run visitor path", () => {
 
     // 4. Disconnected save -> connect prompt, no wallet writes
     const dialog = page.getByRole("dialog").filter({ hasText: /connect a wallet/i });
-    await page.getByRole("button", { name: /save definition/i }).click();
+    await page.getByRole("button", { name: /save draft|save definition/i }).click();
     await dialog.waitFor({ state: "visible", timeout: 15_000 });
     assert.deepEqual(wallet.calls.filter((c) => WRITES.includes(c.method)), [], "no signature/tx before connecting");
     await dialog.getByText(/browser wallet|e2e test wallet/i).first().click();
@@ -145,7 +146,7 @@ describe("first-run visitor path", () => {
     const nextStep = page.getByRole("heading", { name: /what must not be sacrificed/i });
     if (!(await nextStep.isVisible().catch(() => false))) {
       await nextStep.waitFor({ timeout: 8_000 }).catch(async () => {
-        await page.getByRole("button", { name: /save definition/i }).click();
+        await page.getByRole("button", { name: /save draft|save definition/i }).click();
         await nextStep.waitFor({ timeout: 20_000 });
       });
     }

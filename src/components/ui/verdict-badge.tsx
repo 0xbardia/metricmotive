@@ -25,7 +25,7 @@ export function VerdictBadge({
   }
   const copy = verdictCopyFor(verdict as Verdict);
   return (
-    <Badge tone={copy.role} className={size === "lg" ? "px-3 py-1 text-xs" : undefined}>
+    <Badge tone={copy.role} data-verdict={verdict} className={size === "lg" ? "px-3 py-1 text-xs" : undefined}>
       <span aria-hidden="true" className="mr-1">
         {copy.glyph}
       </span>
