@@ -12,3 +12,4 @@ select 'guards' as t, count(*) from guards union all select 'runs', count(*) fro
  union all select 'receipts', count(*) from receipts union all select 'guard_transactions', count(*) from guard_transactions
  union all select 'create_guard_intents', count(*) from create_guard_intents;
 select name from _migrations order by name desc limit 3;      -- expect 0010_run_evidence_snapshot.sql first
+select count(*) as long_running from pg_stat_activity where state <> 'idle' and pid <> pg_backend_pid() and now() - query_start > interval '5 seconds';  -- expect 0 before migrating
