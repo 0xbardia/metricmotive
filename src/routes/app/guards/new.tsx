@@ -415,7 +415,7 @@ function NewGuardContent() {
                     maxLength={LIMITS.metric}
                     onChange={(event) => setMetric(event.target.value)}
                     onBlur={() => setTouched((current) => ({ ...current, metric: true }))}
-                    placeholder="Book 80 meetings this week."
+                    placeholder="Qualified sales conversations booked with in-scope accounts."
                     aria-describedby={`metric-help metric-count${touched.metric && fieldErrors.metric ? " metric-error" : ""}`}
                     aria-invalid={(touched.metric && Boolean(fieldErrors.metric)) || undefined}
                   />

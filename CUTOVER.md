@@ -119,3 +119,15 @@ commit;
 A transaction superseded under V2 has already been removed from
 `guard_transactions`; after a schema rollback its record survives only in the
 CSV export. Full restore: `pg_restore --clean --if-exists --no-owner -d "$DATABASE_URL" <dump>`.
+
+## Accepted risks and kept components
+
+- **`style-src 'unsafe-inline'` (accepted risk).** Script CSP is nonce-based (S-01 done). Styles stay inline because the
+  framework inlines the stylesheet (`server.build.inlineCss`), which was worth +13-15 Lighthouse mobile points (landing 88 vs 73
+  when linked) and React sets `style` attributes. Impact: CSS injection is not blocked; script execution still is.
+  Follow-up: serve the stylesheet as a linked, cacheable file with a nonce or hash, re-measure Lighthouse (keep >= 90), then drop `'unsafe-inline'` from `style-src`.
+- **Better Auth is kept, and is not in the production output.** The `better-auth` package, `src/lib/auth/*` and `AuthProvider`
+  stay because `vite.config.ts` loads `src/lib/auth/popup.server.ts` for the live-preview platform's `/auth/popup`. Checked on the
+  v2 build: `.vercel/output` has no `better-auth` code (no match in the server bundle or static assets; `node_modules` of the server
+  function has no `better-auth`), because `VITE_AUTH_ENABLED=false` and there are no auth routes. Production sign-in is wallet auth
+  (`/api/v1/auth/*`). Removing the stack needs a decision about the preview platform's popup.
