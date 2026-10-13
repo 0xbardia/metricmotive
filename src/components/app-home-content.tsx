@@ -6,11 +6,13 @@ import { useAccount } from "wagmi";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StateCard } from "@/components/ui/state-card";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { useWalletSession } from "@/lib/wallet/session";
 import { classifyReadError, nextPrivateReadStep } from "@/lib/private-read";
 import { listGuardsFn, reconcileCreateFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
+import { GLOSSARY } from "@/lib/terminology";
 import { requireWallet } from "@/lib/wallet/require-wallet";
 import { WalletProviders } from "@/lib/wallet/provider";
 import type { Guard } from "@/lib/domain";
@@ -72,19 +74,15 @@ function AppHomeContent() {
       </div>
 
       {!address || !connector ? (
-        <section className="product-status paper-panel mt-9 max-w-3xl p-6" aria-labelledby="connect-title">
-          <Badge tone="brand">Start here</Badge>
-          <h2 id="connect-title" className="mt-3 font-display text-3xl tracking-tight">Connect a wallet to open your workspace.</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.</p>
-        </section>
+        <StateCard className="mt-9 max-w-3xl" kind="empty" title="Connect a wallet to open your workspace." minHeight="9rem" action={<Button onClick={() => connect()}>Connect wallet</Button>}>
+          Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.
+        </StateCard>
       ) : q.isLoading ? (
-        <p className="mt-9 text-sm text-graphite" role="status">Loading your cases…</p>
+        <StateCard className="mt-9 max-w-3xl" kind="loading" title="Loading your cases…" minHeight="9rem">Checking your wallet session. This takes a moment.</StateCard>
       ) : q.isError ? (
-        <div className="paper-panel mt-9 max-w-2xl p-6" role="alert">
-          <p className="font-display text-2xl">We couldn’t load your cases right now.</p>
-          <p className="mt-2 text-sm text-graphite">Your saved cases were not deleted. Confirm the wallet signature or try again.</p>
-          <Button className="mt-4" variant="outline" onClick={() => void q.refetch()}>Try again</Button>
-        </div>
+        <StateCard className="mt-9 max-w-3xl" kind="error" title="We couldn’t load your cases right now." minHeight="9rem" action={<Button variant="outline" onClick={() => void q.refetch()}>Try again</Button>}>
+          Your saved cases were not deleted. Confirm the wallet signature, then try again.
+        </StateCard>
       ) : (
         <>
           <section className="mt-9" aria-labelledby="history-title">
@@ -103,12 +101,9 @@ function AppHomeContent() {
             </div>
           </section>
           {guards.length === 0 ? (
-            <section className="product-status paper-panel mt-12 max-w-3xl p-6" aria-labelledby="empty-cases-title">
-              <Badge tone="brand">First case</Badge>
-              <h2 id="empty-cases-title" className="mt-3 font-display text-3xl tracking-tight">Start with the outcome, not the dashboard.</h2>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-graphite">Create a Motive Guard to define what success should mean before an agent gets a chance to optimize the number.</p>
-              <Link to="/app/guards/new" className="mt-5 inline-block"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link>
-            </section>
+            <StateCard className="mt-12 max-w-3xl" kind="empty" title="No Guards yet." action={<Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link>}>
+              {GLOSSARY.guard}
+            </StateCard>
           ) : (
             <section className="mt-12" aria-labelledby="cases-title">
               <div className="flex items-center justify-between gap-3"><h2 id="cases-title" className="font-display text-2xl">Your Guards</h2><span className="font-mono text-xs text-graphite">{guards.length} case{guards.length === 1 ? "" : "s"}</span></div>
@@ -128,7 +123,7 @@ function GuardRow({ guard }: { guard: Guard }) {
     <li>
       <Link to="/app/guards/$id" params={{ id: guard.id }} className="group flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-[0.64rem] uppercase tracking-[0.1em] text-graphite">v{guard.version}</span><Badge tone={guard.status === "RESOLVED" ? "success" : "neutral"}>{statusLabel(guard)}</Badge>{guard.recordClass === "DUPLICATE" ? <Badge tone="graphite">Duplicate · superseded</Badge> : null}</div><p className="mt-2 truncate font-display text-xl group-hover:text-ochre">{guard.motive || "Untitled motive"}</p><p className="mt-1 truncate text-sm text-graphite">{guard.metric || "No metric yet"}</p></div>
-        <div className="flex items-center gap-3 sm:shrink-0"><VerdictBadge verdict={guard.verdict} /><span className="font-mono text-xs text-graphite">{nextStep(guard)}</span><ArrowRight className="size-4 text-graphite transition-transform group-hover:translate-x-1" /></div>
+        <div className="flex items-center gap-3 sm:shrink-0"><VerdictBadge verdict={guard.verdict} size="sm" /><span className="font-mono text-xs text-graphite">{nextStep(guard)}</span><ArrowRight className="size-4 text-graphite transition-transform group-hover:translate-x-1" /></div>
       </Link>
     </li>
   );
@@ -165,7 +160,7 @@ export function AppHomeFallback() {
   return (
     <>
       <div className="max-w-4xl"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">Verification workspace</p><div className="mt-1 flex flex-wrap items-end justify-between gap-4"><div><h1 className="font-display text-4xl tracking-tight">Cases</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">Define what the agent should achieve, capture what happened, and let GenLayer verify the difference.</p></div><Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link></div></div>
-      <section className="product-status paper-panel mt-9 max-w-3xl p-6" aria-live="polite"><Badge tone="brand">Start here</Badge><h2 className="mt-3 font-display text-3xl tracking-tight">Connect a wallet to open your workspace.</h2><p className="mt-2 text-sm leading-relaxed text-graphite">Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.</p></section>
+      <StateCard className="mt-9 max-w-3xl" kind="loading" title="Opening your workspace…" minHeight="9rem">Your Guards and Runs are private to the wallet that created them.</StateCard>
     </>
   );
 }
@@ -217,20 +212,20 @@ export function PrivateReadError({
     retry: [`We couldn’t load this ${noun} right now.`, "Your case was not deleted. Check the wallet session or try again."],
   }[step];
 
+  const action =
+    step === "not-found" ? (
+      <Link to="/app"><Button variant="outline">Back to Cases</Button></Link>
+    ) : step === "connect" ? (
+      <Button onClick={() => { setWantSign(true); connect(); }}>Connect wallet</Button>
+    ) : step === "sign-and-retry" ? (
+      <Button loading={busy} loadingLabel="Waiting for signature…" disabled={busy} onClick={() => setWantSign(true)}>Sign in with wallet</Button>
+    ) : (
+      <Button variant="outline" onClick={onRetry}>Try again</Button>
+    );
   return (
-    <div role="alert" className="paper-panel max-w-2xl p-6">
-      <p className="font-display text-2xl">{copy[0]}</p>
-      <p className="mt-2 text-sm text-graphite">{copy[1]}</p>
-      {signError ? <p className="mt-2 text-sm text-carbon">{signError}</p> : null}
-      {step === "not-found" ? (
-        <Link to="/app" className="mt-4 inline-block"><Button variant="outline">Back to Cases</Button></Link>
-      ) : step === "connect" ? (
-        <Button className="mt-4" onClick={() => { setWantSign(true); connect(); }}>Connect wallet</Button>
-      ) : step === "sign-and-retry" ? (
-        <Button className="mt-4" loading={busy} loadingLabel="Waiting for signature…" disabled={busy} onClick={() => setWantSign(true)}>Sign in with wallet</Button>
-      ) : (
-        <Button className="mt-4" variant="outline" onClick={onRetry}>Try again</Button>
-      )}
-    </div>
+    <StateCard className="max-w-2xl" kind="error" title={copy[0]} minHeight="9rem" action={action}>
+      {copy[1]}
+      {signError ? <span className="mt-2 block text-carbon">{signError}</span> : null}
+    </StateCard>
   );
 }

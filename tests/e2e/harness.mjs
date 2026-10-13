@@ -49,6 +49,8 @@ export async function newSession({ timeScale = 1 } = {}) {
   const consoleErrors = [];
   context.on("page", (p) => {
     p.on("pageerror", (e) => consoleErrors.push(String(e)));
+    // A CSP violation is a defect (the app ships a nonce CSP): fail every scenario that asserts `consoleErrors` is empty.
+    p.on("console", (m) => { if (m.type() === "error" && /Content Security Policy|Refused to (execute|load|apply|connect)/i.test(m.text())) consoleErrors.push("CSP: " + m.text().slice(0, 200)); });
     // Default is the real glass UI. E2E_REDUCED_TRANSPARENCY=1 runs the solid prefers-reduced-transparency state.
     if (process.env.E2E_REDUCED_TRANSPARENCY === "1") {
       context.newCDPSession(p).then((cdp) => cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] })).catch(() => undefined);

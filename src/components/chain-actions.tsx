@@ -14,7 +14,7 @@ import { auditUiAction } from "@/lib/action-audit";
 import { type Guardrail } from "@/lib/domain";
 import { getActiveDeployment } from "@/lib/contract";
 import { ACTIVE_CHAIN_ID } from "@/lib/wallet/chain";
-import { CTA } from "@/lib/terminology";
+import { CTA, GLOSSARY } from "@/lib/terminology";
 import {
   getGuardDeploymentFn,
   prepareEvidenceFn,
@@ -435,7 +435,7 @@ async function reserveOperation(
       phase: "failed",
       action: operation,
       hash: null,
-      error: walletErrorMessage(err, "Could not reserve this step"),
+      error: walletErrorMessage(err, "Could not reserve this step. Check your connection and try again."),
     });
   }
   return null;
@@ -753,7 +753,7 @@ export function CreateAndLock({
         data: { id: guardId, reservationToken },
       });
       if (!reservation.canSubmit) {
-        if (reservation.txHash) {
+        if (reservation.txHash && reservation.failureKind !== "mismatch" && reservation.failureKind !== "failed") {
           createRecovery.setTx(
             transactionState("create_guard", reservation.txHash, gate.address, null),
           );
@@ -762,8 +762,9 @@ export function CreateAndLock({
           createRecovery.setTx({
             phase: "failed",
             action: "create_guard",
-            hash: null,
-            error: reservation.message ?? "Create is already reserved in another session.",
+            hash: reservation.txHash,
+            error: reservation.message ?? "Publishing is already in progress in another tab or session. Finish or wait for it there.",
+            failureKind: reservation.failureKind ?? undefined,
           });
         }
         return;
@@ -807,7 +808,7 @@ export function CreateAndLock({
         phase: "failed",
         action: "create_guard",
         hash: null,
-        error: walletErrorMessage(err, "Could not reserve this Guard for creation"),
+        error: walletErrorMessage(err, "Could not reserve this Guard for publishing. Check your connection and try again."),
       });
     } finally {
       if (reserved && !submitted) {
@@ -827,7 +828,7 @@ export function CreateAndLock({
         phase: "failed",
         action: "arm_guard",
         hash: null,
-        error: "Create the Guard on GenLayer first.",
+        error: "Publish the Guard definition first (step 1), then lock it.",
       });
       return;
     }
@@ -912,12 +913,14 @@ export function CreateAndLock({
                 <p className="mt-2 font-display text-2xl">Publish the Guard definition.</p>
                 <p className="text-sm leading-relaxed text-graphite">
                   Publishing creates this Guard on GenLayer as a draft. You will approve the write
-                  in your wallet.
+                  in your wallet. Publishing sends one transaction and pays a small network fee;
+                  saving the draft was the free step. Locking is a separate transaction with its
+                  own fee, so nothing is frozen yet.
                 </p>
                 <TechnicalDetails className="mt-4" title="What gets written on-chain">
                   <p className="text-sm leading-relaxed">
                     The certified Intelligent Contract stores this definition on{" "}
-                    {getActiveDeployment().networkName}. Its fingerprint is fixed at publish;
+                    {getActiveDeployment().networkName}. Its definition ID is fixed at publish;
                     locking is a separate transaction. MetricMotive never stores a private key.
                   </p>
                 </TechnicalDetails>
@@ -942,6 +945,7 @@ export function CreateAndLock({
               The definition is already published. Locking freezes the Motive, Metric, and
               Guardrails on {getActiveDeployment().networkName}.
             </p>
+            <p className="text-sm leading-relaxed text-graphite">{GLOSSARY.fee}</p>
             {onchainId ? (
               <p className="font-mono text-xs text-graphite">On-chain Guard id {onchainId}</p>
             ) : null}
@@ -951,7 +955,7 @@ export function CreateAndLock({
             <TechnicalDetails className="mt-4" title="What gets written on-chain">
               <p className="text-sm leading-relaxed">
                 The lock transaction freezes this Guard version: the Motive, the Metric, and the
-                Guardrails, plus the definition fingerprint below. It cannot be rewritten
+                Guardrails, plus the definition ID below. It cannot be rewritten
                 afterwards. The wallet signs this one transaction; MetricMotive never stores a
                 private key.
               </p>
@@ -1250,7 +1254,7 @@ export function SubmitEvidenceChain({
         )}
         {recovery.hasUnresolved ? null : (
           <p className="text-sm text-graphite">
-            MetricMotive commits the evidence fingerprint on GenLayer. The commitment cannot be
+            MetricMotive commits the evidence ID on GenLayer. The commitment cannot be
             replaced.
           </p>
         )}

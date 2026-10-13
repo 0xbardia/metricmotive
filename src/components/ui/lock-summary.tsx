@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/ui/copy-button";
 import type { Guardrail } from "@/lib/domain";
 import { GENLAYER } from "@/lib/domain";
+import { GLOSSARY, GUARDRAIL_KIND_LABEL } from "@/lib/terminology";
+import { Hint } from "@/components/ui/hint";
 
 /**
  * Immutable payload summary shown before a wallet lock (S3 / M5).
@@ -51,7 +53,7 @@ export function LockSummary({
           <ul className="mt-2 space-y-2">
             {guardrails.map((guardrail) => (
               <li key={`${guardrail.kind}-${guardrail.text}`} className="flex gap-2 text-sm">
-                <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{guardrail.kind}</Badge>
+                <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{GUARDRAIL_KIND_LABEL[guardrail.kind]}</Badge>
                 <span>{guardrail.text}</span>
               </li>
             ))}
@@ -71,15 +73,15 @@ export function LockSummary({
           <dd className="font-mono tabular-nums">{GENLAYER.chainId}</dd>
         </div>
         <div className="flex items-center justify-between gap-3 sm:col-span-2">
-          <dt className="text-graphite">Cost</dt>
-          <dd>Network transaction required</dd>
+          <dt className="text-graphite"><Hint term="Cost">{GLOSSARY.fee}</Hint></dt>
+          <dd>One small network fee</dd>
         </div>
         {definitionHash ? (
           <div className="flex items-center justify-between gap-3 sm:col-span-2">
-            <dt className="text-graphite">Definition fingerprint</dt>
+            <dt className="text-graphite"><Hint term="Definition ID">{GLOSSARY.evidenceId}</Hint></dt>
             <dd className="flex min-w-0 items-center gap-1">
               <span className="truncate font-mono text-xs">{definitionHash}</span>
-              <CopyButton value={definitionHash} label="definition fingerprint" compact />
+              <CopyButton value={definitionHash} label="definition ID" compact />
             </dd>
           </div>
         ) : null}
@@ -87,8 +89,8 @@ export function LockSummary({
       {definitionHash ? (
         <p className="mt-2 text-xs text-graphite">
           {locked
-            ? "This definition fingerprint is finalized for this Guard version."
-            : "This fingerprint identifies the published definition. Locking makes this version immutable."}
+            ? "This definition ID is finalized for this Guard version."
+            : "This ID identifies the published definition. Locking makes this version immutable."}
         </p>
       ) : null}
     </div>

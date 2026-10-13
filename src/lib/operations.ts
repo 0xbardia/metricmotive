@@ -234,13 +234,13 @@ function copyFor(
       return {
         status: "Transaction submitted",
         title: titles.pending,
-        message: "The transaction was submitted. MetricMotive is checking its status.",
+        message: "The transaction was submitted. MetricMotive is checking its status; there is nothing to do but wait.",
       };
     case "confirming":
       return {
         status: "Confirming",
         title: "Confirming on GenLayer…",
-        message: "The transaction has been submitted and MetricMotive is checking its status.",
+        message: "The transaction has been submitted and MetricMotive is checking its status. Keep this page open or come back later.",
       };
     case "confirmation_delayed":
       return {
@@ -266,7 +266,7 @@ function copyFor(
           ? {
               status: "Transaction reverted",
               title: "Transaction reverted",
-              message: "GenLayer rejected this transaction. No state change was finalized.",
+              message: "GenLayer rejected this transaction. No state change was finalized. You can try this step again.",
             }
           : tx.failureKind === "failed"
             ? {

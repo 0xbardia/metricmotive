@@ -228,7 +228,7 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
       return {
         kind: "commit-evidence",
         label: "Commit evidence from this Run",
-        description: "The Run is finished. Commit its evidence fingerprint to GenLayer.",
+        description: "The Run is finished. Commit its evidence ID to GenLayer.",
         required: true,
       };
     }
@@ -245,7 +245,7 @@ export function getGuardLifecyclePresentation(input: LifecycleInput): LifecycleP
         kind: "continue-to-verification",
         label: CTA.continueToVerification,
         description:
-          "The evidence fingerprint is committed. Ask GenLayer to evaluate it against the locked specification.",
+          "The evidence ID is committed. Ask GenLayer to evaluate it against the locked specification.",
         required: true,
       };
     }
@@ -390,7 +390,7 @@ function body(stage: LifecycleStage, authority: "LOCAL" | "GENLAYER"): string {
     case "LOCKED":
       return "This version is immutable on-chain. The next step is to record what the agent actually did.";
     case "RUN":
-      return "Evidence stays off-chain until you commit its fingerprint. Nothing about the locked Guard changes.";
+      return "Evidence stays off-chain until you commit its evidence ID. Nothing about the locked Guard changes.";
     case "EVIDENCE_COMMITTED":
       return "GenLayer evaluates the semantic question against the locked motive, metric, and guardrails.";
     default:

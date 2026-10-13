@@ -17,7 +17,7 @@ export function evidenceEventSummary(event: RunEvent): string {
 /**
  * Truthful one-line summary of a committed evidence event (N29).
  *
- * The receipt used to gesture at "the committed evidence fingerprint" and leave
+ * The receipt used to gesture at "the committed evidence ID" and leave
  * the reader with a hash. This surfaces each recorded observation instead.
  *
  * The recorded observation text is used VERBATIM — only a leading

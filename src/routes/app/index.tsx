@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Stepper } from "@/components/ui/stepper";
-import { Badge } from "@/components/ui/badge";
+import { StateCard } from "@/components/ui/state-card";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/app/")({ component: AppHome });
@@ -47,11 +47,9 @@ function AppHomeFallback() {
         </div>
         <Stepper kind="lifecycle" current={0} className="mt-7" />
       </div>
-      <section className="product-status paper-panel mt-9 max-w-3xl p-6" aria-live="polite">
-        <Badge tone="ochre">Start here</Badge>
-        <h2 className="mt-3 font-display text-3xl tracking-tight">Connect a wallet to open your workspace.</h2>
-        <p className="mt-2 text-sm leading-relaxed text-graphite">Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.</p>
-      </section>
+      <StateCard className="mt-9 max-w-3xl" kind="loading" title="Opening your workspace…" minHeight="9rem">
+        Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.
+      </StateCard>
     </>
   );
 }

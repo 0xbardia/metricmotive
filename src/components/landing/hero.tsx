@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { D1 } from "@/lib/d1-case";
 import { ROUTES, SITE_DESCRIPTION, SITE_TAGLINE } from "@/lib/site";
 import { ButtonLink, Kicker, LiveLink, TextLink } from "./parts";
@@ -41,9 +42,9 @@ export function LandingHero() {
               <dd className="font-mono">{D1.counts.booked}</dd>
             </div>
           </dl>
-          <p className="mt-5 inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-danger-on-dark px-3 py-1.5 text-sm font-medium text-danger-on-dark">
-            <span aria-hidden="true">✕</span> Metric gaming detected
-          </p>
+          <div className="mt-5">
+            <VerdictBadge verdict={D1.verdict} size="lg" />
+          </div>
           <div className="mt-3">
             <LiveLink dark />
           </div>

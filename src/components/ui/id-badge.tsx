@@ -19,7 +19,7 @@ const KIND_LABEL: Record<IdKind, string> = {
   wallet: "wallet address",
   contract: "contract address",
   tx: "transaction hash",
-  fingerprint: "fingerprint",
+  fingerprint: "evidence ID",
   manifest: "manifest hash",
 };
 

@@ -9,6 +9,7 @@ import { AdvisoryNote } from "@/components/chrome";
 import { SubmitEvidenceChain } from "@/components/chain-actions";
 import { TechnicalDetails } from "@/components/product-ui";
 import { Badge } from "@/components/ui/badge";
+import { StateCard } from "@/components/ui/state-card";
 import { Button } from "@/components/ui/button";
 import { EvidenceList, EvidenceSummary } from "@/components/ui/evidence-list";
 import { Input, Label, Select, Textarea } from "@/components/ui/field";
@@ -224,14 +225,14 @@ function RunPageContent() {
   });
 
   if (q.isLoading) {
-    return <AppShell wallet={false}><p className="text-sm text-graphite">Loading Run…</p></AppShell>;
+    return <AppShell wallet={false}><StateCard kind="loading" title="Loading Run…" minHeight="12rem" className="max-w-2xl">Fetching the Run and its evidence.</StateCard></AppShell>;
   }
   if (q.isError) {
     return <AppShell wallet={false}><PrivateReadError error={q.error} noun="Run" onRetry={retryRead} /></AppShell>;
   }
   const run = q.data?.run;
   const guard = q.data?.guard;
-  if (!run || !guard) return <AppShell wallet={false}><p>Run not found.</p></AppShell>;
+  if (!run || !guard) return <AppShell wallet={false}><StateCard kind="empty" title="Run not found." minHeight="9rem" className="max-w-2xl" action={<Link to="/app"><Button variant="outline">Back to Cases</Button></Link>}>That link does not match a Run. Go back to your cases and open it from its Guard.</StateCard></AppShell>;
 
   const automatic = run.agentRef !== "manual";
   const finished = run.status === "FINISHED";

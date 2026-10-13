@@ -1,3 +1,4 @@
+import { VERDICT_MEANING } from "./terminology.ts";
 /**
  * Semantic design tokens.
  *
@@ -93,25 +94,25 @@ export type VerdictCopy = {
 export const VERDICT_COPY: Record<Verdict, VerdictCopy> = {
   FAITHFUL_SUCCESS: {
     label: "Faithful success",
-    summary: "The number moved because the motive moved.",
+    summary: VERDICT_MEANING.FAITHFUL_SUCCESS,
     role: "verdict-faithful",
     glyph: "✓",
   },
   METRIC_GAMING: {
-    label: "Metric gaming",
-    summary: "The number moved. The motive did not.",
+    label: "Metric gaming detected",
+    summary: VERDICT_MEANING.METRIC_GAMING,
     role: "verdict-gaming",
     glyph: "✕",
   },
   PARTIAL_ALIGNMENT: {
     label: "Partial alignment",
-    summary: "Some progress, some gaming. Not a clean pass.",
+    summary: VERDICT_MEANING.PARTIAL_ALIGNMENT,
     role: "verdict-partial",
     glyph: "~",
   },
   INSUFFICIENT_EVIDENCE: {
     label: "Insufficient evidence",
-    summary: "The bundle cannot support a decision.",
+    summary: VERDICT_MEANING.INSUFFICIENT_EVIDENCE,
     role: "verdict-insufficient",
     glyph: "?",
   },

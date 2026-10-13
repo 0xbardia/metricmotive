@@ -39,6 +39,7 @@ import { sameWallet } from "./security";
 import {
   clearOperationSlot,
   releaseOperationSlot,
+  blockedCreateOutcome,
   replacementDecision,
   reservedByOther,
   reserveOperationSlot,
@@ -287,6 +288,8 @@ export type CreateGuardReservation = {
   txHash: string | null;
   canSubmit: boolean;
   message: string | null;
+  /** Server-proven failure of the recorded create transaction (same field as reserveChainOperation). */
+  failureKind: FailureKind | null;
 };
 
 function reservationResult(
@@ -299,6 +302,7 @@ function reservationResult(
     state,
     txHash: row.tx_hash,
     canSubmit,
+    failureKind: null,
     message: canSubmit
       ? null
       : row.tx_hash
@@ -330,7 +334,6 @@ export async function reserveCreateGuard(
   if (guard.onchainId || guard.txCreate) {
     const existing = await getChainTransaction(id, "create_guard");
     if (existing) {
-      const blocked = replacementDecision(existing, null);
       return {
         idempotencyKey: createGuardIdempotencyKey({
           wallet: guard.ownerAddress,
@@ -343,9 +346,7 @@ export async function reserveCreateGuard(
         state: existing.reconciledAt ? "RECONCILED" : "SUBMITTED",
         txHash: existing.txHash,
         canSubmit: false,
-        message: blocked.action === "blocked" && (blocked.reason === "mismatch" || blocked.reason === "failed")
-          ? blocked.message
-          : "This Guard already has a create transaction. Confirmation can resume without submitting another transaction.",
+        ...blockedCreateOutcome(existing),
       };
     }
     throw new AppError("CONFLICT", "This Guard is already created or has a pending create transaction", 409);

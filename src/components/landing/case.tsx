@@ -1,3 +1,4 @@
+import { VerdictSummary } from "@/components/ui/verdict-summary";
 import { D1 } from "@/lib/d1-case";
 import { formatUtc } from "@/lib/format";
 import { CopyValue } from "./copy-value";
@@ -84,10 +85,7 @@ export default function Case() {
             <p>Pattern: {pattern}</p>
           </Step>
           <Step n="06" title="Verdict">
-            <p className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-danger-on-dark px-3 py-1.5 text-sm font-medium text-danger-on-dark">
-              <span aria-hidden="true">✕</span> Metric gaming
-            </p>
-            <p>Metric gaming. The agent hit the metric but failed the motive.</p>
+            <VerdictSummary verdict={D1.verdict} tone="dark" />
             <p className="text-bone/90">
               A fixed rule in the contract turns the findings into the verdict, so nobody can talk it into a different answer.
             </p>

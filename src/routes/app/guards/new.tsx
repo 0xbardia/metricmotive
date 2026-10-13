@@ -10,13 +10,15 @@ import { Stepper } from "@/components/ui/stepper";
 import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/ui/hint";
+import { StateCard } from "@/components/ui/state-card";
 import { FieldError, Input, Label, Textarea } from "@/components/ui/field";
 import { type Guardrail, type GuardrailKind, LIMITS, parseGuardrails } from "@/lib/domain";
 import { auditUiAction } from "@/lib/action-audit";
 import { BUILDER_FLOW, getGuardLifecyclePresentation } from "@/lib/lifecycle";
 import { initialBuilderState, loadDraft, sameWallet, saveDraft, validateGuardSearch } from "@/lib/guard-draft";
 import { useWalletSession } from "@/lib/wallet/session";
-import { CTA } from "@/lib/terminology";
+import { BUILDER_STEPS, CTA, GLOSSARY, GUARDRAIL_KIND_LABEL } from "@/lib/terminology";
 import {
   blueprintFn,
   createGuardFn,
@@ -145,10 +147,18 @@ function NewGuardContent() {
   // Hydrate only from a ?guardId= this wallet owns; anything else starts empty.
   const hydratedRef = useRef(!persistedGuardHint);
   const [hydrated, setHydrated] = useState(!persistedGuardHint);
+  // Why a requested ?guardId= draft could not be opened (null = nothing wrong).
+  const [draftProblem, setDraftProblem] = useState<"connect" | "missing" | "not-yours" | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   useEffect(() => {
     if (hydratedRef.current) return;
     // Wait for wagmi's reconnect, or a returning owner would start empty.
     if (persistedGuardQuery.isPending || walletSession.connecting) return;
+    // No wallet yet: ask for it and retry when it connects (do not give up on the draft).
+    if (!address) {
+      setDraftProblem("connect");
+      return;
+    }
     hydratedRef.current = true;
     const g = persistedGuardQuery.data?.guard;
     if (g && address && sameWallet(g.ownerAddress, address)) {
@@ -166,6 +176,9 @@ function NewGuardContent() {
       setMotive(init.draft.motive);
       setMetric(init.draft.metric);
       setGuardrails(init.draft.guardrails);
+      setDraftProblem(null);
+    } else {
+      setDraftProblem(g ? "not-yours" : "missing");
     }
     setHydrated(true);
   }, [persistedGuardQuery.isPending, persistedGuardQuery.data, walletSession.connecting, address, persistedGuardHint, navigate]);
@@ -205,6 +218,7 @@ function NewGuardContent() {
   async function goNext() {
     if (persistIntentRef.current) return;
     setError(null);
+    setSaveError(null);
     persistIntentRef.current = true;
     try {
       if (step === 0) {
@@ -234,7 +248,7 @@ function NewGuardContent() {
       }
       setStep((current) => Math.min(current + 1, STEPS.length - 1));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save this Guard.");
+      setSaveError(err instanceof Error ? err.message : "Could not save this Guard.");
     } finally {
       persistIntentRef.current = false;
     }
@@ -273,6 +287,10 @@ function NewGuardContent() {
     enabled: Boolean(id) && step === 3,
   });
 
+  const overallStep = step === 3 ? 2 : 1;
+  const reminder = BUILDER_STEPS[overallStep - 1];
+  const draftBlocked = Boolean(persistedGuardHint) && (!hydrated || draftProblem !== null);
+
   return (
     <AppShell wallet={false}>
       <div className="max-w-4xl">
@@ -282,13 +300,79 @@ function NewGuardContent() {
         <div className="mt-1">
           <h1 className="font-display text-4xl tracking-tight">Define what success means.</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
-            A Guard records the outcome you want, the number you will measure, and what the agent
-            must not sacrifice to reach it.
+            <Hint term="A Motive Guard">{GLOSSARY.guard}</Hint> records the outcome you want, the
+            number you will measure, and what the agent must not sacrifice to reach it.
           </p>
         </div>
+        <ol
+          aria-label="The three separate steps"
+          className="mt-6 grid gap-3 md:grid-cols-3"
+        >
+          {BUILDER_STEPS.map((s) => (
+            <li
+              key={s.n}
+              aria-current={s.n === overallStep ? "step" : undefined}
+              className={`rounded-sm border p-3 text-sm ${s.n === overallStep ? "border-2 border-brand bg-card" : "border-border-strong"}`}
+            >
+              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-brand-text">
+                Step {s.n} of 3{s.n === overallStep ? " · you are here" : ""}
+              </p>
+              <p className="mt-1 font-medium">
+                {s.n === 2 ? (
+                  <Hint term={s.title}>
+                    {GLOSSARY.lock} {GLOSSARY.fee}
+                  </Hint>
+                ) : (
+                  s.title
+                )}
+              </p>
+              <p className="mt-1 text-xs text-graphite">{s.cost}</p>
+            </li>
+          ))}
+        </ol>
+        {draftBlocked ? (
+          <div className="mt-8 max-w-3xl">
+            {draftProblem === "connect" ? (
+              <StateCard
+                kind="error"
+                title="Connect your wallet to open this draft"
+                minHeight="12rem"
+                action={<Button onClick={() => walletSession.connect()}>Connect wallet</Button>}
+              >
+                Drafts belong to the wallet that saved them. Connecting is free and sends nothing.
+              </StateCard>
+            ) : draftProblem ? (
+              <StateCard
+                kind="error"
+                title={draftProblem === "missing" ? "We could not find this draft" : "This draft belongs to another wallet"}
+                minHeight="12rem"
+                action={
+                  <Button
+                    onClick={() => {
+                      setDraftProblem(null);
+                      void navigate({ to: "/app/guards/new", search: {}, replace: true });
+                    }}
+                  >
+                    Start a new Guard
+                  </Button>
+                }
+              >
+                {draftProblem === "missing"
+                  ? "It may have been removed, or the link is wrong. You can start a new Guard instead."
+                  : "Switch to the wallet that saved it, or start a new Guard."}
+              </StateCard>
+            ) : (
+              <StateCard kind="loading" title="Loading your saved draft…" minHeight="12rem" />
+            )}
+          </div>
+        ) : (
+        <>
         <Stepper kind="builder" current={step} className="mt-7" />
 
         <div className="mt-8 max-w-3xl stagger-in" key={step}>
+          <p className="mb-4 font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">
+            Step {reminder.n} of 3 · {reminder.title} · {reminder.cost.split(":")[0]}
+          </p>
           {step === 0 ? (
             <section aria-labelledby="define-title">
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
@@ -402,7 +486,7 @@ function NewGuardContent() {
                       className="mm-segmented-option"
                       data-selected={kind === value}
                     >
-                      {value === "MUST" ? "Must not happen" : "Quality to preserve"}
+                      {GUARDRAIL_KIND_LABEL[value]}
                     </button>
                   ))}
                 </div>
@@ -475,7 +559,7 @@ function NewGuardContent() {
                                   )
                                 }
                               >
-                                {value === "MUST" ? "Must not happen" : "Quality to preserve"}
+                                {GUARDRAIL_KIND_LABEL[value]}
                               </button>
                             ))}
                           </span>
@@ -499,7 +583,7 @@ function NewGuardContent() {
                     ) : (
                       <span className="min-w-0 text-sm">
                         <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>
-                          {guardrail.kind}
+                          {GUARDRAIL_KIND_LABEL[guardrail.kind]}
                         </Badge>
                         <span className="ml-2">{guardrail.text}</span>
                       </span>
@@ -543,7 +627,7 @@ function NewGuardContent() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
-                    Review before publishing
+                    Review before locking
                   </p>
                   <h2 id="review-title" className="mt-2 font-display text-3xl tracking-tight">
                     Does the definition say what you mean?
@@ -579,7 +663,7 @@ function NewGuardContent() {
                         {guardrails.map((guardrail) => (
                           <li key={`${guardrail.kind}-${guardrail.text}`}>
                             <Badge tone={guardrail.kind === "MUST" ? "brick" : "sage"}>
-                              {guardrail.kind}
+                              {GUARDRAIL_KIND_LABEL[guardrail.kind]}
                             </Badge>
                             <span className="ml-2">{guardrail.text}</span>
                           </li>
@@ -703,7 +787,7 @@ function NewGuardContent() {
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
                 Publishing creates the Guard on GenLayer. Locking is a separate transaction that
                 freezes the Motive, Metric, and Guardrails so they cannot be rewritten after seeing
-                the result.
+                the result. <Hint term="Why a fee?">{GLOSSARY.fee}</Hint>
               </p>
               <div className="mt-7">
                 {id && guardQ.isLoading ? (
@@ -743,6 +827,22 @@ function NewGuardContent() {
           ) : null}
 
           <FieldError>{error}</FieldError>
+          {saveError ? (
+            <StateCard
+              kind="error"
+              title="We could not save your draft"
+              className="mt-4"
+              action={
+                address ? (
+                  <Button onClick={() => void goNext()}>Try again</Button>
+                ) : (
+                  <Button onClick={() => walletSession.connect()}>Connect wallet</Button>
+                )
+              }
+            >
+              {saveError} {address ? "Your text is still here. Try again in a moment." : "Connect your wallet, then try again."}
+            </StateCard>
+          ) : null}
           {draftSaved && !id ? (
             <p className="mt-3 text-xs text-graphite" role="status">
               Draft saved locally in this browser. Nothing is stored on-chain or on the server yet.
@@ -769,10 +869,10 @@ function NewGuardContent() {
                 onClick={() => void goNext()}
               >
                 {step === 0
-                  ? "Save definition"
+                  ? "Save draft (free signature)"
                   : step === 1
-                    ? "Review guard"
-                    : "Continue to publish"}
+                    ? "Save and review"
+                    : "Continue to lock"}
                 <ArrowRight className="size-4" />
               </Button>
             ) : null}
@@ -790,6 +890,8 @@ function NewGuardContent() {
             </div>
           ) : null}
         </div>
+        </>
+        )}
       </div>
     </AppShell>
   );

@@ -3,7 +3,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import { after, before, describe, it } from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import {
+  CREATE_EXISTING_MESSAGE,
   FAILED_RECOVERY_MESSAGE,
+  blockedCreateOutcome,
   MISMATCH_RECOVERY_MESSAGE,
   RESERVATION_TTL_MS,
   markTransactionFailed,
@@ -12,6 +14,7 @@ import {
   reserveOperationSlot,
   reservedByOther,
   supersedeFailedTransaction,
+  type FailureKind,
   type SqlLike,
 } from "./operation-store.ts";
 
@@ -75,12 +78,38 @@ describe("replacement decision", () => {
     const src = (f: string) => readFileSync(new URL(f, import.meta.url), "utf8");
     assert.match(src("./chain-reconciliation.ts"), /kind === "failed"\s*\?\s*FAILED_RECOVERY_MESSAGE/);
     assert.match(src("./chain-reconciliation.ts"), /kind === "mismatch"\s*\?\s*`\$\{error\.message\} \$\{MISMATCH_RECOVERY_MESSAGE\}`/);
-    assert.match(src("./repo.ts"), /reason === "failed"/);
+    assert.match(src("./repo.ts"), /decision\.message/);
+    assert.match(src("./operation-store.ts"), /reason === "failed"/);
   });
   it("proven revert -> replace; same hash -> same; none -> free", () => {
     assert.equal(replacementDecision(known({ failureKind: "reverted" }), NEW).action, "replace");
     assert.equal(replacementDecision(known({ failureKind: "reverted" }), OLD).action, "same");
     assert.equal(replacementDecision(null, NEW).action, "free");
+  });
+});
+
+describe("blocked create reservation carries failureKind", () => {
+  it("mismatch / failed carry kind + recovery message; reverted and pending carry the resume message", () => {
+    assert.deepEqual(blockedCreateOutcome(known({ failureKind: "mismatch" })!), { failureKind: "mismatch", message: MISMATCH_RECOVERY_MESSAGE });
+    assert.deepEqual(blockedCreateOutcome(known({ failureKind: "failed" })!), { failureKind: "failed", message: FAILED_RECOVERY_MESSAGE });
+    assert.deepEqual(blockedCreateOutcome(known({ failureKind: "reverted" })!), { failureKind: "reverted", message: CREATE_EXISTING_MESSAGE });
+    assert.deepEqual(blockedCreateOutcome(known()!), { failureKind: null, message: CREATE_EXISTING_MESSAGE });
+  });
+
+  it("ledger row stamped by markTransactionFailed yields the same outcome (PGLite)", async () => {
+    for (const kind of ["mismatch", "failed", "reverted"] as const) {
+      const id = `g-cb-${kind}-${RUN}`;
+      const hash = hx(kind[0]!) ;
+      await pg.query(`insert into guards (id, owner_address, tx_create) values ($1,'0xowner',$2)`, [id, hash]);
+      await pg.query(
+        `insert into guard_transactions (guard_id, operation, tx_hash, originating_wallet, chain_id, contract_address)
+         values ($1,'create_guard',$2,'0xowner',61997,'0xc')`,
+        [id, hash],
+      );
+      await markTransactionFailed(sql, id, "create_guard", hash, kind, "x");
+      const row = (await pg.query<{ failure_kind: FailureKind }>(`select failure_kind from guard_transactions where guard_id=$1`, [id])).rows[0]!;
+      assert.equal(blockedCreateOutcome({ txHash: hash, reconciledAt: null, failureKind: row.failure_kind }).failureKind, kind);
+    }
   });
 });
 

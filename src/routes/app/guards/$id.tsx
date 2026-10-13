@@ -10,13 +10,16 @@ import { AdvisoryNote } from "@/components/chrome";
 import { CreateAndLock, SubmitEvidenceChain, VerifyWithGenLayer } from "@/components/chain-actions";
 import { TechnicalDetails } from "@/components/product-ui";
 import { Badge } from "@/components/ui/badge";
+import { StateCard } from "@/components/ui/state-card";
+import { Hint } from "@/components/ui/hint";
+import { VerdictSummary } from "@/components/ui/verdict-summary";
 import { Button } from "@/components/ui/button";
 import { FindingsSummary } from "@/components/ui/findings-summary";
 import { IdBadge } from "@/components/ui/id-badge";
 import { MetricEligibilityExplanation } from "@/components/ui/metric-eligibility-explanation";
 import { NextActionCard } from "@/components/ui/next-action-card";
 import { Stepper } from "@/components/ui/stepper";
-import { VerdictBadge, ProtocolStatusBadge } from "@/components/ui/verdict-badge";
+import { ProtocolStatusBadge } from "@/components/ui/verdict-badge";
 import { guardDeployment } from "@/lib/contract";
 import { auditUiAction } from "@/lib/action-audit";
 import { verdictCopy, type Guard } from "@/lib/domain";
@@ -27,7 +30,7 @@ import {
   explainMetric,
   rawMetricObservationFromEvents,
 } from "@/lib/metric-explanation";
-import { CTA } from "@/lib/terminology";
+import { CTA, GLOSSARY, GUARDRAIL_KIND_LABEL } from "@/lib/terminology";
 import { createV2Fn, getGuardFn, remediateFn, startRunFn } from "@/lib/server/actions";
 import { ensureWalletSession } from "@/lib/wallet/auth-client";
 import { requireWallet } from "@/lib/wallet/require-wallet";
@@ -107,12 +110,12 @@ function GuardPageContent() {
     v2.mutate(undefined, { onSettled: () => { v2IntentRef.current = false; } });
   }
 
-  if (q.isLoading) return <AppShell wallet={false}><p className="text-sm text-graphite">Loading Guard…</p></AppShell>;
+  if (q.isLoading) return <AppShell wallet={false}><StateCard kind="loading" title="Loading Guard…" minHeight="12rem" className="max-w-2xl">Fetching the Guard and its Runs.</StateCard></AppShell>;
   if (q.isError) {
     return <AppShell wallet={false}><PrivateReadError error={q.error} noun="Guard" onRetry={retryRead} /></AppShell>;
   }
   const data = q.data;
-  if (!data) return <AppShell wallet={false}><p>Guard not found.</p></AppShell>;
+  if (!data) return <AppShell wallet={false}><StateCard kind="empty" title="Guard not found." minHeight="9rem" className="max-w-2xl" action={<Link to="/app"><Button variant="outline">Back to Cases</Button></Link>}>That link does not match a Guard. Go back to your cases and open it from the list.</StateCard></AppShell>;
   const guard = data.guard;
   const copy = guard.verdict ? verdictCopy(guard.verdict) : null;
 
@@ -170,7 +173,6 @@ function GuardPageContent() {
               </Badge>
             )}
             {guard.status === "RESOLVED" ? <ProtocolStatusBadge state="RESOLVED" /> : null}
-            <VerdictBadge verdict={guard.verdict} />
             {guard.authority === "LOCAL" && guard.status === "RESOLVED" ? <Badge tone="warning">Advisory only</Badge> : null}
             {guard.isExample ? <Badge>Example</Badge> : null}
             {guard.recordClass === "DUPLICATE" ? <Badge tone="graphite">Duplicate · superseded</Badge> : null}
@@ -189,13 +191,13 @@ function GuardPageContent() {
         </div>
 
         <section className="mt-10" aria-labelledby="definition-title">
-          <p className="font-mono text-xs uppercase tracking-[0.14em] text-graphite">The specification</p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-graphite">The specification · <Hint term="Motive Guard">{GLOSSARY.guard}</Hint></p>
           <h2 id="definition-title" className="mt-2 font-display text-3xl tracking-tight">What the agent was meant to do.</h2>
           <div className="mt-6 grid gap-8 md:grid-cols-2">
             <div className="border-t-2 border-sage pt-4"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-sage-text">Motive · intended outcome</p><p className="mt-3 font-display text-2xl leading-tight">{guard.motive}</p></div>
             <div className="border-t-2 border-ochre pt-4"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-brand-text">Metric · measurable proxy</p><p className="mt-3 font-display text-2xl leading-tight">{guard.metric}</p></div>
           </div>
-          <div className="mt-8 border-t border-rule pt-5"><div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-display text-2xl">Guardrails</h3><span className="text-sm text-graphite">What must not be sacrificed</span></div><ul className="mt-4 grid gap-2 md:grid-cols-2">{guard.guardrails.length ? guard.guardrails.map((guardrail) => <li key={`${guardrail.kind}-${guardrail.text}`} className="border-l-2 border-sage bg-card px-4 py-3 text-sm"><Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{guardrail.kind}</Badge><span className="ml-2">{guardrail.text}</span></li>) : <li className="text-sm text-graphite">No guardrails recorded.</li>}</ul></div>
+          <div className="mt-8 border-t border-rule pt-5"><div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-display text-2xl">Guardrails</h3><span className="text-sm text-graphite">What must not be sacrificed</span></div><ul className="mt-4 grid gap-2 md:grid-cols-2">{guard.guardrails.length ? guard.guardrails.map((guardrail) => <li key={`${guardrail.kind}-${guardrail.text}`} className="border-l-2 border-sage bg-card px-4 py-3 text-sm"><Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{GUARDRAIL_KIND_LABEL[guardrail.kind]}</Badge><span className="ml-2">{guardrail.text}</span></li>) : <li className="text-sm text-graphite">No guardrails recorded.</li>}</ul></div>
         </section>
 
         {copy ? (
@@ -206,9 +208,8 @@ function GuardPageContent() {
                   {guard.authority === "GENLAYER" ? `Final result · finalized on ${guardDeployment(guard).network}` : "Advisory result"}
                 </p>
                 <h2 id="verdict-title" className="mt-2 font-display text-4xl tracking-tight">{copy.title}</h2>
-                <p className="mt-3 max-w-2xl text-base leading-relaxed text-graphite">{copy.lede}</p>
+                <VerdictSummary verdict={guard.verdict} className="mt-3" />
               </div>
-              <VerdictBadge verdict={guard.verdict} size="lg" />
             </div>
             {guard.findings ? <FindingsSummary findings={guard.findings} pattern={guard.primaryPattern} className="mt-8" /> : null}
             {metricExplanation ? <MetricEligibilityExplanation explanation={metricExplanation} className="mt-8 border-t border-rule pt-6" /> : null}
@@ -227,8 +228,8 @@ function GuardPageContent() {
             <div><dt>Contract</dt><dd><IdBadge value={guardDeployment(guard).contractAddress} kind="contract" /></dd></div>
             <div><dt>Guard ID</dt><dd>{guard.onchainId ? <IdBadge value={guard.onchainId} kind="guard" /> : "Not published"}</dd></div>
             <div><dt>Local resource</dt><dd><IdBadge value={guard.id} kind="guard" label="local Guard id" /></dd></div>
-            <div><dt>Definition fingerprint</dt><dd><IdBadge value={guard.definitionHash} kind="fingerprint" /></dd></div>
-            <div><dt>Evidence fingerprint</dt><dd>{guard.evidenceHash ? <IdBadge value={guard.evidenceHash} kind="fingerprint" label="evidence fingerprint" /> : "Not committed"}</dd></div>
+            <div><dt>Definition ID</dt><dd><IdBadge value={guard.definitionHash} kind="fingerprint" label="definition ID" /></dd></div>
+            <div><dt><Hint term="Evidence ID">{GLOSSARY.evidenceId}</Hint></dt><dd>{guard.evidenceHash ? <IdBadge value={guard.evidenceHash} kind="fingerprint" label="evidence ID" /> : "Not committed"}</dd></div>
             <div><dt>Authority</dt><dd>{guard.authority === "GENLAYER" ? "Finalized contract state" : "Local advisory state"}</dd></div>
             <div><dt>Lifecycle status</dt><dd>{guard.status}</dd></div>
             <div><dt>Transaction history</dt><dd className="space-y-1">
@@ -275,7 +276,7 @@ function nextAction({
   onLockInFlight: (inFlight: boolean) => void;
   onUpdated: () => void | Promise<void>;
 }) {
-  if (lifecycleKind === "publish-and-lock") return <CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onLockInFlight={onLockInFlight} onUpdated={onUpdated} />;
+  if (lifecycleKind === "publish-and-lock") return <div><p className="mb-4 max-w-2xl text-sm leading-relaxed text-graphite">{GLOSSARY.lock} {GLOSSARY.fee}</p><CreateAndLock guardId={guard.id} motive={guard.motive} metric={guard.metric} guardrails={guard.guardrails} onchainId={guard.onchainId} txCreate={guard.txCreate} txArm={guard.txArm} onLockInFlight={onLockInFlight} onUpdated={onUpdated} /></div>;
   if (lifecycleKind === "start-run") return <div className="flex flex-wrap items-center gap-3"><Button loading={start.isPending} loadingLabel="Starting Run…" disabled={start.isPending} onClick={async () => { try { const result = await start.mutateAsync(); window.location.href = `/app/runs/${result.run.id}`; } catch { /* onError shows the message */ } }}><Play className="size-4" />{CTA.startRun}</Button></div>;
   const recoveryRun = evidenceRecoveryRun(data);
   if (isEvidenceCommitting(guard) && recoveryRun) {

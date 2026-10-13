@@ -5,15 +5,19 @@ import { TechnicalDetails } from "@/components/product-ui";
 import { Badge } from "@/components/ui/badge";
 import { FindingsSummary } from "@/components/ui/findings-summary";
 import { IdBadge } from "@/components/ui/id-badge";
-import { ProtocolStatusBadge, VerdictBadge } from "@/components/ui/verdict-badge";
+import { Hint } from "@/components/ui/hint";
+import { StateCard } from "@/components/ui/state-card";
+import { ProtocolStatusBadge } from "@/components/ui/verdict-badge";
+import { VerdictSummary } from "@/components/ui/verdict-summary";
 import { contractProvenanceLabel } from "@/lib/explorer";
 import { humanReadableFindings, primaryPatternCopy } from "@/lib/findings";
 import { committedEvidenceLines } from "@/lib/evidence-summary";
 import type { RunEvent } from "@/lib/domain";
-import { verdictCopy, type Verdict } from "@/lib/domain";
+import type { Verdict } from "@/lib/domain";
+import { VERDICT_COPY } from "@/lib/tokens";
 import { getReceiptFn } from "@/lib/server/actions";
 import { receiptTimes } from "@/lib/receipt-times";
-import { CTA } from "@/lib/terminology";
+import { CTA, GLOSSARY, GUARDRAIL_KIND_LABEL } from "@/lib/terminology";
 
 type ReceiptLoad = { data: Awaited<ReturnType<typeof getReceiptFn>> | null; error: string | null };
 
@@ -43,25 +47,7 @@ function ReceiptPage() {
         comfortable shell rather than the narrowest column in the product.
       */}
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
-        {error ? (
-          <div role="alert" className="paper-panel p-6">
-            <p className="font-display text-2xl">
-              {/not found/i.test(error)
-                ? "This receipt does not exist."
-                : /authentication|control|access/i.test(error)
-                  ? "You don’t have access to this receipt."
-                  : "We couldn’t load this receipt right now."}
-            </p>
-            <p className="mt-2 text-sm text-graphite">
-              {/authentication|control|access/i.test(error)
-                ? "This receipt is private until its Guard is finalized publicly."
-                : "The recorded proof has not been changed. Try again."}
-            </p>
-            <button type="button" className="mt-4 min-h-11 text-sm underline-offset-4 hover:underline" onClick={() => void router.invalidate()}>
-              Try again
-            </button>
-          </div>
-        ) : null}
+        {error ? <ReceiptError error={error} onRetry={() => void router.invalidate()} /> : null}
         {data ? <ReceiptView data={data} /> : null}
       </main>
       <SiteFooter />
@@ -69,10 +55,44 @@ function ReceiptPage() {
   );
 }
 
+const linkCls = "inline-flex min-h-11 items-center text-sm text-brand-text underline underline-offset-4";
+
+function ReceiptError({ error, onRetry }: { error: string; onRetry: () => void }) {
+  const missing = /not found/i.test(error);
+  const denied = /authentication|control|access/i.test(error);
+  return (
+    <StateCard
+      kind="error"
+      minHeight="12rem"
+      title={missing ? "This receipt does not exist." : denied ? "You don’t have access to this receipt." : "We couldn’t load this receipt right now."}
+      action={
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+          {missing || denied ? null : (
+            <button type="button" className={linkCls} onClick={onRetry}>
+              Try again
+            </button>
+          )}
+          <Link to="/" className={linkCls}>
+            Back home
+          </Link>
+          <Link to="/demo" className={linkCls}>
+            Open the demo
+          </Link>
+        </div>
+      }
+    >
+      {missing
+        ? "Check the link, or open the demo to see a finished receipt."
+        : denied
+          ? "This receipt is private until its Guard is finalized publicly. Go back home, or open the demo to see a finished receipt."
+          : "The recorded proof has not been changed. Try again, or come back in a minute."}
+    </StateCard>
+  );
+}
+
 function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> }) {
   const snap = data.receipt.snapshot;
   const verdict = String(snap.verdict ?? data.guard?.verdict ?? "") as Verdict;
-  const copy = verdict ? verdictCopy(verdict) : null;
   const times = receiptTimes({
     chainResolvedAt: String(snap.chainResolvedAt ?? data.guard?.chainResolvedAt ?? "") || null,
     recordedAt: String(snap.resolvedAt ?? data.guard?.resolvedAt ?? "") || null,
@@ -121,12 +141,9 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
           {example ? <Badge>Example</Badge> : null}
           {example ? null : advisory ? <Badge tone="warning">Advisory</Badge> : <Badge tone="success">GenLayer</Badge>}
           <ProtocolStatusBadge state={finalized ? "RESOLVED" : "DRAFT"} />
-          <VerdictBadge verdict={verdict} size="lg" />
         </div>
-        <h1 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
-          {copy?.title ?? "Motive Receipt"}
-        </h1>
-        <p className="mt-3 max-w-3xl text-lg leading-relaxed text-graphite">{copy?.lede}</p>
+        <h1 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">Motive Receipt</h1>
+        <VerdictSummary verdict={verdict} className="mt-4" />
         <dl className="mt-6 grid gap-4 sm:grid-cols-3">
           <MetaItem k="Receipt" v={<IdBadge value={data.receipt.id} kind="fingerprint" label="receipt id" />} />
           <MetaItem k="Case" v={<IdBadge value={String(data.receipt.guardId)} kind="guard" label="local Guard id" />} />
@@ -176,7 +193,7 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
                 </dl>
                 <p className="mt-3 leading-relaxed text-graphite">
                   These finalized findings deterministically map to{" "}
-                  <strong className="font-mono">{verdict || "the recorded outcome"}</strong>.
+                  <strong>{verdict in VERDICT_COPY ? VERDICT_COPY[verdict].label : "the recorded outcome"}</strong>.
                 </p>
               </>
             ) : (
@@ -225,7 +242,7 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
               </>
             ) : (
               <p className="mt-1 leading-relaxed text-graphite">
-                The committed evidence fingerprint is the reference for this result. Its exact value is recorded
+                The committed evidence ID is the reference for this result. Its exact value is recorded
                 under Verification proof.
               </p>
             )}
@@ -264,7 +281,7 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
             <ul className="mt-3 grid gap-2 md:grid-cols-2">
               {data.guard.guardrails.map((guardrail) => (
                 <li key={`${guardrail.kind}-${guardrail.text}`} className="border-l-2 border-sage bg-card px-4 py-3 text-sm">
-                  <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{guardrail.kind}</Badge>
+                  <Badge tone={guardrail.kind === "MUST" ? "danger" : "success"}>{GUARDRAIL_KIND_LABEL[guardrail.kind]}</Badge>
                   <span className="ml-2">{guardrail.text}</span>
                 </li>
               ))}
@@ -314,8 +331,8 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> 
             id={{ kind: "tx", explorer: { chainId: recordedChainId, contractAddress: recordedContract } }}
           />
           {runId ? <Row k="Run" v={runId} id={{ kind: "run" }} /> : null}
-          <Row k="Evidence fingerprint" v={String(snap.evidenceHash ?? "")} id={{ kind: "fingerprint" }} />
-          <Row k="Definition fingerprint" v={String(snap.definitionHash ?? "")} id={{ kind: "fingerprint" }} />
+          <Row k="Evidence ID" hint={GLOSSARY.evidenceId} v={String(snap.evidenceHash ?? "")} id={{ kind: "fingerprint" }} />
+          <Row k="Definition ID" v={String(snap.definitionHash ?? "")} id={{ kind: "fingerprint" }} />
           <Row k="Finalized" v={finalized ? "Yes — finalized contract state" : "No. This is not a GenLayer finalized verdict."} />
         </dl>
 
@@ -357,22 +374,24 @@ function Row({
   k,
   v,
   id,
+  hint,
 }: {
   k: string;
+  hint?: string;
   v: string;
   id?: { kind: "guard" | "tx" | "fingerprint" | "contract" | "run"; explorer?: { chainId: number | null; contractAddress: string | null } };
 }) {
   if (!v || v === "n/a") {
     return (
       <div className="border-b border-rule pb-3">
-        <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-graphite">{k}</dt>
+        <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-graphite">{hint ? <Hint term={k}>{hint}</Hint> : k}</dt>
         <dd className="mt-1 text-graphite">—</dd>
       </div>
     );
   }
   return (
     <div className="min-w-0 border-b border-rule pb-3">
-      <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-graphite">{k}</dt>
+      <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-graphite">{hint ? <Hint term={k}>{hint}</Hint> : k}</dt>
       <dd className="mt-1 break-words">
         {id ? <IdBadge value={v} kind={id.kind} label={k} provenance={id.explorer} /> : v}
       </dd>

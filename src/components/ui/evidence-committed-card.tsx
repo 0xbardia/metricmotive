@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/ui/hint";
+import { GLOSSARY } from "@/lib/terminology";
 import { IdBadge } from "@/components/ui/id-badge";
 
 /**
@@ -37,7 +39,7 @@ export function EvidenceCommittedCard({
         {eventCount} {eventCount === 1 ? "event" : "events"} committed to GenLayer.
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
-        The evidence fingerprint is finalized on-chain. The commitment cannot be replaced or resubmitted.
+        The evidence ID is finalized on-chain. The commitment cannot be replaced or resubmitted.
       </p>
       {txEvidence || manifestHash ? (
         <dl className="mt-5 grid gap-3 border-t border-rule pt-4 text-sm sm:grid-cols-2">
@@ -49,8 +51,8 @@ export function EvidenceCommittedCard({
           ) : null}
           {manifestHash ? (
             <div>
-              <dt className="text-graphite">Evidence fingerprint</dt>
-              <dd className="mt-1"><IdBadge value={manifestHash} kind="fingerprint" label="evidence fingerprint" /></dd>
+              <dt className="text-graphite"><Hint term="Evidence ID">{GLOSSARY.evidenceId}</Hint></dt>
+              <dd className="mt-1"><IdBadge value={manifestHash} kind="fingerprint" label="evidence ID" /></dd>
             </div>
           ) : null}
         </dl>

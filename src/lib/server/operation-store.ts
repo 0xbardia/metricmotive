@@ -65,6 +65,19 @@ export function replacementDecision(
   return { action: "blocked", reason: "pending", message: STILL_CONFIRMING_MESSAGE };
 }
 
+export const CREATE_EXISTING_MESSAGE =
+  "This Guard already has a create transaction. Confirmation can resume without submitting another transaction.";
+
+/**
+ * Message + failureKind a blocked create reservation reports, so the client shows the same
+ * recovery copy as arm/evidence/evaluate. Only proven mismatch/failed carry a recovery message.
+ */
+export function blockedCreateOutcome(existing: KnownTransaction): { failureKind: FailureKind | null; message: string } {
+  const d = replacementDecision(existing, null);
+  const message = d.action === "blocked" && (d.reason === "mismatch" || d.reason === "failed") ? d.message : CREATE_EXISTING_MESSAGE;
+  return { failureKind: existing.failureKind, message };
+}
+
 const LEGACY_COLUMN: Record<string, string> = {
   create_guard: "tx_create",
   arm_guard: "tx_arm",
