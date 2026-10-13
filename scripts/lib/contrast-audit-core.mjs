@@ -42,7 +42,7 @@ export const auditInPage = () => {
     rows.push({ auditId: tag, rawFg: fg.slice(), key, kind, ratio: +r.toFixed(2), need, pass: r >= need, size, weight: cs.fontWeight, fg: "rgb(" + f.slice(0, 3).map(Math.round) + ")", bg: "rgb(" + bgInfo.c.slice(0, 3).map(Math.round) + ")", imageBg: bgInfo.hadImage, text: text.slice(0, 40), sel: el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + "." + (typeof el.className === "string" ? el.className.split(/\s+/).slice(0, 3).join(".") : ""), n: 1 });
   };
   for (const el of document.querySelectorAll("body *")) {
-    if (!visible(el)) continue;
+    if (!visible(el) || el.closest(".sr-only")) continue; // visually hidden text is announced, not seen
     const cs = getComputedStyle(el);
     const own = [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim()).map(n => n.textContent.trim()).join(" ");
     const disabled = el.matches(":disabled") || el.closest("[aria-disabled=true]") || el.closest("button:disabled");

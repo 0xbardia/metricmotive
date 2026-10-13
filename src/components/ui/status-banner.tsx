@@ -51,7 +51,7 @@ export function StatusBanner({
   const Icon = busy ? Loader2 : ICONS[severity];
   return (
     <section
-      className={cn("product-status paper-panel p-5", roleClass(severity), className)}
+      className={cn("product-status paper-panel p-5", roleClass(severity), "bg-card!", className)}
       style={{ borderLeftColor: roleAccent(severity) }}
       role={bannerRole(severity)}
       aria-live={severity === "neutral" ? undefined : severity === "danger" ? "assertive" : "polite"}

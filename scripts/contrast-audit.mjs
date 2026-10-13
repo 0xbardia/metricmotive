@@ -27,11 +27,12 @@ async function pixelVerify(page, row) {
   const el = page.locator(`[data-audit="${row.auditId}"]`).first();
   if (!(await el.count())) return null;
   await el.scrollIntoViewIfNeeded().catch(() => undefined);
-  await page.addStyleTag({ content: "*{color:transparent !important;text-shadow:none !important;-webkit-text-fill-color:transparent !important} svg,img{visibility:hidden !important}" });
+  const hide = await page.addStyleTag({ content: "*{color:transparent !important;text-shadow:none !important;-webkit-text-fill-color:transparent !important} svg,img{visibility:hidden !important}" });
   await page.waitForTimeout(250);
   const box = await el.boundingBox();
-  if (!box || box.width < 2 || box.height < 2) return null;
+  if (!box || box.width < 2 || box.height < 2) { await hide.evaluate((e) => e.remove()); return null; }
   const buf = await page.screenshot({ clip: { x: Math.max(0, box.x), y: Math.max(0, box.y), width: box.width, height: box.height } });
+  await hide.evaluate((e) => e.remove()); // never leave the page with hidden text
   const px = await page.evaluate(async (b64) => {
     const img = new Image(); img.src = "data:image/png;base64," + b64; await img.decode();
     const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d"); x.drawImage(img, 0, 0);
@@ -52,19 +53,24 @@ for (const width of widths) for (const path of paths) {
   const H = await page.evaluate(() => document.body.scrollHeight);
   for (let y = 0; y < H; y += 600) { await page.evaluate((y) => scrollTo(0, y), y); await page.waitForTimeout(100); }
   await page.waitForLoadState("networkidle"); await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(500);
-  let rows = await page.evaluate(`(${auditInPage.toString()})()`);
+  const verifyRows = async (rows) => {
+    const done = [];
+    for (const r of rows) {
+      if (r.pass || r.kind === "disabled") { done.push({ ...r, verdict: r.pass ? "pass" : "exempt-disabled" }); continue; }
+      if (r.imageBg || r.ratio <= 1.05) { // backdrop unseen by the audit: judge from the rendered pixels
+        const worst = await pixelVerify(page, r).catch(() => null);
+        if (worst != null) { done.push({ ...r, verdict: worst >= r.need ? "pass-by-pixels" : "FAIL", pixelRatio: +worst.toFixed(2) }); continue; }
+      }
+      done.push({ ...r, verdict: "FAIL" });
+    }
+    return done;
+  };
+  const checked = await verifyRows(await page.evaluate(`(${auditInPage.toString()})()`));
   if (walkDemo && path.startsWith("/demo")) for (let i = 0; i < 12; i++) {
     const next = page.getByRole("button", { name: /^next/i }); if (!(await next.count()) || (await next.first().isDisabled())) break;
-    await next.first().click(); await page.waitForTimeout(700); rows = rows.concat(await page.evaluate(`(${auditInPage.toString()})()`));
-  }
-  const checked = [];
-  for (const r of rows) {
-    if (r.pass || r.kind === "disabled") { checked.push({ ...r, verdict: r.pass ? "pass" : "exempt-disabled" }); continue; }
-    if (r.imageBg || r.ratio <= 1.05) { // backdrop unseen by the audit: judge from the rendered pixels
-      const worst = await pixelVerify(page, r).catch(() => null);
-      if (worst != null) { checked.push({ ...r, verdict: worst >= r.need ? "pass-by-pixels" : "FAIL", pixelRatio: +worst.toFixed(2) }); continue; }
-    }
-    checked.push({ ...r, verdict: "FAIL" });
+    await next.first().click(); await page.waitForTimeout(700);
+    await page.evaluate(() => document.querySelectorAll("style[data-audit-hide]").forEach((e) => e.remove()));
+    checked.push(...(await verifyRows(await page.evaluate(`(${auditInPage.toString()})()`))));
   }
   all.push({ page: path, width, rows: checked }); await page.close();
 }
