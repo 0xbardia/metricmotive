@@ -1,6 +1,6 @@
 # V2 production cut-over
 
-Run by a human operator only. Nothing in this file runs automatically. `v2.0.0-rc5` differs from the rehearsed `v2.0.0-rc1` only in `CUTOVER.md`, `.env.example`, `docs/cutover-*.sql` and `scripts/` helpers (no app code). **Rehearsed end to end on 2026-10-13** against a
+Run by a human operator only. Nothing in this file runs automatically. `v2.0.0-rc6` differs from the rehearsed `v2.0.0-rc1` only in `CUTOVER.md`, `.env.example`, `docs/cutover-*.sql` and `scripts/` helpers (no app code). **Rehearsed end to end on 2026-10-13** against a
 disposable PostgreSQL 17 and a V1-state copy of the app on a spare port; the timings below are from that run.
 
 The live site (`metricmotive.xyz`, PM2 process `metricmotive-web` on `127.0.0.1:4189`) serves `.vercel/output` from the
@@ -26,8 +26,10 @@ The cut-over ships the V2 **app** only. The V2 contract (`v2-contract`) stays un
 ## Step list (you run every [PROD] step; paste the output and I verify it against "Expect")
 Each step has the exact command, the expected output, an abort condition (stop and do not continue) and the rollback.
 
+**Order:** P0 → P0a → P1 → 1 → 2 → 3 → 4 → 5. Steps 5 and 6 are the only restarts. Neither runs until P0a is done and P1 reads PASS.
+
 ### P0. Read-only facts  [PROD, read-only]
-Prep (no production effect; creates only the release directory, step 1 builds in it): `cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc5 && git -C /root/mm-release-v2 describe --tags` (expect `v2.0.0-rc5`).
+Prep (no production effect; creates only the release directory, step 1 builds in it): `cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc6 && git -C /root/mm-release-v2 describe --tags` (expect `v2.0.0-rc6`).
 ```sh
 cd /root/MetricMotive && set -a; . ./.env; set +a
 { PGOPTIONS='-c default_transaction_read_only=on' psql "$DATABASE_URL" -X -f /root/mm-release-v2/docs/cutover-db-facts.sql; pg_dump --version; } 2>&1 | tee /root/p0-output.txt
@@ -44,7 +46,7 @@ docker run --rm --network host -e DATABASE_URL -v /root/metricmotive-backups:/ba
 ```
 
 ### P0a. Align `.env` with the active deployment  [PROD, writes `.env`; before any restart]
-Why: `.env` still holds the historical Studionet pair (chain 61999, `0xe39e59f8…`). Replaying the start gate (`scripts/check-deployment.mjs`, same `set -eu` flow as `start-production.sh`) with that pair **exits 0** and logs the active address, `Deployment configuration verified: 0x4105…/61997`. The gate refuses only when the RPC string differs from the registry. The pair branch (`scripts/check-deployment.mjs:12-19`) accepts any registry row, `historical` and `legacy` included. So a successful restart proves nothing about `.env`; P1 is the check that refuses the historical pair. Fixing the gate is a separate decision, not part of this cut-over.
+Why: `.env` still holds the historical Studionet pair (chain 61999, `0xe39e59f8…`). The gate before rc6 accepted that pair (exit 0) and logged the active address, so the stale file went unnoticed. rc6 fixes the gate: `scripts/check-deployment.mjs` refuses any pair that is not the active deployment. **After rc6, the stale `.env` makes the server refuse to start, so P0a is mandatory, not optional.** P1 is this step's validator.
 
 Backup (before any edit; `.env` is mode 600, the backup keeps that):
 ```sh
@@ -91,7 +93,7 @@ Rollback: none.
 
 ### 1. Release directory (not production)
 ```sh
-cd /root/mm-release-v2 && git switch --detach v2.0.0-rc5 && git describe --tags   # the P0 prep created the directory at rc4; expect v2.0.0-rc5
+cd /root/mm-release-v2 && git switch --detach v2.0.0-rc6 && git describe --tags   # the P0 prep created the directory at rc4; expect v2.0.0-rc6
 env -u DATABASE_URL npm ci --no-audit --no-fund && env -u DATABASE_URL npm run build
 ls .vercel/output/functions/__server.func/_libs | grep pglite
 ```
@@ -140,7 +142,7 @@ Rollback: section 7.
 Use a fresh shell (not the one that sourced `.env`), see "What `pm2 restart --update-env` does".
 ```sh
 cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
-git switch --detach v2.0.0-rc5
+git switch --detach v2.0.0-rc6
 test -f node_modules/.nitro/last-build.json || echo '{"outputDir":"../../../.vercel/output"}' > node_modules/.nitro/last-build.json
 mv .vercel/output ".vercel/output.v1-$ts" && cp -a /root/mm-release-v2/.vercel/output .vercel/output
 pm2 restart metricmotive-web --update-env
@@ -160,7 +162,7 @@ git switch --detach "$(cat /root/metricmotive-backups/start-commit)"
 pm2 restart metricmotive-web --update-env
 sleep 6; curl -fsS https://metricmotive.xyz/api/v1/ready
 ```
-Expect: ready 200 with the same contract address; `/` shows the V1 landing (the 80-meeting case).
+Expect: ready 200 with the same contract address; `/` shows the V1 landing (the 80-meeting case). The V1 gate at `c2ffa2e` is unchanged and its active row is also `studio-dev-v1`, so the P0a-aligned `.env` starts V1 too.
 Validate: `node scripts/check-cutover-output.mjs 6 <file>`.
 Abort condition: none; if it is not ready, stop and paste the output (the dump and the V1 output copy are intact).
 

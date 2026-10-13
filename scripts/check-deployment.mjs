@@ -1,7 +1,7 @@
 import {
   CURRENT_CONTRACT,
   DEPLOYMENTS,
-  getDeploymentByChainAndContract,
+  getActiveDeployment,
 } from "../packages/sdk/src/deployment.ts";
 
 const envAddress = process.env.GENLAYER_CONTRACT_ADDRESS?.trim();
@@ -10,11 +10,17 @@ const envNetwork = process.env.GENLAYER_NETWORK?.trim();
 const envRpc = process.env.GENLAYER_RPC_URL?.trim();
 
 if (envAddress && envChain) {
-  const row = getDeploymentByChainAndContract(Number(envChain), envAddress);
-  if (envNetwork && envNetwork !== row.networkName && envNetwork !== CURRENT_CONTRACT.network) {
+  // Only the active row may pass. Historical and legacy rows are registered but must never be started against.
+  const active = getActiveDeployment();
+  if (Number(envChain) !== active.chainId || envAddress.toLowerCase() !== active.contractAddress.toLowerCase()) {
+    throw new Error(
+      `GENLAYER_CONTRACT_ADDRESS and GENLAYER_CHAIN_ID are not the active deployment (${active.key}: chain ${active.chainId}, ${active.contractAddress}). Historical and legacy deployments are refused; set .env to the active values.`,
+    );
+  }
+  if (envNetwork && envNetwork !== active.networkName) {
     throw new Error("GENLAYER_NETWORK disagrees with the deployment registry.");
   }
-  if (envRpc && envRpc !== row.rpcUrl) {
+  if (envRpc && envRpc !== active.rpcUrl) {
     throw new Error("GENLAYER_RPC_URL disagrees with the deployment registry.");
   }
 } else {
