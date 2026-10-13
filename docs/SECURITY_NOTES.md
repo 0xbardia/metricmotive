@@ -13,3 +13,8 @@ barrier scripts embed per-request dehydrated state, so their content changes on 
 ## Errors (E-06)
 `errorBody` returns code/message only for `AppError`. Every other error returns `INTERNAL` and is logged
 server-side with the request id.
+
+## Better Auth stack (kept, owner decision needed)
+`better-auth`, `src/lib/auth/*` and `AuthProvider` are still present: `vite.config.ts` loads
+`src/lib/auth/popup.server.ts` for the preview platform and the root layout mounts `AuthProvider`. The product's own
+sign-in is wallet auth (`/api/v1/auth/*`). Removing the Better Auth stack needs an owner decision on the preview-platform dependency.
