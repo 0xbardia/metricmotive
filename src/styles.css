@@ -695,10 +695,11 @@
     opacity: 1;
   }
 
-  /* Bottom rule once scrolled: currentColor at 12%, so it follows the tone's text colour. */
+  /* Bottom rule once scrolled, on the header's bottom border row (where rc6 drew its border line). currentColor at
+     rc6's strength: 12% bone on dark, 10% carbon on light. Opacity only. */
   .site-header-rule {
     position: absolute;
-    inset: auto 0 0;
+    inset: auto 0 -1px;
     height: 1px;
     background-color: currentColor;
     opacity: 0;
@@ -708,6 +709,10 @@
 
   .site-header[data-scrolled="true"] .site-header-rule {
     opacity: 0.12;
+  }
+
+  .site-header[data-scrolled="true"][data-tone="light"] .site-header-rule {
+    opacity: 0.1;
   }
 
   .header-inner {
@@ -762,7 +767,8 @@
     animation: mobile-nav-in var(--motion-fast) var(--ease-out-soft) both;
   }
 
-  .route-enter {
+  /* Added after mount (RouteEnter): the default route wrapper is at rest, with no animation. */
+  .route-enter-on {
     animation: route-enter var(--motion-fast) var(--ease-out-soft) both;
   }
 
@@ -813,7 +819,7 @@
       transform: none;
     }
 
-    .route-enter,
+    .route-enter-on,
     .mobile-nav {
       animation: none;
     }

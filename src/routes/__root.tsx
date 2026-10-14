@@ -9,6 +9,7 @@ import {
 import { AuthProvider } from "@/lib/auth/provider";
 import { SiteFooter, SiteHeader } from "@/components/chrome";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { RouteEnter } from "@/components/route-enter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/query-client";
 import { useState } from "react";
@@ -72,9 +73,9 @@ function RootDocument() {
         <PreviewHostBridge />
         <AuthProvider>
           <QueryClientProvider client={queryClient}>
-            <div key={routeKey} className="route-enter">
+            <RouteEnter key={routeKey}>
               <Outlet />
-            </div>
+            </RouteEnter>
           </QueryClientProvider>
         </AuthProvider>
         <Scripts />
