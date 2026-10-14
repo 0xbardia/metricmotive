@@ -1,0 +1,65 @@
+[
+  {
+    "name": "fraunces-opsz-wght-400-700",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeA.woff2",
+    "bytes": 67304,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "fraunces-opsz-wght-100-900",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,100..900&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeA.woff2",
+    "bytes": 67304,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "fraunces-opsz-wght-soft-400-700",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,0..100&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/fraunces/v38/6NUI8FyLNQOQZAnv9bYEvCeYdG9Ea92uemAO8Uik.woff2",
+    "bytes": 120788,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "fraunces-opsz-wght-soft-wonk-400-700",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..700,0..100,0..1&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/fraunces/v38/6NUV8FyLNQOQZAnv9ZwIlOk.woff2",
+    "bytes": 121016,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "instrument-sans-wdth-wght",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/instrumentsans/v4/pxicypc9vsFDm051Uf6KVwgkfoSbT2lB.woff2",
+    "bytes": 57332,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "hanken-grotesk-wght-400-700",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400..700&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/hankengrotesk/v12/ieVn2YZDLWuGJpnzaiwFXS9tYtpd59A.woff2",
+    "bytes": 34704,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "fraunces-opsz-wght-wonk-400-700",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,WONK@9..144,400..700,0..1&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/fraunces/v38/6NUI8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAO8Uik.woff2",
+    "bytes": 67488,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "fraunces-wght-only-400-700",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Fraunces:wght@400..700&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/fraunces/v38/6NUu8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58nib14c7qv8.woff2",
+    "bytes": 36620,
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "name": "instrument-sans-wght-only",
+    "cssUrl": "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap",
+    "fileUrl": "https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0SZe1Q.woff2",
+    "bytes": 30092,
+    "license": "SIL OFL 1.1"
+  }
+]
