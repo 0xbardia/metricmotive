@@ -139,15 +139,20 @@ Validate: `node scripts/check-cutover-output.mjs 4 <file>`.
 Rollback: section 7.
 
 ### 5. Deploy  [PROD, restarts the live process]
-Use a fresh shell (not the one that sourced `.env`), see "What `pm2 restart --update-env` does".
+Use a fresh shell (not the one that sourced `.env`), see "What `pm2 restart metricmotive-web` does with the environment".
 ```sh
 cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
 git switch --detach v2.0.0-rc6
 test -f node_modules/.nitro/last-build.json || echo '{"outputDir":"../../../.vercel/output"}' > node_modules/.nitro/last-build.json
 mv .vercel/output ".vercel/output.v1-$ts" && cp -a /root/mm-release-v2/.vercel/output .vercel/output
-pm2 restart metricmotive-web --update-env
-sleep 6; curl -fsS https://metricmotive.xyz/api/v1/ready; echo; pm2 status metricmotive-web
+cp -a ".vercel/output.v1-$ts" /root/MetricMotive-v2-recon/archived-builds/v1-live-output
+PM2=/root/.nvm/versions/node/v20.20.2/bin/pm2   # pm2 is not on the PATH of a clean shell: always use this absolute path
+$PM2 status metricmotive-web                    # record the restart counter (↺) before the restart
+$PM2 restart metricmotive-web || echo "RESTART FAILED: new assets are live under the old process, see the restart check below"
+for i in $(seq 1 15); do curl -fsS --max-time 5 https://metricmotive.xyz/api/v1/ready && break; sleep 2; done; echo
+$PM2 status metricmotive-web
 ```
+Restart check (must pass before step 6 or any other step): `pm2 status metricmotive-web` shows `online` and the restart counter up by one from the value recorded above. A restart that fails silently is not a no-op: the swap is already on disk, so the old process serves the new output and the site returns 404 for the new `/assets/*.js` names (in the cut-over, about one minute and 14 of 15 assets). If the counter has not moved, retry the restart with the absolute path; if it still fails, roll back (step 6). After the checks pass, remove the temporary V1 copy: `rm -rf ".vercel/output.v1-$ts"`. The archived copies are `/root/MetricMotive-v2-recon/archived-builds/v1-live-output` and `/root/metricmotive-backups/vercel-output-$ts`.
 Expect: `{"status":"ready",...,"db":true,"contractConfigured":true,"chainId":61997,"network":"GenLayer Studio Dev","contractAddress":"0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703"}`; pm2 shows `online` with the restart counter up by one.
 Then: `/`, `/demo`, `/docs`, `/contract`, `/roadmap`, `/verify/rct_14804bf62424284e`, `/app`, `/app/guards/new` return 200; every `/assets/*.js` referenced by `/` returns 200 (use `grep -a`); `pm2 logs metricmotive-web --lines 50 --nostream` shows no errors.
 Abort and roll back if: ready is not 200 within 30 s, pm2 is not `online` or is restarting, the contract address or chain differs, any of the eight routes is not 200, or any asset is not 200.
@@ -159,8 +164,11 @@ Rollback: section 6 (about 5 s).
 cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
 rm -rf .vercel/output && cp -a "/root/metricmotive-backups/vercel-output-$ts" .vercel/output
 git switch --detach "$(cat /root/metricmotive-backups/start-commit)"
-pm2 restart metricmotive-web --update-env
-sleep 6; curl -fsS https://metricmotive.xyz/api/v1/ready
+PM2=/root/.nvm/versions/node/v20.20.2/bin/pm2
+$PM2 status metricmotive-web                    # record the restart counter (↺) before the restart
+$PM2 restart metricmotive-web || echo "RESTART FAILED: the old output is in place but the process did not restart; check pm2 status and retry"
+for i in $(seq 1 15); do curl -fsS --max-time 5 https://metricmotive.xyz/api/v1/ready && break; sleep 2; done; echo
+$PM2 status metricmotive-web                    # the counter must be up by one
 ```
 Expect: ready 200 with the same contract address; `/` shows the V1 landing (the 80-meeting case). The V1 gate at `c2ffa2e` is unchanged and its active row is also `studio-dev-v1`, so the P0a-aligned `.env` starts V1 too.
 Validate: `node scripts/check-cutover-output.mjs 6 <file>`.
@@ -187,8 +195,8 @@ Full restore alternative: `pg_restore --clean --if-exists --no-owner -d "$DATABA
 | 0013 | 1 x `ADD COLUMN IF NOT EXISTS chain_resolved_at timestamptz` (nullable) | Yes | momentary `ACCESS EXCLUSIVE` on `guards` | milliseconds |
 No statement rewrites a table, backfills, or takes a long lock. The runner applies each file in one transaction. Worst case is waiting behind a long-running query on the same table (the `ACCESS EXCLUSIVE` request queues): check `select pid, state, now()-query_start from pg_stat_activity where state <> 'idle'` first if the migrate step ever seems to hang. V1 keeps working between steps 3 and 5: V1 maps rows field by field, so extra columns are ignored (rehearsed: V1 build served `/`, `/app`, `/docs`, receipts, with extra columns populated, 0 console errors, 0 server errors).
 
-## What `pm2 restart metricmotive-web --update-env` does with the environment
-PM2 restarts the registered script, `deployment/start-production.sh`. That script runs `set -a; . ./.env` itself and then `node scripts/check-deployment.mjs` and `exec npm run preview ...`, so **every variable defined in `/root/MetricMotive/.env` is re-read from the file on each restart**, and the file wins over anything PM2 stored. `--update-env` additionally replaces PM2's stored environment with the environment of the shell that runs the command; it matters only for variables that `.env` does not define (for example `PATH`). So: run step 5 in a fresh shell, because a shell that sourced `.env` for the backup would copy the database URL and secrets into PM2's stored environment (visible in `pm2 env`/dump). Plain `pm2 restart metricmotive-web` is enough for this cut-over, since V2 adds no variables.
+## What `pm2 restart metricmotive-web` does with the environment
+PM2 restarts the registered script, `deployment/start-production.sh`. That script runs `set -a; . ./.env` itself and then `node scripts/check-deployment.mjs` and `exec npm run preview ...`, so **every variable defined in `/root/MetricMotive/.env` is re-read from the file on each restart**. The deploy and the rollback therefore use a plain `pm2 restart metricmotive-web`, without `--update-env`: `--update-env` copies the calling shell's environment into PM2's stored environment, and a shell that sourced `.env` for the backup would put the database URL and secrets there (visible in `pm2 env`/dump). Run both from a fresh shell, with the absolute `pm2` path from step 5.
 
 ## Rehearsal timings (disposable database, small data)
 | Step | Time |
