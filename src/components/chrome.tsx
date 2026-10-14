@@ -108,7 +108,7 @@ export function SiteHeader({
       className={cn("site-header sticky top-0 z-(--z-header)", dark ? "glass-dark text-bone" : "glass text-carbon")}
     >
       <div className="header-inner mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link to="/" aria-label="MetricMotive home">
+        <Link to="/" aria-label="MetricMotive home" className="shrink-0 whitespace-nowrap">
           <Wordmark invert={dark} />
         </Link>
         <nav className="hidden items-center gap-5 lg:flex" aria-label="Primary">

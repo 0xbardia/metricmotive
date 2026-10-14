@@ -273,12 +273,10 @@
   from {
     opacity: 0;
     transform: translateY(var(--motion-y-medium));
-    filter: blur(2px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -469,6 +467,7 @@
     }
 
     .landing-rail a {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -495,21 +494,26 @@
     }
 
     .landing-rail-label {
-      order: 1;
-      overflow: hidden;
-      max-width: 0;
+      position: absolute;
+      right: calc(100% + 0.5rem);
+      opacity: 0;
+      transform: translateX(4px);
+      pointer-events: none;
       color: var(--nav-text);
       font-family: var(--font-mono);
       font-size: 0.625rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       white-space: nowrap;
-      transition: max-width var(--motion-quick) var(--ease-out-soft);
+      transition-property: opacity, transform;
+      transition-duration: var(--motion-quick);
+      transition-timing-function: var(--ease-out-soft);
     }
 
     .landing-rail a:hover .landing-rail-label,
     .landing-rail a:focus-visible .landing-rail-label {
-      max-width: 7rem;
+      opacity: 1;
+      transform: translateX(0);
     }
   }
 
@@ -565,12 +569,14 @@
 @layer components {
   /* Modifier for glass CONTENT cards (used with .glass / .glass-dark): phones keep the translucent material
      and border but drop the live blur, so a phone viewport never has more than the header + one blur layer. */
+  .glass.glass-flat,
+  .glass-dark.glass-flat {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  /* Desktop: the card sits on the smooth ambient mesh, where blur is invisible, so the translucent
+     background alone reproduces the look. */
   @media (max-width: 640px) {
-    .glass.glass-flat,
-    .glass-dark.glass-flat {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
     .glass.glass-flat { background-color: var(--glass-bg-bone-solid); }
     .glass-dark.glass-flat { background-color: var(--glass-bg-carbon-solid); }
   }
@@ -641,14 +647,7 @@
   }
 
   .header-inner {
-    min-height: var(--header-h);
-    padding-block: 0.75rem;
-    transition:
-      min-height var(--motion-fast) var(--ease-out-soft),
-      padding var(--motion-fast) var(--ease-out-soft);
-  }
-
-  .site-header[data-scrolled="true"] .header-inner {
+    /* Constant in both scroll states, so scrolling never moves layout. */
     min-height: 64px;
     padding-block: 9px;
   }
@@ -792,7 +791,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition-property: opacity, transform, filter;
+    transition-property: opacity, transform;
     transition-duration: var(--motion-fast);
     transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
   }
@@ -805,25 +804,21 @@
   .icon-swap[data-on="true"] > .icon-swap-on {
     opacity: 1;
     transform: scale(1);
-    filter: blur(0);
   }
 
   .icon-swap[data-on="true"] > .icon-swap-off {
     opacity: 0;
     transform: scale(0.25);
-    filter: blur(4px);
   }
 
   .icon-swap[data-on="false"] > .icon-swap-on {
     opacity: 0;
     transform: scale(0.25);
-    filter: blur(4px);
   }
 
   .icon-swap[data-on="false"] > .icon-swap-off {
     opacity: 1;
     transform: scale(1);
-    filter: blur(0);
   }
 
   .technical-details {
