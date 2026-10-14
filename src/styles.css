@@ -626,47 +626,81 @@
     transform: translateX(3px);
   }
 
+  /* Surfaces are two stacked layers (one per tone, below), faded by opacity only. Rest is the glass at 62% bone
+     or 58% carbon: the strong glass (88% / 82%) at 0.7045 / 0.7073 opacity. Scrolled is the strong glass at 1. */
   .site-header {
-    --header-surface: var(--glass-bg-bone);
     --header-line: color-mix(in srgb, var(--color-carbon) 14%, transparent);
+    --header-light: var(--glass-bg-bone-strong);
+    --header-dark: var(--glass-bg-carbon-strong);
+    --header-light-rest: 0.7045;
+    --header-dark-rest: 0.7073;
     min-height: var(--header-h);
     border-bottom: 1px solid var(--header-line);
-    background-color: var(--header-surface);
+    background-color: transparent;
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    transition:
-      background-color var(--motion-glass) var(--ease-out-soft),
-      border-color var(--motion-glass) var(--ease-out-soft),
-      box-shadow var(--motion-glass) var(--ease-out-soft);
   }
 
   .site-header[data-invert="true"] {
     margin-bottom: calc(-1 * var(--header-h) - 1px);
   }
 
-  /* Tone contract (C-11): light = bone glass + carbon text, dark = carbon glass
-     + bone text. Scrolled states are the more opaque "strong" glass. */
-
-  .site-header[data-tone="dark"] {
-    --header-surface: var(--glass-bg-carbon);
-    --header-line: transparent;
-  }
-
+  /* Tone contract (C-11): light = bone glass + carbon text, dark = carbon glass + bone text. A tone change
+     crossfades the two layers; text colour switches with the tone (a class change, no transition). */
+  .site-header[data-tone="dark"],
   .site-header[data-tone="light"] {
-    --header-surface: var(--glass-bg-bone);
     --header-line: transparent;
   }
 
-  .site-header[data-scrolled="true"][data-tone="dark"] {
-    --header-surface: var(--glass-bg-carbon-strong);
-    --header-line: color-mix(in srgb, var(--color-bone) 12%, transparent);
-    box-shadow: var(--glass-shadow);
+  .site-header::before,
+  .site-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--motion-glass) var(--ease-out-soft);
   }
 
-  .site-header[data-scrolled="true"][data-tone="light"] {
-    --header-surface: var(--glass-bg-bone-strong);
-    --header-line: color-mix(in srgb, var(--color-carbon) 10%, transparent);
-    box-shadow: var(--glass-shadow);
+  .site-header::before {
+    background-color: var(--header-light);
+    background-image: var(--glass-specular-bone);
+    box-shadow: var(--glass-border-bone), var(--glass-shadow);
+  }
+
+  .site-header::after {
+    background-color: var(--header-dark);
+    background-image: var(--glass-specular-carbon);
+    box-shadow: var(--glass-border-carbon), var(--glass-shadow);
+  }
+
+  .site-header[data-tone="light"]::before {
+    opacity: var(--header-light-rest);
+  }
+
+  .site-header[data-tone="dark"]::after {
+    opacity: var(--header-dark-rest);
+  }
+
+  .site-header[data-scrolled="true"][data-tone="light"]::before,
+  .site-header[data-scrolled="true"][data-tone="dark"]::after {
+    opacity: 1;
+  }
+
+  /* Bottom rule once scrolled: currentColor at 12%, so it follows the tone's text colour. */
+  .site-header-rule {
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-glass) var(--ease-out-soft);
+  }
+
+  .site-header[data-scrolled="true"] .site-header-rule {
+    opacity: 0.12;
   }
 
   .header-inner {
@@ -683,41 +717,41 @@
     transform: scale(0.94);
   }
 
+  /* No backdrop support, or reduced transparency: solid layers, no fade. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .site-header {
-      --header-surface: var(--glass-bg-bone-solid);
+      --header-light: var(--glass-bg-bone-solid);
+      --header-dark: var(--glass-bg-carbon-solid);
+      --header-light-rest: 1;
+      --header-dark-rest: 1;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-    }
-    .site-header[data-tone="dark"],
-    .site-header[data-scrolled="true"][data-tone="dark"] {
-      --header-surface: var(--glass-bg-carbon-solid);
     }
   }
 
   @media (prefers-reduced-transparency: reduce) {
-    .site-header,
-    .site-header[data-tone="light"],
-    .site-header[data-scrolled="true"][data-tone="light"] {
-      --header-surface: var(--glass-bg-bone-solid);
+    .site-header {
+      --header-light: var(--glass-bg-bone-solid);
+      --header-dark: var(--glass-bg-carbon-solid);
+      --header-light-rest: 1;
+      --header-dark-rest: 1;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-    }
-    .site-header[data-tone="dark"],
-    .site-header[data-scrolled="true"][data-tone="dark"] {
-      --header-surface: var(--glass-bg-carbon-solid);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .site-header {
+    .site-header::before,
+    .site-header::after,
+    .site-header-rule {
       transition: none;
     }
   }
 
+  /* The mobile menu sits inside the header, so the layers already give it its surface. */
   .mobile-nav {
-    border-top-color: var(--header-line);
-    background-color: var(--header-surface);
+    border-top-color: color-mix(in srgb, currentColor 12%, transparent);
+    background-color: transparent;
     animation: mobile-nav-in var(--motion-fast) var(--ease-out-soft) both;
   }
 

@@ -105,8 +105,9 @@ export function SiteHeader({
       data-invert={invert}
       data-scrolled={scrolled}
       data-tone={dark ? "dark" : "light"}
-      className={cn("site-header sticky top-0 z-(--z-header)", dark ? "glass-dark text-bone" : "glass text-carbon")}
+      className={cn("site-header sticky top-0 z-(--z-header)", dark ? "text-bone" : "text-carbon")}
     >
+      <span className="site-header-rule" aria-hidden="true" />
       <div className="header-inner mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link to="/" aria-label="MetricMotive home" className="shrink-0 whitespace-nowrap">
           <Wordmark invert={dark} />
