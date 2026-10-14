@@ -391,6 +391,13 @@
     background-image: var(--ambient-mesh-carbon);
   }
 
+  /* Landing sections skip style, layout and paint while off screen. The size is the placeholder's (inline, from
+     Hold) until a section has rendered once, then its last rendered size, so scrolling does not move the page. */
+  main > section[data-tone] {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 50rem;
+  }
+
   /* Landing section navigation: rail on desktop, jump strip below the header
      on mobile. Both follow [data-tone] set by the section observer. */
   .landing-rail {

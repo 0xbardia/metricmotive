@@ -21,15 +21,20 @@ export function midEllipsis(value: string, head = 8, tail = 6): string {
  * receipt could read different clocks with no way to tell. Stored instants are
  * UTC, so UTC is what is displayed, explicitly.
  */
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * Same text as Intl "en" (medium date, short time) in UTC, written out: the first Intl.DateTimeFormat costs
+ * about 30 ms cold (over 100 ms at 4x CPU), and the landing's case section formats a timestamp on first paint.
+ * Parity with Intl is tested in format.test.ts.
+ */
 export function formatUtc(value: string | null | undefined): string {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(d) + " UTC";
+  const h = d.getUTCHours();
+  const minutes = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}, ${h % 12 || 12}:${minutes} ${h < 12 ? "AM" : "PM"} UTC`;
 }
 
 export function classForVerdict(
