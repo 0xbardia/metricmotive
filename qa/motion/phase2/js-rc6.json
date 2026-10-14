@@ -1,0 +1,379 @@
+{
+ "base": "http://127.0.0.1:8097",
+ "out": {
+  "landing": {
+   "files": [
+    {
+     "f": "index-Dpak7TO7.js",
+     "raw": 393206,
+     "gz": 121451,
+     "wallet": false
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "routes-DacxDpVb.js",
+     "raw": 7593,
+     "gz": 2687,
+     "wallet": false
+    },
+    {
+     "f": "d1-case-DvD8WzRJ.js",
+     "raw": 4646,
+     "gz": 2144,
+     "wallet": false
+    },
+    {
+     "f": "case-D57M6vcr.js",
+     "raw": 4528,
+     "gz": 1735,
+     "wallet": false
+    },
+    {
+     "f": "trust-BGjaDwmr.js",
+     "raw": 2126,
+     "gz": 883,
+     "wallet": false
+    },
+    {
+     "f": "copy-button-CBSHIjkU.js",
+     "raw": 1532,
+     "gz": 810,
+     "wallet": false
+    },
+    {
+     "f": "how-it-works-Va_c_FPS.js",
+     "raw": 1382,
+     "gz": 742,
+     "wallet": false
+    },
+    {
+     "f": "audience-BdWRGaM4.js",
+     "raw": 1010,
+     "gz": 566,
+     "wallet": false
+    },
+    {
+     "f": "cta-DiXoSeaH.js",
+     "raw": 857,
+     "gz": 461,
+     "wallet": false
+    },
+    {
+     "f": "badge-CSYTdg3B.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-6y9nAPnd.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    },
+    {
+     "f": "verdict-summary-D2xGGXTz.js",
+     "raw": 591,
+     "gz": 390,
+     "wallet": false
+    },
+    {
+     "f": "marketing-shell-CifRPWvH.js",
+     "raw": 321,
+     "gz": 247,
+     "wallet": false
+    },
+    {
+     "f": "format-BSEtzX1K.js",
+     "raw": 285,
+     "gz": 232,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 521463,
+   "totalGz": 168394,
+   "walletFiles": []
+  },
+  "demo": {
+   "files": [
+    {
+     "f": "index-Dpak7TO7.js",
+     "raw": 393206,
+     "gz": 121451,
+     "wallet": false
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "demo-CksiCL4w.js",
+     "raw": 7980,
+     "gz": 2722,
+     "wallet": false
+    },
+    {
+     "f": "d1-case-DvD8WzRJ.js",
+     "raw": 4646,
+     "gz": 2144,
+     "wallet": false
+    },
+    {
+     "f": "badge-CSYTdg3B.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-6y9nAPnd.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    },
+    {
+     "f": "verdict-summary-D2xGGXTz.js",
+     "raw": 591,
+     "gz": 390,
+     "wallet": false
+    },
+    {
+     "f": "marketing-shell-CifRPWvH.js",
+     "raw": 321,
+     "gz": 247,
+     "wallet": false
+    },
+    {
+     "f": "arrow-left-DEXSGbPy.js",
+     "raw": 151,
+     "gz": 152,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 510281,
+   "totalGz": 163152,
+   "walletFiles": []
+  },
+  "receipt": {
+   "files": [
+    {
+     "f": "index-Dpak7TO7.js",
+     "raw": 393206,
+     "gz": 121451,
+     "wallet": false
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "_receiptId-d-LCEZSR.js",
+     "raw": 12910,
+     "gz": 3886,
+     "wallet": false
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "id-badge-k7QNVO17.js",
+     "raw": 3006,
+     "gz": 1464,
+     "wallet": false
+    },
+    {
+     "f": "findings-summary-K7vYHBTQ.js",
+     "raw": 2179,
+     "gz": 924,
+     "wallet": false
+    },
+    {
+     "f": "copy-button-CBSHIjkU.js",
+     "raw": 1532,
+     "gz": 810,
+     "wallet": false
+    },
+    {
+     "f": "badge-CSYTdg3B.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-6y9nAPnd.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    },
+    {
+     "f": "verdict-summary-D2xGGXTz.js",
+     "raw": 591,
+     "gz": 390,
+     "wallet": false
+    },
+    {
+     "f": "evidence-summary-DycJCdmS.js",
+     "raw": 529,
+     "gz": 300,
+     "wallet": false
+    },
+    {
+     "f": "format-BSEtzX1K.js",
+     "raw": 285,
+     "gz": 232,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 517624,
+   "totalGz": 165503,
+   "walletFiles": []
+  },
+  "app": {
+   "files": [
+    {
+     "f": "index-Dpak7TO7.js",
+     "raw": 393206,
+     "gz": 121451,
+     "wallet": false
+    },
+    {
+     "f": "provider-YjbpZAar.js",
+     "raw": 252261,
+     "gz": 30065,
+     "wallet": true
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "createBatchScheduler-C5ZjWuWX.js",
+     "raw": 15892,
+     "gz": 4959,
+     "wallet": true
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "app-home-content-DMwutI2z.js",
+     "raw": 8813,
+     "gz": 3288,
+     "wallet": true
+    },
+    {
+     "f": "useQuery-xvhfKUDt.js",
+     "raw": 8049,
+     "gz": 2924,
+     "wallet": false
+    },
+    {
+     "f": "auth-client-BZgus8cK.js",
+     "raw": 1679,
+     "gz": 845,
+     "wallet": false
+    },
+    {
+     "f": "Value-LxLegnNd.js",
+     "raw": 1650,
+     "gz": 778,
+     "wallet": false
+    },
+    {
+     "f": "badge-CSYTdg3B.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-6y9nAPnd.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 784936,
+   "totalGz": 200356,
+   "walletFiles": [
+    "provider-YjbpZAar.js",
+    "createBatchScheduler-C5ZjWuWX.js",
+    "app-home-content-DMwutI2z.js"
+   ]
+  }
+ }
+}

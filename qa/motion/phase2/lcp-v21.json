@@ -1,0 +1,368 @@
+[
+ {
+  "variant": "built",
+  "viewport": "mobile4x",
+  "run": 0,
+  "lcpMs": 740,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 35640,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "built",
+  "viewport": "mobile4x",
+  "run": 1,
+  "lcpMs": 924,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 35640,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "built",
+  "viewport": "mobile4x",
+  "run": 2,
+  "lcpMs": 996,
+  "lcpEl": "P.mt-5 max-w-xl text-base leading-relaxed  \"MetricMotive checks whether an AI agent \"",
+  "lcpSize": 33418,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "built",
+  "viewport": "desktop1x",
+  "run": 0,
+  "lcpMs": 928,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "built",
+  "viewport": "desktop1x",
+  "run": 1,
+  "lcpMs": 636,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "built",
+  "viewport": "desktop1x",
+  "run": 2,
+  "lcpMs": 680,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "none",
+  "viewport": "mobile4x",
+  "run": 0,
+  "lcpMs": 1132,
+  "lcpEl": "P.mt-5 max-w-xl text-base leading-relaxed  \"MetricMotive checks whether an AI agent \"",
+  "lcpSize": 33418,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "none",
+  "viewport": "mobile4x",
+  "run": 1,
+  "lcpMs": 760,
+  "lcpEl": "P.mt-5 max-w-xl text-base leading-relaxed  \"MetricMotive checks whether an AI agent \"",
+  "lcpSize": 33418,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "none",
+  "viewport": "mobile4x",
+  "run": 2,
+  "lcpMs": 1200,
+  "lcpEl": "P.mt-5 max-w-xl text-base leading-relaxed  \"MetricMotive checks whether an AI agent \"",
+  "lcpSize": 33418,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "none",
+  "viewport": "desktop1x",
+  "run": 0,
+  "lcpMs": 684,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 94600,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "none",
+  "viewport": "desktop1x",
+  "run": 1,
+  "lcpMs": 380,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "none",
+  "viewport": "desktop1x",
+  "run": 2,
+  "lcpMs": 564,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "frauncesOnly",
+  "viewport": "mobile4x",
+  "run": 0,
+  "lcpMs": 1320,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 35640,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "frauncesOnly",
+  "viewport": "mobile4x",
+  "run": 1,
+  "lcpMs": 732,
+  "lcpEl": "P.mt-5 max-w-xl text-base leading-relaxed  \"MetricMotive checks whether an AI agent \"",
+  "lcpSize": 33418,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "frauncesOnly",
+  "viewport": "mobile4x",
+  "run": 2,
+  "lcpMs": 1228,
+  "lcpEl": "P.mt-5 max-w-xl text-base leading-relaxed  \"MetricMotive checks whether an AI agent \"",
+  "lcpSize": 33418,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "frauncesOnly",
+  "viewport": "desktop1x",
+  "run": 0,
+  "lcpMs": 648,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "frauncesOnly",
+  "viewport": "desktop1x",
+  "run": 1,
+  "lcpMs": 528,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ },
+ {
+  "variant": "frauncesOnly",
+  "viewport": "desktop1x",
+  "run": 2,
+  "lcpMs": 1040,
+  "lcpEl": "H1.mt-4 max-w-xl font-display text-4xl font \"Your agent hit the metric. Did it honor \"",
+  "lcpSize": 90903,
+  "h1Font": "Fraunces",
+  "loadedFaces": [
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Fraunces Fallback normal",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal",
+   "Fraunces 400 700",
+   "Instrument Sans 400 700",
+   "Commit Mono 400",
+   "Instrument Sans Fallback normal",
+   "Commit Mono Fallback normal"
+  ],
+  "preloadTags": 2
+ }
+]

@@ -1,0 +1,70 @@
+{
+ "landing": [
+  {
+   "run": 0,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 1,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 2,
+   "cls": 0,
+   "shifts": []
+  }
+ ],
+ "app": [
+  {
+   "run": 0,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 1,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 2,
+   "cls": 0,
+   "shifts": []
+  }
+ ],
+ "demo": [
+  {
+   "run": 0,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 1,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 2,
+   "cls": 0,
+   "shifts": []
+  }
+ ],
+ "receipt": [
+  {
+   "run": 0,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 1,
+   "cls": 0,
+   "shifts": []
+  },
+  {
+   "run": 2,
+   "cls": 0,
+   "shifts": []
+  }
+ ]
+}

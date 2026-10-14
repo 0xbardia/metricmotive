@@ -1,0 +1,331 @@
+{
+ "base": "http://127.0.0.1:8095",
+ "out": {
+  "landing": {
+   "files": [
+    {
+     "f": "index-B4QexXv7.js",
+     "raw": 393323,
+     "gz": 121478,
+     "wallet": false
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "routes-CACj74e9.js",
+     "raw": 8994,
+     "gz": 3245,
+     "wallet": false
+    },
+    {
+     "f": "d1-case-DvD8WzRJ.js",
+     "raw": 4646,
+     "gz": 2144,
+     "wallet": false
+    },
+    {
+     "f": "badge-BwdRIB-j.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-C3MZPDg7.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    },
+    {
+     "f": "marketing-shell-DFZwyLmk.js",
+     "raw": 321,
+     "gz": 246,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 510670,
+   "totalGz": 163159,
+   "walletFiles": []
+  },
+  "demo": {
+   "files": [
+    {
+     "f": "index-B4QexXv7.js",
+     "raw": 393323,
+     "gz": 121478,
+     "wallet": false
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "demo-Do6sDHgv.js",
+     "raw": 7980,
+     "gz": 2720,
+     "wallet": false
+    },
+    {
+     "f": "d1-case-DvD8WzRJ.js",
+     "raw": 4646,
+     "gz": 2144,
+     "wallet": false
+    },
+    {
+     "f": "badge-BwdRIB-j.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-C3MZPDg7.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    },
+    {
+     "f": "verdict-summary-CgDhldtc.js",
+     "raw": 591,
+     "gz": 389,
+     "wallet": false
+    },
+    {
+     "f": "marketing-shell-DFZwyLmk.js",
+     "raw": 321,
+     "gz": 246,
+     "wallet": false
+    },
+    {
+     "f": "arrow-left-DEXSGbPy.js",
+     "raw": 151,
+     "gz": 152,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 510398,
+   "totalGz": 163175,
+   "walletFiles": []
+  },
+  "receipt": {
+   "files": [
+    {
+     "f": "index-B4QexXv7.js",
+     "raw": 393323,
+     "gz": 121478,
+     "wallet": false
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "_receiptId-DKIJpaWq.js",
+     "raw": 12910,
+     "gz": 3882,
+     "wallet": false
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "id-badge-Dj0O2K8j.js",
+     "raw": 3006,
+     "gz": 1464,
+     "wallet": false
+    },
+    {
+     "f": "findings-summary-CxJeyczm.js",
+     "raw": 2179,
+     "gz": 925,
+     "wallet": false
+    },
+    {
+     "f": "copy-button-CBSHIjkU.js",
+     "raw": 1532,
+     "gz": 810,
+     "wallet": false
+    },
+    {
+     "f": "badge-BwdRIB-j.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-C3MZPDg7.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    },
+    {
+     "f": "verdict-summary-CgDhldtc.js",
+     "raw": 591,
+     "gz": 389,
+     "wallet": false
+    },
+    {
+     "f": "format-BxL_cxi8.js",
+     "raw": 449,
+     "gz": 333,
+     "wallet": false
+    },
+    {
+     "f": "evidence-summary-DycJCdmS.js",
+     "raw": 529,
+     "gz": 300,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 517905,
+   "totalGz": 165627,
+   "walletFiles": []
+  },
+  "app": {
+   "files": [
+    {
+     "f": "index-B4QexXv7.js",
+     "raw": 393323,
+     "gz": 121478,
+     "wallet": false
+    },
+    {
+     "f": "provider-CYEUOmQP.js",
+     "raw": 252263,
+     "gz": 30065,
+     "wallet": true
+    },
+    {
+     "f": "actions-DmpkaicD.js",
+     "raw": 42856,
+     "gz": 14262,
+     "wallet": false
+    },
+    {
+     "f": "cn-Cj22VEkE.js",
+     "raw": 28095,
+     "gz": 9051,
+     "wallet": false
+    },
+    {
+     "f": "link-SKAdmT89.js",
+     "raw": 21471,
+     "gz": 8166,
+     "wallet": false
+    },
+    {
+     "f": "createBatchScheduler-C5ZjWuWX.js",
+     "raw": 15892,
+     "gz": 4959,
+     "wallet": true
+    },
+    {
+     "f": "clsx-BFZP3dM6.js",
+     "raw": 9555,
+     "gz": 3678,
+     "wallet": false
+    },
+    {
+     "f": "app-home-content-CUGwAss7.js",
+     "raw": 8813,
+     "gz": 3289,
+     "wallet": true
+    },
+    {
+     "f": "useQuery-B_k2L8Tp.js",
+     "raw": 8049,
+     "gz": 2925,
+     "wallet": false
+    },
+    {
+     "f": "auth-client-dQZAusLo.js",
+     "raw": 1679,
+     "gz": 844,
+     "wallet": false
+    },
+    {
+     "f": "Value-LxLegnNd.js",
+     "raw": 1650,
+     "gz": 778,
+     "wallet": false
+    },
+    {
+     "f": "badge-BwdRIB-j.js",
+     "raw": 758,
+     "gz": 450,
+     "wallet": false
+    },
+    {
+     "f": "verdict-badge-C3MZPDg7.js",
+     "raw": 651,
+     "gz": 439,
+     "wallet": false
+    }
+   ],
+   "totalRaw": 785055,
+   "totalGz": 200384,
+   "walletFiles": [
+    "provider-CYEUOmQP.js",
+    "createBatchScheduler-C5ZjWuWX.js",
+    "app-home-content-CUGwAss7.js"
+   ]
+  }
+ }
+}

@@ -1,0 +1,21 @@
+long tasks (>=50 ms) in 5 s: 8; TBT 704 ms; CPU samples in window: 7530
+Long-task time by category (ms, traced durations): style=88 layout=128 parse=6 paint=73 script-event=349
+Top 5 long tasks by duration:
+{"startMs":2629,"durMs":235,"sampledJsMs":235,"topFn":"127.0.0.1:8095/assets/index.js :: (anon) (79 ms)","layoutStyleMs":0,"paintMs":0,"parseMs":0}
+{"startMs":2928,"durMs":225,"sampledJsMs":224,"topFn":"(native:appendChild) :: appendChild (27 ms)","layoutStyleMs":0,"paintMs":0,"parseMs":0}
+{"startMs":379,"durMs":222,"sampledJsMs":222,"topFn":"(native:(program)) :: (program) (222 ms)","layoutStyleMs":146,"paintMs":73,"parseMs":0}
+{"startMs":59,"durMs":108,"sampledJsMs":26,"topFn":"(native:(program)) :: (program) (26 ms)","layoutStyleMs":3,"paintMs":0,"parseMs":0}
+{"startMs":3653,"durMs":100,"sampledJsMs":100,"topFn":"127.0.0.1:8095/assets/cn.js :: o (22 ms)","layoutStyleMs":0,"paintMs":0,"parseMs":0}
+JS self-time inside long tasks, by script (ms):
+    443  127.0.0.1:8095/assets/index.js
+    355  (native:(program))
+     79  127.0.0.1:8095/assets/cn.js
+     56  127.0.0.1:8095/assets/link.js
+     29  (native:appendChild)
+     16  127.0.0.1:8095/assets/actions.js
+     15  127.0.0.1:8095/assets/clsx.js
+     11  (native:(garbage collector))
+      4  (native:queueMicrotask)
+      4  (native:addEventListener)
+      4  (native:(idle))
+      2  (native:set webkitSpeechRecognitionEvent)

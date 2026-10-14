@@ -1,0 +1,5 @@
+long tasks (>=50 ms) in 5 s: 1; TBT 2 ms; CPU samples in window: 0
+Long-task time by category (ms, traced durations): parse=0
+Top 5 long tasks by duration:
+{"startMs":1,"durMs":52,"sampledJsMs":0,"topFn":"-","layoutStyleMs":0,"paintMs":0,"parseMs":0}
+JS self-time inside long tasks, by script (ms):
