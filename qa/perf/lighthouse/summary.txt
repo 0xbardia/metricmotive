@@ -1,0 +1,8 @@
+landing rc6        n=5 score 75 TBT 682 CLS 0 LCP 2664 FCP 2123 SI 4259
+   scores [75,76,76,72,74] TBT [682,484,625,1139,1187]
+landing v21        n=5 score 79 TBT 767 CLS 0.0001 LCP 2230 FCP 1567 SI 2868
+   scores [75,81,77,83,79] TBT [1054,710,899,356,767]
+receipt rc6        n=5 score 84 TBT 602 CLS 0.0002 LCP 2109 FCP 1309 SI 2433
+   scores [83,84,77,87,89] TBT [615,602,1000,300,396]
+receipt v21        n=5 score 84 TBT 586 CLS 0 LCP 2070 FCP 1225 SI 2441
+   scores [86,78,78,87,84] TBT [509,931,880,479,586]

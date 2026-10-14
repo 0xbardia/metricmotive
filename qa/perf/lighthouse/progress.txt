@@ -1,0 +1,21 @@
+rc6 / r1 load=7.33 exit=0
+v21 / r1 load=7.98 exit=0
+rc6 /verify/rct_14804bf62424284e r1 load=8.06 exit=0
+v21 /verify/rct_14804bf62424284e r1 load=7.75 exit=0
+v21 / r2 load=7.70 exit=0
+rc6 / r2 load=6.77 exit=0
+v21 /verify/rct_14804bf62424284e r2 load=6.03 exit=0
+rc6 /verify/rct_14804bf62424284e r2 load=6.02 exit=0
+rc6 / r3 load=5.68 exit=0
+v21 / r3 load=6.11 exit=0
+rc6 /verify/rct_14804bf62424284e r3 load=6.75 exit=0
+v21 /verify/rct_14804bf62424284e r3 load=7.15 exit=0
+v21 / r4 load=6.43 exit=0
+rc6 / r4 load=7.19 exit=0
+v21 /verify/rct_14804bf62424284e r4 load=7.03 exit=0
+rc6 /verify/rct_14804bf62424284e r4 load=6.40 exit=0
+rc6 / r5 load=7.21 exit=0
+v21 / r5 load=7.73 exit=0
+rc6 /verify/rct_14804bf62424284e r5 load=7.21 exit=0
+v21 /verify/rct_14804bf62424284e r5 load=6.21 exit=0
+DONE
