@@ -1,0 +1,3677 @@
+[
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 49,
+   "o33": 18,
+   "o50": 10,
+   "p95": 150
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 204,
+   "o33": 52,
+   "o50": 20,
+   "p95": 66.70000000000073
+  },
+  "longtasks": 14,
+  "tbt": 2325,
+  "longtasksAll": 31,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 63,
+   "o33": 17,
+   "o50": 10,
+   "p95": 133.5
+  },
+  "cls4s": 0.00008212956547731149,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 191,
+   "o33": 56,
+   "o50": 17,
+   "p95": 83.19999999999891
+  },
+  "longtasks": 15,
+  "tbt": 2186,
+  "longtasksAll": 29,
+  "clsTotal": 0.00008212956547731149,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 49,
+   "o33": 18,
+   "o50": 12,
+   "p95": 250.00000000000023
+  },
+  "cls4s": 0.00008212956547731149,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 178,
+   "o33": 55,
+   "o50": 26,
+   "p95": 83.30000000000018
+  },
+  "longtasks": 16,
+  "tbt": 2490,
+  "longtasksAll": 40,
+  "clsTotal": 0.00008212956547731149,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 25,
+   "o33": 15,
+   "o50": 11,
+   "p95": 466.70000000000005
+  },
+  "cls4s": 0.03469382702653464,
+  "scrollHeight": 4784,
+  "scroll": {
+   "frames": 60,
+   "o33": 55,
+   "o50": 44,
+   "p95": 516.6000000000004
+  },
+  "longtasks": 16,
+  "tbt": 2466,
+  "longtasksAll": 49,
+  "clsTotal": 0.03469382702653464,
+  "bdLoad": 2,
+  "bdMax": 6,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 43,
+   "o33": 14,
+   "o50": 8,
+   "p95": 250.0999999999999
+  },
+  "cls4s": 0.00001633967228223594,
+  "scrollHeight": 4784,
+  "scroll": {
+   "frames": 54,
+   "o33": 48,
+   "o50": 37,
+   "p95": 350.10000000000036
+  },
+  "longtasks": 15,
+  "tbt": 2746,
+  "longtasksAll": 47,
+  "clsTotal": 0.00001633967228223594,
+  "bdLoad": 2,
+  "bdMax": 6,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 53,
+   "o33": 18,
+   "o50": 11,
+   "p95": 366.6
+  },
+  "cls4s": 0,
+  "scrollHeight": 4784,
+  "scroll": {
+   "frames": 53,
+   "o33": 46,
+   "o50": 36,
+   "p95": 383.2999999999993
+  },
+  "longtasks": 10,
+  "tbt": 2638,
+  "longtasksAll": 39,
+  "clsTotal": 0,
+  "bdLoad": 2,
+  "bdMax": 6,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 191,
+   "o33": 12,
+   "o50": 4,
+   "p95": 33.299999999999955
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 239,
+   "o33": 12,
+   "o50": 2,
+   "p95": 33.29999999999927
+  },
+  "longtasks": 6,
+  "tbt": 315,
+  "longtasksAll": 6,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 184,
+   "o33": 10,
+   "o50": 6,
+   "p95": 33.30000000000018
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 236,
+   "o33": 12,
+   "o50": 2,
+   "p95": 33.29999999999927
+  },
+  "longtasks": 5,
+  "tbt": 279,
+  "longtasksAll": 5,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 164,
+   "o33": 13,
+   "o50": 7,
+   "p95": 33.299999999999955
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 234,
+   "o33": 20,
+   "o50": 2,
+   "p95": 33.30000000000109
+  },
+  "longtasks": 7,
+  "tbt": 646,
+  "longtasksAll": 7,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 122,
+   "o33": 11,
+   "o50": 7,
+   "p95": 83.30000000000018
+  },
+  "cls4s": 0,
+  "scrollHeight": 2098,
+  "scroll": {
+   "frames": 246,
+   "o33": 8,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 7,
+  "tbt": 889,
+  "longtasksAll": 7,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 114,
+   "o33": 16,
+   "o50": 7,
+   "p95": 100
+  },
+  "cls4s": 0,
+  "scrollHeight": 2098,
+  "scroll": {
+   "frames": 235,
+   "o33": 17,
+   "o50": 4,
+   "p95": 33.30000000000018
+  },
+  "longtasks": 12,
+  "tbt": 1320,
+  "longtasksAll": 14,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 70,
+   "o33": 17,
+   "o50": 10,
+   "p95": 200
+  },
+  "cls4s": 0,
+  "scrollHeight": 2098,
+  "scroll": {
+   "frames": 243,
+   "o33": 10,
+   "o50": 2,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 12,
+  "tbt": 1848,
+  "longtasksAll": 12,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 128,
+   "o33": 11,
+   "o50": 10,
+   "p95": 83.29999999999995
+  },
+  "cls4s": 0.000002909526641803841,
+  "scrollHeight": 1625,
+  "scroll": {
+   "frames": 50,
+   "o33": 41,
+   "o50": 37,
+   "p95": 150
+  },
+  "longtasks": 7,
+  "tbt": 1099,
+  "longtasksAll": 10,
+  "clsTotal": 0.000002909526641803841,
+  "bdLoad": 2,
+  "bdMax": 2,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 110,
+   "o33": 12,
+   "o50": 7,
+   "p95": 99.90000000000009
+  },
+  "cls4s": 0.0007296606411822703,
+  "scrollHeight": 1625,
+  "scroll": {
+   "frames": 51,
+   "o33": 41,
+   "o50": 37,
+   "p95": 150
+  },
+  "longtasks": 8,
+  "tbt": 943,
+  "longtasksAll": 12,
+  "clsTotal": 0.0007296606411822703,
+  "bdLoad": 2,
+  "bdMax": 2,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 71,
+   "o33": 15,
+   "o50": 11,
+   "p95": 250
+  },
+  "cls4s": 0.000002909526641803841,
+  "scrollHeight": 1625,
+  "scroll": {
+   "frames": 60,
+   "o33": 42,
+   "o50": 38,
+   "p95": 183.29999999999927
+  },
+  "longtasks": 13,
+  "tbt": 1545,
+  "longtasksAll": 18,
+  "clsTotal": 0.000002909526641803841,
+  "bdLoad": 2,
+  "bdMax": 2,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 207,
+   "o33": 8,
+   "o50": 1,
+   "p95": 16.799999999999955
+  },
+  "cls4s": 0,
+  "scrollHeight": 2098,
+  "scroll": {
+   "frames": 242,
+   "o33": 6,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 1,
+  "tbt": 72,
+  "longtasksAll": 1,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 150,
+   "o33": 8,
+   "o50": 1,
+   "p95": 33.299999999999955
+  },
+  "cls4s": 0,
+  "scrollHeight": 2098,
+  "scroll": {
+   "frames": 238,
+   "o33": 10,
+   "o50": 1,
+   "p95": 16.80000000000109
+  },
+  "longtasks": 1,
+  "tbt": 43,
+  "longtasksAll": 1,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "demo",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 199,
+   "o33": 10,
+   "o50": 1,
+   "p95": 33.200000000000045
+  },
+  "cls4s": 0,
+  "scrollHeight": 2098,
+  "scroll": {
+   "frames": 240,
+   "o33": 8,
+   "o50": 1,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 1,
+  "tbt": 122,
+  "longtasksAll": 1,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 65,
+   "o33": 16,
+   "o50": 13,
+   "p95": 166.5999999999999
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 247,
+   "o33": 8,
+   "o50": 1,
+   "p95": 16.799999999999272
+  },
+  "longtasks": 11,
+  "tbt": 1332,
+  "longtasksAll": 13,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 106,
+   "o33": 14,
+   "o50": 8,
+   "p95": 66.70000000000005
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 243,
+   "o33": 16,
+   "o50": 3,
+   "p95": 33.30000000000018
+  },
+  "longtasks": 10,
+  "tbt": 1242,
+  "longtasksAll": 10,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 112,
+   "o33": 15,
+   "o50": 8,
+   "p95": 116.70000000000005
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 241,
+   "o33": 10,
+   "o50": 3,
+   "p95": 16.80000000000109
+  },
+  "longtasks": 11,
+  "tbt": 1197,
+  "longtasksAll": 12,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 117,
+   "o33": 17,
+   "o50": 6,
+   "p95": 66.59999999999991
+  },
+  "cls4s": 0.000017725354522998114,
+  "scrollHeight": 3367,
+  "scroll": {
+   "frames": 214,
+   "o33": 36,
+   "o50": 5,
+   "p95": 33.400000000000546
+  },
+  "longtasks": 6,
+  "tbt": 1049,
+  "longtasksAll": 9,
+  "clsTotal": 0.000017725354522998114,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 78,
+   "o33": 15,
+   "o50": 10,
+   "p95": 183.30000000000018
+  },
+  "cls4s": 0.000016018881882823215,
+  "scrollHeight": 3367,
+  "scroll": {
+   "frames": 206,
+   "o33": 45,
+   "o50": 7,
+   "p95": 33.399999999999636
+  },
+  "longtasks": 13,
+  "tbt": 1475,
+  "longtasksAll": 13,
+  "clsTotal": 0.000016018881882823215,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 125,
+   "o33": 17,
+   "o50": 10,
+   "p95": 83.30000000000018
+  },
+  "cls4s": 0.00001658770609621485,
+  "scrollHeight": 3367,
+  "scroll": {
+   "frames": 199,
+   "o33": 44,
+   "o50": 5,
+   "p95": 50
+  },
+  "longtasks": 12,
+  "tbt": 778,
+  "longtasksAll": 12,
+  "clsTotal": 0.00001658770609621485,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 204,
+   "o33": 7,
+   "o50": 2,
+   "p95": 16.800000000000182
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 244,
+   "o33": 5,
+   "o50": 1,
+   "p95": 16.799999999999272
+  },
+  "longtasks": 3,
+  "tbt": 170,
+  "longtasksAll": 3,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 174,
+   "o33": 7,
+   "o50": 2,
+   "p95": 16.800000000000182
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 240,
+   "o33": 8,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 3,
+  "tbt": 201,
+  "longtasksAll": 3,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 201,
+   "o33": 8,
+   "o50": 3,
+   "p95": 16.800000000000182
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 246,
+   "o33": 5,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 3,
+  "tbt": 99,
+  "longtasksAll": 3,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    }
+   ]
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 1,
+   "500": 1,
+   "1200": 1
+  },
+  "props": [
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 128,
+   "o33": 22,
+   "o50": 9,
+   "p95": 66.60000000000036
+  },
+  "cls4s": 0.03170815786334481,
+  "scrollHeight": 844,
+  "scroll": {
+   "frames": 247,
+   "o33": 6,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 9,
+  "tbt": 776,
+  "longtasksAll": 9,
+  "clsTotal": 0.03170815786334481,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 1,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 102,
+   "o33": 14,
+   "o50": 6,
+   "p95": 66.59999999999991
+  },
+  "cls4s": 0,
+  "scrollHeight": 844,
+  "scroll": {
+   "frames": 249,
+   "o33": 12,
+   "o50": 4,
+   "p95": 16.80000000000109
+  },
+  "longtasks": 9,
+  "tbt": 1638,
+  "longtasksAll": 9,
+  "clsTotal": 0.03170815786334481,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 91,
+   "o33": 19,
+   "o50": 7,
+   "p95": 100
+  },
+  "cls4s": 0,
+  "scrollHeight": 844,
+  "scroll": {
+   "frames": 246,
+   "o33": 10,
+   "o50": 3,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 10,
+  "tbt": 1810,
+  "longtasksAll": 10,
+  "clsTotal": 0.03170815786334481,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 92,
+   "o33": 16,
+   "o50": 8,
+   "p95": 83.39999999999964
+  },
+  "cls4s": 0,
+  "scrollHeight": 900,
+  "scroll": {
+   "frames": 236,
+   "o33": 10,
+   "o50": 2,
+   "p95": 16.80000000000109
+  },
+  "longtasks": 13,
+  "tbt": 1858,
+  "longtasksAll": 13,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 1,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 98,
+   "o33": 16,
+   "o50": 11,
+   "p95": 116.60000000000002
+  },
+  "cls4s": 0,
+  "scrollHeight": 900,
+  "scroll": {
+   "frames": 246,
+   "o33": 15,
+   "o50": 3,
+   "p95": 33.29999999999927
+  },
+  "longtasks": 12,
+  "tbt": 1929,
+  "longtasksAll": 14,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 2,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "desktop",
+  "rate": 4,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 94,
+   "o33": 17,
+   "o50": 11,
+   "p95": 166.70000000000027
+  },
+  "cls4s": 0.13868790884344992,
+  "scrollHeight": 900,
+  "scroll": {
+   "frames": 242,
+   "o33": 8,
+   "o50": 1,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 12,
+  "tbt": 1403,
+  "longtasksAll": 12,
+  "clsTotal": 0.13868790884344992,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 2,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 192,
+   "o33": 12,
+   "o50": 6,
+   "p95": 33.39999999999998
+  },
+  "cls4s": 0.03170815786334481,
+  "scrollHeight": 844,
+  "scroll": {
+   "frames": 246,
+   "o33": 2,
+   "o50": 0,
+   "p95": 16.799999999999272
+  },
+  "longtasks": 4,
+  "tbt": 248,
+  "longtasksAll": 4,
+  "clsTotal": 0.03170815786334481,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 206,
+   "o33": 10,
+   "o50": 2,
+   "p95": 16.800000000000182
+  },
+  "cls4s": 0.03169270581363505,
+  "scrollHeight": 844,
+  "scroll": {
+   "frames": 246,
+   "o33": 1,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 4,
+  "tbt": 164,
+  "longtasksAll": 4,
+  "clsTotal": 0.03169270581363505,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "app",
+  "vp": "mobile",
+  "rate": 1,
+  "reduced": false,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 199,
+   "o33": 9,
+   "o50": 3,
+   "p95": 16.799999999999955
+  },
+  "cls4s": 0.03169270581363505,
+  "scrollHeight": 844,
+  "scroll": {
+   "frames": 245,
+   "o33": 1,
+   "o50": 0,
+   "p95": 16.799999999999272
+  },
+  "longtasks": 4,
+  "tbt": 252,
+  "longtasksAll": 4,
+  "clsTotal": 0.03169270581363505,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "500": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "running"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ],
+   "1200": [
+    {
+     "type": "CSSAnimation",
+     "name": "route-enter",
+     "tag": "DIV",
+     "cls": "route-enter",
+     "pseudo": "",
+     "props": [
+      "transform"
+     ],
+     "dur": 280,
+     "state": "finished"
+    },
+    {
+     "type": "CSSAnimation",
+     "name": "pulse",
+     "tag": "SPAN",
+     "cls": "mr-2",
+     "pseudo": "",
+     "props": [
+      "opacity"
+     ],
+     "dur": 2000,
+     "state": "running"
+    }
+   ]
+  },
+  "running": 1,
+  "animCounts": {
+   "100": 2,
+   "500": 2,
+   "1200": 2
+  },
+  "props": [
+   "opacity",
+   "transform"
+  ],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": true,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 49,
+   "o33": 23,
+   "o50": 9,
+   "p95": 316.6
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 202,
+   "o33": 28,
+   "o50": 11,
+   "p95": 66.60000000000036
+  },
+  "longtasks": 16,
+  "tbt": 2034,
+  "longtasksAll": 22,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [],
+   "500": [],
+   "1200": []
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 0,
+   "500": 0,
+   "1200": 0
+  },
+  "props": [],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": true,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 116,
+   "o33": 13,
+   "o50": 10,
+   "p95": 83.40000000000009
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 222,
+   "o33": 25,
+   "o50": 8,
+   "p95": 49.900000000000546
+  },
+  "longtasks": 13,
+  "tbt": 1277,
+  "longtasksAll": 20,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [],
+   "500": [],
+   "1200": []
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 0,
+   "500": 0,
+   "1200": 0
+  },
+  "props": [],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "landing",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": true,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 55,
+   "o33": 14,
+   "o50": 8,
+   "p95": 516.6
+  },
+  "cls4s": 0,
+  "scrollHeight": 7372,
+  "scroll": {
+   "frames": 220,
+   "o33": 22,
+   "o50": 9,
+   "p95": 50
+  },
+  "longtasks": 12,
+  "tbt": 2120,
+  "longtasksAll": 14,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [],
+   "500": [],
+   "1200": []
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 0,
+   "500": 0,
+   "1200": 0
+  },
+  "props": [],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": true,
+  "run": 1,
+  "status": 200,
+  "win": {
+   "frames": 112,
+   "o33": 11,
+   "o50": 6,
+   "p95": 83.30000000000018
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 247,
+   "o33": 6,
+   "o50": 1,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 7,
+  "tbt": 782,
+  "longtasksAll": 7,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [],
+   "500": [],
+   "1200": []
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 0,
+   "500": 0,
+   "1200": 0
+  },
+  "props": [],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": true,
+  "run": 2,
+  "status": 200,
+  "win": {
+   "frames": 124,
+   "o33": 15,
+   "o50": 7,
+   "p95": 66.59999999999991
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 253,
+   "o33": 2,
+   "o50": 0,
+   "p95": 16.800000000000182
+  },
+  "longtasks": 8,
+  "tbt": 983,
+  "longtasksAll": 8,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [],
+   "500": [],
+   "1200": []
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 0,
+   "500": 0,
+   "1200": 0
+  },
+  "props": [],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ },
+ {
+  "page": "receipt",
+  "vp": "mobile",
+  "rate": 4,
+  "reduced": true,
+  "run": 3,
+  "status": 200,
+  "win": {
+   "frames": 136,
+   "o33": 12,
+   "o50": 8,
+   "p95": 83.29999999999995
+  },
+  "cls4s": 0,
+  "scrollHeight": 5064,
+  "scroll": {
+   "frames": 253,
+   "o33": 4,
+   "o50": 0,
+   "p95": 16.799999999999272
+  },
+  "longtasks": 8,
+  "tbt": 1002,
+  "longtasksAll": 8,
+  "clsTotal": 0,
+  "bdLoad": 1,
+  "bdMax": 1,
+  "anims": {
+   "100": [],
+   "500": [],
+   "1200": []
+  },
+  "running": 0,
+  "animCounts": {
+   "100": 0,
+   "500": 0,
+   "1200": 0
+  },
+  "props": [],
+  "reveal": {
+   "n": 0,
+   "visible": true,
+   "bad": 0
+  }
+ }
+]
