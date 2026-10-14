@@ -663,7 +663,7 @@
   .site-header::after {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: 0 0 -1px;
     z-index: -1;
     pointer-events: none;
     opacity: 0;
@@ -695,8 +695,8 @@
     opacity: 1;
   }
 
-  /* Bottom rule once scrolled, on the header's bottom border row (where rc6 drew its border line). currentColor at
-     rc6's strength: 12% bone on dark, 10% carbon on light. Opacity only. */
+  /* Scrolled bottom line, light headers only: rc6's carbon 10% on the border row. The layers reach that row, so the
+     line blends over the surface as rc6's border did. On dark headers the layer ring already draws rc6's 12% bone line. */
   .site-header-rule {
     position: absolute;
     inset: auto 0 -1px;
@@ -705,10 +705,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--motion-glass) var(--ease-out-soft);
-  }
-
-  .site-header[data-scrolled="true"] .site-header-rule {
-    opacity: 0.12;
   }
 
   .site-header[data-scrolled="true"][data-tone="light"] .site-header-rule {
