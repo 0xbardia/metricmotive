@@ -12,7 +12,7 @@ const base = lightTheme({
 export const metricMotiveWalletTheme: Theme = {
   ...base,
   fonts: {
-    body: '"Source Sans 3", "Segoe UI", system-ui, sans-serif',
+    body: '"Instrument Sans", "Segoe UI", system-ui, sans-serif',
   },
   colors: {
     ...base.colors,
