@@ -1,0 +1,104 @@
+[
+  {
+    "check": "page",
+    "page": "landing",
+    "width": 390,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "landing",
+    "width": 1440,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 5,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "demo",
+    "width": 390,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "demo",
+    "width": 1440,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "receipt",
+    "width": 390,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "receipt",
+    "width": 1440,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "app",
+    "width": 390,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "app",
+    "width": 1440,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "wizard",
+    "width": 390,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "page",
+    "page": "wizard",
+    "width": 1440,
+    "runningMotionAt500": 0,
+    "runningMotionAt1200": 0,
+    "hiddenTextLeaves": 0,
+    "revealNotVisible": 0
+  },
+  {
+    "check": "hover-rail-label",
+    "opacity": "1",
+    "transitionDuration": "1e-05s",
+    "transform": "matrix(1, 0, 0, 1, 0, 0)"
+  },
+  {
+    "check": "scroll-active-section",
+    "before": null,
+    "active": "",
+    "motion": 0
+  }
+]

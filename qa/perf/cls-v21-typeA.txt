@@ -1,0 +1,181 @@
+{
+  "base": "http://127.0.0.1:8095",
+  "rows": [
+    {
+      "page": "/",
+      "cpu": 1,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/verify/rct_14804bf62424284e",
+      "cpu": 1,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/app",
+      "cpu": 1,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/demo",
+      "cpu": 1,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/",
+      "cpu": 1,
+      "fonts": "delayed1500",
+      "median": 0.0001,
+      "runs": [
+        0.0001,
+        0.0001,
+        0.0001
+      ]
+    },
+    {
+      "page": "/verify/rct_14804bf62424284e",
+      "cpu": 1,
+      "fonts": "delayed1500",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/app",
+      "cpu": 1,
+      "fonts": "delayed1500",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/demo",
+      "cpu": 1,
+      "fonts": "delayed1500",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/",
+      "cpu": 4,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/verify/rct_14804bf62424284e",
+      "cpu": 4,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/app",
+      "cpu": 4,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/demo",
+      "cpu": 4,
+      "fonts": "normal",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/",
+      "cpu": 4,
+      "fonts": "delayed1500",
+      "median": 0.0001,
+      "runs": [
+        0.0001,
+        0.0001,
+        0.0001
+      ]
+    },
+    {
+      "page": "/verify/rct_14804bf62424284e",
+      "cpu": 4,
+      "fonts": "delayed1500",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/app",
+      "cpu": 4,
+      "fonts": "delayed1500",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "page": "/demo",
+      "cpu": 4,
+      "fonts": "delayed1500",
+      "median": 0,
+      "runs": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
