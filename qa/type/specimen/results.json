@@ -1,0 +1,171 @@
+{
+ "bytes": {
+  "A": {
+   "first": 91804,
+   "total": 122992,
+   "deltaVsCurrent": -18588,
+   "pass": true
+  },
+  "ASOFT": {
+   "first": 140776,
+   "total": 171964,
+   "deltaVsCurrent": 30384,
+   "pass": false
+  },
+  "AWONK": {
+   "first": 92068,
+   "total": 123256,
+   "deltaVsCurrent": -18324,
+   "pass": true
+  },
+  "B": {
+   "first": 83092,
+   "total": 112688,
+   "deltaVsCurrent": -28892,
+   "pass": true
+  },
+  "C": {
+   "first": 90660,
+   "total": 136064,
+   "deltaVsCurrent": -5516,
+   "pass": true
+  }
+ },
+ "budget": {
+  "current": 141580,
+  "ceiling": 161580
+ },
+ "clsRes": {
+  "A": {
+   "fallback": {
+    "runs": [
+     0,
+     0,
+     0
+    ],
+    "median": 0
+   },
+   "nofallback": {
+    "runs": [
+     0.017861763161032045,
+     0.017861763161032045,
+     0.017861763161032045
+    ],
+    "median": 0.017861763161032045
+   }
+  },
+  "ASOFT": {
+   "fallback": {
+    "runs": [
+     0,
+     0,
+     0
+    ],
+    "median": 0
+   },
+   "nofallback": {
+    "runs": [
+     0.017861763161032045,
+     0.017861763161032045,
+     0.017865391526557042
+    ],
+    "median": 0.017861763161032045
+   }
+  },
+  "AWONK": {
+   "fallback": {
+    "runs": [
+     0,
+     0,
+     0
+    ],
+    "median": 0
+   },
+   "nofallback": {
+    "runs": [
+     0.017861763161032045,
+     0.017861763161032045,
+     0.017861763161032045
+    ],
+    "median": 0.017861763161032045
+   }
+  },
+  "B": {
+   "fallback": {
+    "runs": [
+     0,
+     0,
+     0
+    ],
+    "median": 0
+   },
+   "nofallback": {
+    "runs": [
+     0.017897820043436718,
+     0.017897820043436718,
+     0.017861763161032045
+    ],
+    "median": 0.017897820043436718
+   }
+  },
+  "C": {
+   "fallback": {
+    "runs": [
+     0,
+     0,
+     0
+    ],
+    "median": 0
+   },
+   "nofallback": {
+    "runs": [
+     0.08044439126681215,
+     0.08044439126681215,
+     0.08044439126681215
+    ],
+    "median": 0.08044439126681215
+   }
+  }
+ },
+ "contrast": {
+  "carbon on bone": 15.63,
+  "bone on carbon": 15.63,
+  "graphite on bone (labels)": 5.65,
+  "graphite on cream": 5.07,
+  "brand-text #8a5a12 on bone (light link)": 5.19,
+  "ochre on carbon (dark link / dark label)": 7.25,
+  "ochre on bone (NOT used for text)": 2.15,
+  "danger-text on bone": 5.44,
+  "danger-on-dark on carbon": 6.76,
+  "#bdbab0 on carbon (specimen dark labels)": 9.17
+ },
+ "contrastSummary": {
+  "minNormalText": 5.19,
+  "minSmallMonoLabel": 5.19,
+  "aaNormal": true
+ },
+ "tabularFigures": {
+  "Fraunces (all variants)": "NO tnum: digits proportional, tnum has no effect in the built subsets",
+  "Instrument Sans": "YES, proportional by default, tnum works",
+  "Hanken Grotesk": "default digits already tabular; tnum ok",
+  "Source Sans 3": "default digits already tabular; tnum ok",
+  "Commit Mono": "monospace",
+  "IBM Plex Mono": "monospace"
+ },
+ "overrideCorrection": {
+  "face": "Instrument Sans Fallback",
+  "from": {
+   "size-adjust": "106.47%",
+   "ascent": "91.11%",
+   "descent": "23.48%"
+  },
+  "to": {
+   "size-adjust": "102.14%",
+   "ascent": "94.97%",
+   "descent": "24.48%"
+  },
+  "measured": "100px height web 122 = fallback 122 (height matched), but 17px lede width web/fallback = 0.9593, so size-adjust *0.9593 and asc/desc scaled by 1.0424 to keep height",
+  "candidateAClsBefore": 0.00999,
+  "after": 0
+ }
+}

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MetricMotive type specimen</title>
+<script>
+// Flags: ?c=A|ASOFT|AWONK|B|C shows one candidate; ?nofallback=1 drops size-adjust/overrides from the fallback faces.
+var Q=new URLSearchParams(location.search);
+var NOFB=Q.get('nofallback')==='1';
+var O=function(a,d,g,l){return NOFB?'':'size-adjust:'+a+';ascent-override:'+d+';descent-override:'+g+';line-gap-override:0%;'};
+var FB=window.FB={
+ 'Fraunces Fallback':['local("Times New Roman"),local("TimesNewRomanPSMT"),local("Liberation Serif")','125.04%','78.21%','20.39%'],
+ 'Instrument Sans Fallback':['local("Arial"),local("ArialMT"),local("Liberation Sans")','102.14%','94.97%','24.48%'],
+ 'Hanken Grotesk Fallback':['local("Arial"),local("ArialMT"),local("Liberation Sans")','102.68%','97.39%','29.51%'],
+ 'Source Sans 3 Fallback':['local("Arial"),local("ArialMT"),local("Liberation Sans")','96.47%','106.14%','41.46%'],
+ 'Commit Mono Fallback':['local("Courier New"),local("CourierNewPSMT"),local("Liberation Mono")','99.98%','90.01%','20%'],
+ 'IBM Plex Mono Fallback':['local("Courier New"),local("CourierNewPSMT"),local("Liberation Mono")','99.98%','102.52%','27.5%']
+};
+// optional override of percentages (used by the measurement step) via window name JSON
+try{var ov=JSON.parse(Q.get('ov')||'{}');for(var k in ov){FB[k][2]=ov[k][0];FB[k][3]=ov[k][1];}}catch(e){}
+var css='';
+for(var n in FB){var f=FB[n];css+='@font-face{font-family:"'+n+'";src:'+f[0]+';'+(NOFB?'':'size-adjust:'+f[1]+';ascent-override:'+f[2]+';descent-override:'+f[3]+';line-gap-override:0%;')+'}\n';}
+document.write('<style>'+css+'</style>');
+if(Q.get('c'))document.documentElement.setAttribute('data-only',Q.get('c'));
+</script>
+<style>
+/* Web faces. Family names are per-file so candidates never share a face. */
+@font-face{font-family:"Fraunces Fr";src:url(../fonts/variants/fr-opsz-wght-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Fraunces FrSoft";src:url(../fonts/variants/fr-opsz-wght-soft-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Fraunces FrWonk";src:url(../fonts/variants/fr-opsz-wght-wonk-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Instrument Sans IS";src:url(../fonts/variants/is-wght-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Hanken Grotesk HG";src:url(../fonts/variants/hg-wght-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Source Sans 3 SS";src:url(fonts-public/source-sans-3-var.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Source Sans 3 SS";src:url(fonts-public/source-sans-3-italic-400.woff2) format("woff2");font-style:italic;font-weight:400;font-display:swap}
+@font-face{font-family:"Commit Mono CM";src:url(../fonts/commit-mono-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Commit Mono CM";src:url(../fonts/commit-mono-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"IBM Plex Mono PM";src:url(fonts-public/ibm-plex-mono-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono PM";src:url(fonts-public/ibm-plex-mono-500.woff2) format("woff2");font-weight:500;font-display:swap}
+
+:root{--carbon:#171816;--bone:#f3f0e6;--ochre:#d79a2b;--sage:#74866a;--brick:#a85645;--graphite:#5e5f59;--rule:#d4d0c4;--brand-text:#8a5a12;--danger-text:#a0452f;--danger-on-dark:#d98c76}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#e8e4d6;color:var(--carbon);font:16px/1.5 system-ui,sans-serif}
+.page{max-width:1440px;margin:0 auto;padding:16px}
+.intro{font:14px/1.4 system-ui,sans-serif;color:#333;margin:0 0 16px}
+.cand{margin:0 0 40px}
+html[data-only] .cand{display:none}
+html[data-only="A"] .cand[data-c="A"],html[data-only="ASOFT"] .cand[data-c="ASOFT"],html[data-only="AWONK"] .cand[data-c="AWONK"],html[data-only="B"] .cand[data-c="B"],html[data-only="C"] .cand[data-c="C"]{display:block}
+html[data-only] .wonkcmp{display:none}
+.ctitle{font:600 18px/1.3 system-ui,sans-serif;margin:0 0 10px;padding:6px 10px;background:#fff;border-left:4px solid var(--ochre)}
+.surfaces{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:1000px){.surfaces{grid-template-columns:repeat(3,1fr)}}
+.cand[data-c="A"]{--d:"Fraunces Fr","Fraunces Fallback",serif;--s:"Instrument Sans IS","Instrument Sans Fallback",sans-serif;--m:"Commit Mono CM","Commit Mono Fallback",monospace}
+.cand[data-c="ASOFT"]{--d:"Fraunces FrSoft","Fraunces Fallback",serif;--s:"Instrument Sans IS","Instrument Sans Fallback",sans-serif;--m:"Commit Mono CM","Commit Mono Fallback",monospace;--dv:"SOFT" 100}
+.cand[data-c="AWONK"]{--d:"Fraunces FrWonk","Fraunces Fallback",serif;--s:"Instrument Sans IS","Instrument Sans Fallback",sans-serif;--m:"Commit Mono CM","Commit Mono Fallback",monospace;--dv:"WONK" 1}
+.cand[data-c="B"]{--d:"Fraunces Fr","Fraunces Fallback",serif;--s:"Hanken Grotesk HG","Hanken Grotesk Fallback",sans-serif;--m:"IBM Plex Mono PM","IBM Plex Mono Fallback",monospace}
+.cand[data-c="C"]{--d:"Fraunces Fr","Fraunces Fallback",serif;--s:"Source Sans 3 SS","Source Sans 3 Fallback",sans-serif;--m:"IBM Plex Mono PM","IBM Plex Mono Fallback",monospace}
+.surf{padding:20px;border-radius:8px;font-family:var(--s);font-size:16px;line-height:1.5;min-width:0;overflow-wrap:anywhere}
+.surf.light{background:var(--bone);color:var(--carbon)}
+.surf.dark{background:var(--carbon);color:var(--bone)}
+.surf.glass{background:radial-gradient(60% 50% at 12% 8%,#d79a2b99,transparent 70%),radial-gradient(55% 45% at 90% 25%,#74866a88,transparent 70%),radial-gradient(70% 50% at 50% 100%,#d79a2b77,transparent 72%),linear-gradient(160deg,#e9dfc4,#3a3d36 70%);padding:14px;display:flex;flex-direction:column;gap:12px}
+.gl{border-radius:8px;padding:18px;backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);box-shadow:inset 0 0 0 1px #ffffff8c,0 8px 24px -8px #17181630}
+.gl.lg{background:color-mix(in srgb,var(--bone) 62%,transparent);color:var(--carbon)}
+.gl.dk{background:color-mix(in srgb,var(--carbon) 58%,transparent);color:var(--bone);box-shadow:inset 0 0 0 1px #f3f0e61f,0 8px 24px -8px #17181630}
+.tag{font:500 11px/1.3 var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--graphite);margin:0 0 10px}
+.dark .tag,.dk .tag{color:var(--ochre)}
+.tag.small{font-size:11px}
+h3.hd,h4.hd{font-family:var(--d);font-variation-settings:var(--dv,normal);font-weight:600;letter-spacing:-.01em;margin:0}
+h3.hd{font-size:clamp(30px,3.2vw,42px);line-height:1.05}
+h4.hd{font-size:22px;line-height:1.2;margin:14px 0 4px}
+.lede{margin:12px 0 0;font-size:17px;line-height:1.5}
+.ctas{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.btn{font:600 15px/1 var(--s);padding:11px 14px;border-radius:6px;display:inline-block;border:1px solid transparent}
+.btn.o{background:var(--ochre);color:var(--carbon)}
+.btn.l{border-color:currentColor}
+.link{font-weight:600;color:var(--brand-text);text-decoration:underline}
+.dark .link,.dk .link{color:var(--ochre)}
+hr.r{border:0;border-top:1px solid var(--rule);margin:18px 0}
+.dark hr.r,.dk hr.r{border-top-color:#f3f0e633}
+.badge{display:inline-block;font:700 12px/1 var(--m);letter-spacing:.08em;text-transform:uppercase;padding:7px 9px;border-radius:4px;color:var(--danger-text);background:#f0d8d2;border:1px solid var(--danger-text)}
+.dark .badge,.dk .badge{color:var(--danger-on-dark);background:#a8564533;border-color:var(--danger-on-dark)}
+.rows{margin:12px 0 0;display:grid;gap:6px}
+.rows div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #8884;padding:4px 0;flex-wrap:wrap}
+.rows dt{font:400 11px/1.6 var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--graphite)}
+.dark .rows dt,.dk .rows dt{color:#bdbab0}
+.rows dd{margin:0;font:400 13px/1.5 var(--m)}
+p{margin:6px 0 0}
+.muted{color:var(--graphite)}.dark .muted,.dk .muted{color:#d2cfc4}
+.field label{display:block;font-weight:600;font-size:15px}
+.field .inp{margin-top:6px;border:1px solid var(--graphite);border-radius:6px;padding:10px;background:#fff9;font-size:16px}
+.dark .field .inp,.dk .field .inp{background:#f3f0e611;border-color:#bdbab0}
+.stepper{display:flex;gap:6px;margin:12px 0 0;padding:0;list-style:none;flex-wrap:wrap}
+.stepper li{font:500 12px/1 var(--m);letter-spacing:.08em;text-transform:uppercase;padding:7px 9px;border:1px solid currentColor;border-radius:99px;opacity:.65}
+.stepper li.on{background:var(--ochre);color:var(--carbon);border-color:var(--ochre);opacity:1}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.nums div{border:1px dashed #8886;border-radius:6px;padding:8px}
+.nums b{display:block;font:500 10px/1.4 var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--graphite);font-weight:500}
+.dark .nums b,.dk .nums b{color:#bdbab0}
+.nums .sans{font-family:var(--s);font-size:20px;line-height:1.4;margin-top:2px;white-space:pre-line}
+.nums .mono{font-family:var(--m);font-size:15px;line-height:1.5;margin-top:2px;white-space:pre-line}
+.tn{font-variant-numeric:tabular-nums}
+.wonkcmp{margin:0 0 40px;background:var(--bone);padding:20px;border-radius:8px}
+.wonkcmp .row{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:1000px){.wonkcmp .row{grid-template-columns:1fr 1fr}}
+.wonkcmp .big,.wonkcmp .sm{font-family:var(--d);font-variation-settings:var(--dv,normal);font-weight:600;letter-spacing:-.01em;margin:6px 0 14px;line-height:1.05;overflow-wrap:anywhere}
+.wonkcmp .big{font-size:88px}.wonkcmp .sm{font-size:32px}
+@media(max-width:500px){.wonkcmp .big{font-size:56px}}
+.wonkcmp .col[data-c="A"]{--d:"Fraunces Fr","Fraunces Fallback",serif}
+.wonkcmp .col[data-c="AWONK"]{--d:"Fraunces FrWonk","Fraunces Fallback",serif;--dv:"WONK" 1}
+</style>
+</head>
+<body>
+<div class="page">
+<p class="intro">Type specimen, not shipped. Each candidate shows the same real site copy on bone, carbon and glass surfaces. Query flags: <code>?c=A|ASOFT|AWONK|B|C</code>, <code>?nofallback=1</code>.</p>
+<div id="root"></div>
+<section class="wonkcmp" id="wonk"></section>
+</div>
+<script>
+var C=[["A","A · Fraunces + Instrument Sans + Commit Mono"],["ASOFT","A-SOFT · A with Fraunces SOFT axis (budget-failing)"],["AWONK","A-WONK · A with Fraunces WONK axis"],["B","B · Fraunces + Hanken Grotesk + IBM Plex Mono"],["C","C · Current families, variable upgrade"]];
+var MOTIVE="Generate genuine qualified sales opportunities from B2B SaaS companies with 50–500 employees in the US or EU that have a realistic likelihood of becoming customers.";
+var METRIC="Book at least 10 calendar-confirmed sales meetings during one week.";
+function body(){return ''+
+'<p class="tag">For teams running AI agents</p>'+
+'<h3 class="hd">Your agent hit the metric. Did it honor the motive?</h3>'+
+'<p class="lede">MetricMotive checks whether an AI agent served the goal you meant or only the number you measured, and writes the verdict on-chain as a public receipt.</p>'+
+'<div class="ctas"><span class="btn o">Try the demo →</span><span class="btn l">Create a Motive Guard</span><span class="link">See the on-chain receipt →</span></div>'+
+'<hr class="r">'+
+'<p class="tag">01</p><h4 class="hd" style="margin-top:0">Motive</h4><p>'+MOTIVE+'</p>'+
+'<p class="tag" style="margin-top:14px">Must not happen</p><p>Duplicate meetings with the same prospect must not count.</p>'+
+'<hr class="r">'+
+'<h3 class="hd" style="font-size:clamp(28px,3vw,38px)">Motive Receipt</h3>'+
+'<p style="margin-top:10px"><span class="badge">Metric gaming detected</span></p>'+
+'<p class="muted" style="margin-top:8px">The agent hit the metric but failed the motive. It booked 12 calendar-confirmed meetings; the target was at least 10.</p>'+
+'<dl class="rows"><div><dt>Receipt</dt><dd>rct_14804bf62424284e</dd></div><div><dt>Case</dt><dd>grd_6bf7a408ce5c883c</dd></div><div><dt>Recorded</dt><dd>2026-09-19 03:05 UTC</dd></div></dl>'+
+'<hr class="r">'+
+'<p class="tag small" style="color:var(--brand-text)">Summary</p><h3 class="hd" style="font-size:clamp(26px,2.8vw,34px)">Read the result</h3>'+
+'<h4 class="hd">1. What was asked for</h4><p class="muted">'+MOTIVE+'</p>'+
+'<h4 class="hd">2. What was measured</h4><p class="muted">'+METRIC+'</p>'+
+'<hr class="r">'+
+'<ol class="stepper" aria-label="Builder steps"><li>1 Define</li><li class="on">2 Protect</li><li>3 Review</li><li>4 Publish</li></ol>'+
+'<div class="field" style="margin-top:14px"><label>Metric</label><p class="muted" style="font-size:14px">Define the measurable target the agent will optimize.</p><div class="inp">'+METRIC+'</div><p class="muted" style="font-size:12px">A metric is useful. It is not the whole motive.</p></div>'+
+'<hr class="r">'+
+'<p class="tag">Numbers: tabular-nums (left) vs default (right)</p>'+
+'<div class="nums">'+
+'<div><b>Sans, tnum</b><div class="sans tn">12  10  111\n88  10  000\n1,234.56</div></div>'+
+'<div><b>Sans, default</b><div class="sans">12  10  111\n88  10  000\n1,234.56</div></div>'+
+'<div><b>Mono, tnum</b><div class="mono tn">2026-09-19 03:05\n0x14804bf6 1 11 1\n#1 12 10</div></div>'+
+'<div><b>Mono, default</b><div class="mono">2026-09-19 03:05\n0x14804bf6 1 11 1\n#1 12 10</div></div>'+
+'</div>';}
+var root=document.getElementById('root');
+C.forEach(function(c){
+ var s=document.createElement('section');s.className='cand';s.setAttribute('data-c',c[0]);
+ s.innerHTML='<h2 class="ctitle">'+c[1]+'</h2><div class="surfaces">'+
+ '<div class="surf light"><p class="tag small">Light · bone</p>'+body()+'</div>'+
+ '<div class="surf dark"><p class="tag small">Dark · carbon</p>'+body()+'</div>'+
+ '<div class="surf glass"><div class="gl lg"><p class="tag small">Glass · on bone</p>'+body()+'</div></div>'+
+ '</div>';
+ // dark glass card: second half, shorter copy to keep height sane
+ var g=s.querySelector('.glass');var d=document.createElement('div');d.className='gl dk';
+ d.innerHTML='<p class="tag small">Glass · on carbon</p><h3 class="hd">Your agent hit the metric. Did it honor the motive?</h3><p class="lede">MetricMotive checks whether an AI agent served the goal you meant or only the number you measured.</p><p style="margin-top:12px"><span class="badge">Metric gaming detected</span></p><dl class="rows"><div><dt>Receipt</dt><dd>rct_14804bf62424284e</dd></div><div><dt>Case</dt><dd>grd_6bf7a408ce5c883c</dd></div><div><dt>Recorded</dt><dd>2026-09-19 03:05 UTC</dd></div></dl><div class="ctas"><span class="btn o">Try the demo →</span><span class="link">See the on-chain receipt →</span></div>';
+ g.appendChild(d);
+ root.appendChild(s);
+});
+var T='Motive Receipt';
+document.getElementById('wonk').innerHTML='<p class="tag">WONK check: same text, A (left) vs A-WONK (right), at 88 px and 32 px</p><div class="row">'+
+['A','AWONK'].map(function(k){return '<div class="col" data-c="'+k+'"><p class="tag small">'+(k=='A'?'A':'A-WONK')+'</p><div class="big">Whether it honored the motive: hhnmw</div><div class="sm">Whether it honored the motive: hhnmw nvwy</div></div>';}).join('')+'</div>';
+</script>
+</body>
+</html>
