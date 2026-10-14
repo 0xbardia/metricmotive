@@ -1,0 +1,164 @@
+[
+  {
+    "page": "landing",
+    "scenario": "normal",
+    "medianCls": 0,
+    "runs": [
+      {
+        "run": 1,
+        "cls": 0,
+        "shifts": 0,
+        "topShifts": [],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 2,
+        "cls": 0,
+        "shifts": 0,
+        "topShifts": [],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 3,
+        "cls": 0,
+        "shifts": 0,
+        "topShifts": [],
+        "fontsStatus": "loaded"
+      }
+    ]
+  },
+  {
+    "page": "landing",
+    "scenario": "fontsDelayed1500ms",
+    "medianCls": 0.01982,
+    "runs": [
+      {
+        "run": 1,
+        "cls": 0.01982,
+        "shifts": 2,
+        "topShifts": [
+          {
+            "t": 1962,
+            "v": 0.01974
+          },
+          {
+            "t": 2158,
+            "v": 0.00008
+          }
+        ],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 2,
+        "cls": 0.01982,
+        "shifts": 2,
+        "topShifts": [
+          {
+            "t": 2119,
+            "v": 0.01974
+          },
+          {
+            "t": 2339,
+            "v": 0.00008
+          }
+        ],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 3,
+        "cls": 0.01974,
+        "shifts": 1,
+        "topShifts": [
+          {
+            "t": 1925,
+            "v": 0.01974
+          }
+        ],
+        "fontsStatus": "loaded"
+      }
+    ]
+  },
+  {
+    "page": "receipt",
+    "scenario": "normal",
+    "medianCls": 0,
+    "runs": [
+      {
+        "run": 1,
+        "cls": 0,
+        "shifts": 0,
+        "topShifts": [],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 2,
+        "cls": 0,
+        "shifts": 0,
+        "topShifts": [],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 3,
+        "cls": 0,
+        "shifts": 0,
+        "topShifts": [],
+        "fontsStatus": "loaded"
+      }
+    ]
+  },
+  {
+    "page": "receipt",
+    "scenario": "fontsDelayed1500ms",
+    "medianCls": 0.03434,
+    "runs": [
+      {
+        "run": 1,
+        "cls": 0.03434,
+        "shifts": 2,
+        "topShifts": [
+          {
+            "t": 2063,
+            "v": 0.03425
+          },
+          {
+            "t": 2228,
+            "v": 0.00009
+          }
+        ],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 2,
+        "cls": 0.03434,
+        "shifts": 2,
+        "topShifts": [
+          {
+            "t": 2490,
+            "v": 0.03425
+          },
+          {
+            "t": 2604,
+            "v": 0.00009
+          }
+        ],
+        "fontsStatus": "loaded"
+      },
+      {
+        "run": 3,
+        "cls": 0.03434,
+        "shifts": 2,
+        "topShifts": [
+          {
+            "t": 2064,
+            "v": 0.03425
+          },
+          {
+            "t": 2153,
+            "v": 0.00009
+          }
+        ],
+        "fontsStatus": "loaded"
+      }
+    ]
+  }
+]
