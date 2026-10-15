@@ -22,7 +22,7 @@ test("the entrance animation is only on the class added after mount, and reduced
   const on = rulesFor(".route-enter-on");
   assert.ok(on.some((b) => /animation:\s*route-enter\b/.test(b)), "route-enter-on carries the animation");
   assert.ok(rulesFor(".route-enter-on").every((b) => !/opacity/.test(b)));
-  assert.match(css, /\.route-enter-on,\s*\.hero-on \.hero-rise,\s*\.mobile-nav\s*\{\s*animation:\s*none/);
+  assert.match(css, /\.route-enter-on,\s*\.hero-on \.hero-rise,\s*\.enter-on \.rise,\s*\.mobile-nav\s*\{\s*animation:\s*none/);
 });
 
 test("the route-enter keyframes move only; they never fade from opacity 0", () => {
@@ -41,4 +41,12 @@ test("the wrapper starts without the animation class and adds it in an effect", 
 test("the root renders the gated wrapper, not a static class", () => {
   assert.match(rootRoute, /<RouteEnter key=\{routeKey\}>/);
   assert.doesNotMatch(rootRoute, /className="route-enter"/);
+});
+
+test("the shared entrance moves transform only and starts from a hook that is false on first render", () => {
+  const hook = read("src/lib/use-entering.ts");
+  assert.match(hook, /useState\(false\)/);
+  assert.match(hook, /useEffect\(\(\) => \{\s*setEntering\(true\);\s*\}, \[\]\)/);
+  for (const body of rulesFor(".enter-on .rise")) assert.doesNotMatch(body, /opacity/);
+  assert.equal(rulesFor(".rise").length, 0, "no animation on .rise outside .enter-on");
 });

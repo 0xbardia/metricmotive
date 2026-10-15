@@ -794,6 +794,23 @@
     animation-delay: 220ms;
   }
 
+  /* Shared entrance (useEntering): .enter-on on a container, .rise on the items. Transform only. */
+  .enter-on .rise {
+    animation: hero-rise var(--motion-emphasis) var(--ease-out-soft) both;
+  }
+
+  .enter-on .rise.d1 {
+    animation-delay: 80ms;
+  }
+
+  .enter-on .rise.d2 {
+    animation-delay: 160ms;
+  }
+
+  .enter-on .rise.d3 {
+    animation-delay: 220ms;
+  }
+
   .nav-link {
     position: relative;
   }
@@ -843,6 +860,7 @@
 
     .route-enter-on,
     .hero-on .hero-rise,
+    .enter-on .rise,
     .mobile-nav {
       animation: none;
     }
