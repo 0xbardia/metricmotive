@@ -1,0 +1,164 @@
+{
+  "landing": {
+    "head": {
+      "tbt": {
+        "median": 588,
+        "range": "433–941"
+      },
+      "cls": {
+        "median": 0,
+        "range": "0–0"
+      },
+      "frames4sOver33": {
+        "median": 11,
+        "range": "9–17"
+      },
+      "frames4sP95": {
+        "median": 33,
+        "range": "17–67"
+      },
+      "scrollOver33": {
+        "median": 18,
+        "range": "6–21"
+      },
+      "scrollP95": {
+        "median": 33,
+        "range": "17–33"
+      }
+    },
+    "candidate": {
+      "tbt": {
+        "median": 604,
+        "range": "539–687"
+      },
+      "cls": {
+        "median": 0,
+        "range": "0–0"
+      },
+      "frames4sOver33": {
+        "median": 12,
+        "range": "10–16"
+      },
+      "frames4sP95": {
+        "median": 50,
+        "range": "33–50"
+      },
+      "scrollOver33": {
+        "median": 19,
+        "range": "14–26"
+      },
+      "scrollP95": {
+        "median": 33,
+        "range": "33–50"
+      }
+    }
+  },
+  "demo": {
+    "head": {
+      "tbt": {
+        "median": 623,
+        "range": "544–1040"
+      },
+      "cls": {
+        "median": 0,
+        "range": "0–0"
+      },
+      "frames4sOver33": {
+        "median": 8,
+        "range": "6–13"
+      },
+      "frames4sP95": {
+        "median": 17,
+        "range": "17–50"
+      },
+      "scrollOver33": {
+        "median": 1,
+        "range": "0–3"
+      },
+      "scrollP95": {
+        "median": 17,
+        "range": "17–17"
+      }
+    },
+    "candidate": {
+      "tbt": {
+        "median": 633,
+        "range": "454–820"
+      },
+      "cls": {
+        "median": 0,
+        "range": "0–0"
+      },
+      "frames4sOver33": {
+        "median": 10,
+        "range": "9–12"
+      },
+      "frames4sP95": {
+        "median": 33,
+        "range": "33–50"
+      },
+      "scrollOver33": {
+        "median": 1,
+        "range": "0–2"
+      },
+      "scrollP95": {
+        "median": 17,
+        "range": "17–17"
+      }
+    }
+  },
+  "receipt": {
+    "head": {
+      "tbt": {
+        "median": 656,
+        "range": "587–814"
+      },
+      "cls": {
+        "median": 0,
+        "range": "0–0"
+      },
+      "frames4sOver33": {
+        "median": 10,
+        "range": "8–15"
+      },
+      "frames4sP95": {
+        "median": 33,
+        "range": "17–50"
+      },
+      "scrollOver33": {
+        "median": 0,
+        "range": "0–1"
+      },
+      "scrollP95": {
+        "median": 17,
+        "range": "17–17"
+      }
+    },
+    "candidate": {
+      "tbt": {
+        "median": 915,
+        "range": "514–1134"
+      },
+      "cls": {
+        "median": 0,
+        "range": "0–0"
+      },
+      "frames4sOver33": {
+        "median": 9,
+        "range": "6–11"
+      },
+      "frames4sP95": {
+        "median": 33,
+        "range": "17–50"
+      },
+      "scrollOver33": {
+        "median": 3,
+        "range": "1–5"
+      },
+      "scrollP95": {
+        "median": 17,
+        "range": "17–17"
+      }
+    }
+  }
+}

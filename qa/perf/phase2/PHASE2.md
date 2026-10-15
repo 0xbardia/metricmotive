@@ -59,12 +59,12 @@ glyphs, which changed with the typeface.
 
 | Item | Result |
 |---|---|
-| Reduced motion, landing, demo, receipt, /app, wizard, 390 and 1440 | pass: 0 running motion at 500 and 1200 ms; scroll-active OK (`reduced-motion-phase2.json`, `scroll-active-check`) |
-| CLS 0 at 4x: landing, /app, demo, receipt (3 runs each) | pass: 0 everywhere (`cls4x-v21.json`) |
+| Reduced motion, landing, demo, receipt, /app, wizard, 390 and 1440 | pass: 0 running motion at 500 and 1200 ms; scroll-active OK (`reduced-motion-phase2.json`, `scroll-active-check`). *(Phase 2 receipt row was on unseeded 404; re-verified on real seeded receipt: pass)* |
+| CLS 0 at 4x: landing, /app, demo, receipt (3 runs each) | pass: 0 everywhere (`cls4x-v21.json`). *(Phase 2 receipt row was on unseeded 404; re-verified on real seeded receipt: 0.0000 on 3/3 runs)* |
 | /app 0.032 source | closed: rc6's brand-link wrap, fixed by `whitespace-nowrap` (Phase 1b). v2.1 /app is 0 in 3 runs |
 | Landing long tasks lower than rc6's top 3 | pass, rank by rank, in paired runs, under load 21. Per-run ranges overlap, so treat as directional |
 | JS growth under 5 kB gzip, after a full scroll | pass: 168,394 to 169,080 B gzip (+686 B) (`js-scrolled`) |
-| No wallet or chain code on landing, demo, receipt | pass: none found in any loaded JS (`js-v21.json`); /app keeps its wallet chunks |
+| No wallet or chain code on landing, demo, receipt | pass: none found in any loaded JS (`js-v21.json`); /app keeps its wallet chunks. *(Re-verified on real seeded receipt: 15 files, 165.9 KB gz, wallet: none)* |
 
 ## Not done / decisions for you
 

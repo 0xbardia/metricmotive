@@ -1,0 +1,102 @@
+{
+ "base": "http://127.0.0.1:8095",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 835,
+   "longTasksMedian": 9,
+   "top3Median": [
+    396,
+    275,
+    157
+   ],
+   "top3StartMedian": [
+    1956,
+    304,
+    2386
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 21,
+   "frames4sP95Median": 67,
+   "scrollOver33Median": 0,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 7555
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [
+     [
+      304,
+      275
+     ],
+     [
+      596,
+      72
+     ],
+     [
+      1956,
+      396
+     ],
+     [
+      2386,
+      157
+     ],
+     [
+      2764,
+      75
+     ],
+     [
+      2858,
+      51
+     ],
+     [
+      3294,
+      66
+     ],
+     [
+      3549,
+      90
+     ],
+     [
+      3942,
+      103
+     ]
+    ],
+    "tbt": 835,
+    "cls": 0,
+    "win": {
+     "frames": 138,
+     "over33": 21,
+     "over50": 8,
+     "p95": 67
+    },
+    "top3": [
+     [
+      1956,
+      396
+     ],
+     [
+      304,
+      275
+     ],
+     [
+      2386,
+      157
+     ]
+    ],
+    "scroll": {
+     "frames": 247,
+     "over33": 0,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 7555
+   }
+  ]
+ }
+}

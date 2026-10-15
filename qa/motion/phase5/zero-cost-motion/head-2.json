@@ -1,0 +1,250 @@
+{
+ "base": "http://127.0.0.1:8096",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 433,
+   "longTasksMedian": 3,
+   "top3Median": [
+    317,
+    187,
+    79
+   ],
+   "top3StartMedian": [
+    2088,
+    323,
+    2434
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 9,
+   "frames4sP95Median": 17,
+   "scrollOver33Median": 9,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 7043
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 623,
+   "longTasksMedian": 7,
+   "top3Median": [
+    389,
+    151,
+    116
+   ],
+   "top3StartMedian": [
+    1847,
+    328,
+    2273
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 8,
+   "frames4sP95Median": 17,
+   "scrollOver33Median": 0,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 2097
+  },
+  "receipt": {
+   "runs": "1/1",
+   "tbtMedian": 656,
+   "longTasksMedian": 7,
+   "top3Median": [
+    327,
+    318,
+    114
+   ],
+   "top3StartMedian": [
+    2229,
+    532,
+    278
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 9,
+   "frames4sP95Median": 33,
+   "scrollOver33Median": 1,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 5146
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [
+     [
+      323,
+      187
+     ],
+     [
+      2088,
+      317
+     ],
+     [
+      2434,
+      79
+     ]
+    ],
+    "tbt": 433,
+    "cls": 0,
+    "win": {
+     "frames": 183,
+     "over33": 9,
+     "over50": 4,
+     "p95": 17
+    },
+    "top3": [
+     [
+      2088,
+      317
+     ],
+     [
+      323,
+      187
+     ],
+     [
+      2434,
+      79
+     ]
+    ],
+    "scroll": {
+     "frames": 241,
+     "over33": 9,
+     "over50": 4,
+     "p95": 17
+    },
+    "scrollHeight": 7043
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      128,
+      52
+     ],
+     [
+      223,
+      98
+     ],
+     [
+      328,
+      151
+     ],
+     [
+      1847,
+      389
+     ],
+     [
+      2273,
+      116
+     ],
+     [
+      2447,
+      109
+     ],
+     [
+      2675,
+      58
+     ]
+    ],
+    "tbt": 623,
+    "cls": 0,
+    "win": {
+     "frames": 173,
+     "over33": 8,
+     "over50": 6,
+     "p95": 17
+    },
+    "top3": [
+     [
+      1847,
+      389
+     ],
+     [
+      328,
+      151
+     ],
+     [
+      2273,
+      116
+     ]
+    ],
+    "scroll": {
+     "frames": 248,
+     "over33": 0,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 2097
+   }
+  ],
+  "receipt": [
+   {
+    "path": "/verify/rct_14804bf62424284e",
+    "status": 200,
+    "lt": [
+     [
+      278,
+      114
+     ],
+     [
+      532,
+      318
+     ],
+     [
+      854,
+      53
+     ],
+     [
+      2229,
+      327
+     ],
+     [
+      2567,
+      86
+     ],
+     [
+      2830,
+      57
+     ],
+     [
+      2898,
+      51
+     ]
+    ],
+    "tbt": 656,
+    "cls": 0,
+    "win": {
+     "frames": 156,
+     "over33": 9,
+     "over50": 5,
+     "p95": 33
+    },
+    "top3": [
+     [
+      2229,
+      327
+     ],
+     [
+      532,
+      318
+     ],
+     [
+      278,
+      114
+     ]
+    ],
+    "scroll": {
+     "frames": 250,
+     "over33": 1,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 5146
+   }
+  ]
+ }
+}

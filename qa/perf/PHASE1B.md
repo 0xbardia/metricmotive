@@ -30,12 +30,12 @@ Source found: the header brand link flips between one and two lines during font 
 
 ## CLS on font swap (390 px, fonts delayed 1.5 s, median of 3; `qa/perf/cls-*.txt`)
 
-| Page | rc6 (live) | v2.1 |
-| --- | --- | --- |
-| landing `/` | 0.0198 | 0.0001 |
-| receipt | 0.0343 | 0.0001 |
-| `/app` | 0.0457 | 0 |
-| `/demo` | 0.0219 | 0.0001 |
+| Page | rc6 (live) | v2.1 | Note |
+| --- | --- | --- | --- |
+| landing `/` | 0.0198 | 0.0001 | |
+| receipt *(INVALID)* | 0.0343 | 0.0001 | *Invalid: measured on unseeded 404 page; real receipt CLS is 0.0000 on both rc6 and HEAD* |
+| `/app` | 0.0457 | 0 | |
+| `/demo` | 0.0219 | 0.0001 | |
 
 Normal loads: 0 on every page at 1x and 4x (rc6 `/app` at 4x: 0.0317). Residual: the `/demo` heading "What the validators found" (28 px) wraps differently once Fraunces loads, which moves 0.0001. A single Fraunces ratio can't match both 28 px and 36 px headings exactly. I set it for 36 px, the size that causes the larger flip.
 
@@ -45,8 +45,9 @@ Normal loads: 0 on every page at 1x and 4x (rc6 `/app` at 4x: 0.0317). Residual:
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | landing | rc6 | 75 | 682 | 0 | 2664 | 2123 | 4259 |
 | landing | v2.1 | 79 | 767 | 0.0001 | 2230 | 1567 | 2868 |
-| receipt | rc6 | 84 | 602 | 0.0002 | 2109 | 1309 | 2433 |
-| receipt | v2.1 | 84 | 586 | 0 | 2070 | 1225 | 2441 |
+| receipt *(INVALID)* | rc6 | 84 | 602 | 0.0002 | 2109 | 1309 | 2433 |
+| receipt *(INVALID)* | v2.1 | 84 | 586 | 0 | 2070 | 1225 | 2441 |
+*(Note: Receipt rows above marked INVALID — taken on unseeded "receipt not found" 404 page, not real receipt).*
 
 - **Budget status:** the Lighthouse ≥90 target is **not met** on either build under this load. The landing TBT is **+85 ms** on median, which is over the +50 ms budget. The per-run range is wide (rc6 484 to 1187 ms, v2.1 356 to 1054 ms), so with five runs the difference is within noise, but I cannot claim the budget is met. LCP, FCP and Speed Index improved on the landing.
 - To judge the ≥90 target and the TBT budget properly, these need a quieter machine or production hardware.

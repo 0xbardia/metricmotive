@@ -1,0 +1,270 @@
+{
+ "base": "http://127.0.0.1:8096",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 941,
+   "longTasksMedian": 8,
+   "top3Median": [
+    496,
+    455,
+    82
+   ],
+   "top3StartMedian": [
+    2348,
+    337,
+    2883
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 17,
+   "frames4sP95Median": 67,
+   "scrollOver33Median": 21,
+   "scrollP95Median": 33,
+   "scrollHeightMedian": 7043
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 1040,
+   "longTasksMedian": 7,
+   "top3Median": [
+    510,
+    353,
+    181
+   ],
+   "top3StartMedian": [
+    2886,
+    617,
+    351
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 9,
+   "frames4sP95Median": 50,
+   "scrollOver33Median": 3,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 2097
+  },
+  "receipt": {
+   "runs": "1/1",
+   "tbtMedian": 698,
+   "longTasksMedian": 7,
+   "top3Median": [
+    326,
+    279,
+    123
+   ],
+   "top3StartMedian": [
+    2620,
+    449,
+    3308
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 10,
+   "frames4sP95Median": 50,
+   "scrollOver33Median": 1,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 5146
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [
+     [
+      337,
+      455
+     ],
+     [
+      810,
+      54
+     ],
+     [
+      2348,
+      496
+     ],
+     [
+      2883,
+      82
+     ],
+     [
+      3008,
+      54
+     ],
+     [
+      3210,
+      69
+     ],
+     [
+      3299,
+      61
+     ],
+     [
+      3657,
+      70
+     ]
+    ],
+    "tbt": 941,
+    "cls": 0,
+    "win": {
+     "frames": 134,
+     "over33": 17,
+     "over50": 8,
+     "p95": 67
+    },
+    "top3": [
+     [
+      2348,
+      496
+     ],
+     [
+      337,
+      455
+     ],
+     [
+      2883,
+      82
+     ]
+    ],
+    "scroll": {
+     "frames": 234,
+     "over33": 21,
+     "over50": 4,
+     "p95": 33
+    },
+    "scrollHeight": 7043
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      351,
+      181
+     ],
+     [
+      617,
+      353
+     ],
+     [
+      996,
+      82
+     ],
+     [
+      2886,
+      510
+     ],
+     [
+      3633,
+      151
+     ],
+     [
+      3853,
+      53
+     ],
+     [
+      4065,
+      60
+     ]
+    ],
+    "tbt": 1040,
+    "cls": 0,
+    "win": {
+     "frames": 132,
+     "over33": 9,
+     "over50": 6,
+     "p95": 50
+    },
+    "top3": [
+     [
+      2886,
+      510
+     ],
+     [
+      617,
+      353
+     ],
+     [
+      351,
+      181
+     ]
+    ],
+    "scroll": {
+     "frames": 251,
+     "over33": 3,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 2097
+   }
+  ],
+  "receipt": [
+   {
+    "path": "/verify/rct_14804bf62424284e",
+    "status": 200,
+    "lt": [
+     [
+      312,
+      102
+     ],
+     [
+      449,
+      279
+     ],
+     [
+      740,
+      50
+     ],
+     [
+      2620,
+      326
+     ],
+     [
+      2963,
+      117
+     ],
+     [
+      3308,
+      123
+     ],
+     [
+      3836,
+      51
+     ]
+    ],
+    "tbt": 698,
+    "cls": 0,
+    "win": {
+     "frames": 157,
+     "over33": 10,
+     "over50": 6,
+     "p95": 50
+    },
+    "top3": [
+     [
+      2620,
+      326
+     ],
+     [
+      449,
+      279
+     ],
+     [
+      3308,
+      123
+     ]
+    ],
+    "scroll": {
+     "frames": 249,
+     "over33": 1,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 5146
+   }
+  ]
+ }
+}
