@@ -159,6 +159,14 @@ Abort and roll back if: ready is not 200 within 30 s, pm2 is not `online` or is 
 Validate: `node scripts/check-cutover-output.mjs 5 <file>` for the ready JSON and `pm2 status`; then `node scripts/cutover-verify.mjs --base https://metricmotive.xyz --release-dir /root/mm-release-v2` (read-only; routes, every asset 200 and byte-identical to the release build, chain 61997 and contract `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`, hydration without console errors on `/` and `/app`, Connect opens the modal without connecting). Run it from the release directory.
 Rollback: section 6 (about 5 s).
 
+**Scripted deploy for a later release without schema changes.** `scripts/deploy-release.sh` runs the swap, the restart, the readiness and restart-counter checks, and the step 6 rollback on any failure, in one go. It is self-contained (copy it from any checkout; it reads no other repo file) and refuses to run if `DATABASE_URL` is set, so use a fresh shell, after step 2's backup and the operator's approval:
+```sh
+bash scripts/deploy-release.sh <release-dir> <tag> --prod /root/MetricMotive --backups /root/metricmotive-backups \
+  --pm2 /root/.nvm/versions/node/v20.20.2/bin/pm2 --ready-url https://metricmotive.xyz/api/v1/ready \
+  --chain 61997 --contract 0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703
+```
+Exit 0: deployed (the previous output stays in `.vercel/output.prev-<ts>` until the operator says to remove it). Exit 1: failed and rolled back once; stop and report. Exit 2: the rollback itself failed; stop at once. Exit 3: preflight refused, nothing changed. Then run the `cutover-verify` command above. `scripts/deploy-release.test.mjs` covers success, four failure paths, a failing rollback and the preflight (it runs in `npm test`, on dummy trees only).
+
 ### 6. Roll back the app  [PROD]
 ```sh
 cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
