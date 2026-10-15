@@ -1,0 +1,49 @@
+diff --git a/src/routes/verify/$receiptId.tsx b/src/routes/verify/$receiptId.tsx
+index c7c041f..d650b12 100644
+--- a/src/routes/verify/$receiptId.tsx
++++ b/src/routes/verify/$receiptId.tsx
+@@ -9,6 +9,7 @@ import { Hint } from "@/components/ui/hint";
+ import { StateCard } from "@/components/ui/state-card";
+ import { ProtocolStatusBadge } from "@/components/ui/verdict-badge";
+ import { VerdictSummary } from "@/components/ui/verdict-summary";
++import { useEntering } from "@/lib/use-entering";
+ import { contractProvenanceLabel } from "@/lib/explorer";
+ import { humanReadableFindings, primaryPatternCopy } from "@/lib/findings";
+ import { committedEvidenceLines } from "@/lib/evidence-summary";
+@@ -91,6 +92,7 @@ function ReceiptError({ error, onRetry }: { error: string; onRetry: () => void }
+ }
+ 
+ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>> }) {
++  const entering = useEntering();
+   const snap = data.receipt.snapshot;
+   const verdict = String(snap.verdict ?? data.guard?.verdict ?? "") as Verdict;
+   const times = receiptTimes({
+@@ -134,7 +136,7 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>>
+   const runId = runIdOfCommittedSnapshot(data.guard?.evidenceJson);
+ 
+   return (
+-    <article>
++    <article className={entering ? "enter-on" : undefined}>
+       {/* 1. Verdict */}
+       <header className="border-b border-rule pb-8">
+         <div className="flex flex-wrap items-center gap-2">
+@@ -142,8 +144,8 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>>
+           {example ? null : advisory ? <Badge tone="warning">Advisory</Badge> : <Badge tone="success">GenLayer</Badge>}
+           <ProtocolStatusBadge state={finalized ? "RESOLVED" : "DRAFT"} />
+         </div>
+-        <h1 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">Motive Receipt</h1>
+-        <VerdictSummary verdict={verdict} className="mt-4" />
++        <h1 className="rise mt-4 font-display text-4xl tracking-tight sm:text-5xl">Motive Receipt</h1>
++        <VerdictSummary verdict={verdict} className="rise d1 mt-4" />
+         <dl className="mt-6 grid gap-4 sm:grid-cols-3">
+           <MetaItem k="Receipt" v={<IdBadge value={data.receipt.id} kind="fingerprint" label="receipt id" />} />
+           <MetaItem k="Case" v={<IdBadge value={String(data.receipt.guardId)} kind="guard" label="local Guard id" />} />
+@@ -153,7 +155,7 @@ function ReceiptView({ data }: { data: Awaited<ReturnType<typeof getReceiptFn>>
+       </header>
+ 
+       {/* 2. Read the result — the prominent plain-language summary */}
+-      <section className="mt-10 paper-panel p-6 sm:p-8" aria-labelledby="receipt-reading">
++      <section className="rise d2 mt-10 paper-panel p-6 sm:p-8" aria-labelledby="receipt-reading">
+         <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-brand-text">Summary</p>
+         <h2 id="receipt-reading" className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+           Read the result

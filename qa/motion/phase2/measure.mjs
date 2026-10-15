@@ -6,7 +6,7 @@ import { writeFileSync } from "node:fs";
 const require = createRequire("/root/mm-release-v2/node_modules/playwright");
 const { chromium } = require("playwright");
 const [BASE, OUT, RUNS = "3", PAGES_ARG = "landing,demo,receipt,app"] = process.argv.slice(2);
-const ALL = { landing: "/", demo: "/demo", receipt: "/verify/rct_14804bf62424284e", app: "/app" };
+const ALL = { landing: "/", demo: "/demo", receipt: "/verify/rct_14804bf62424284e", app: "/app", wizard: "/app/guards/new" };
 const pages = PAGES_ARG.split(",");
 const VP = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 const init = () => {

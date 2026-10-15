@@ -1,0 +1,177 @@
+diff --git a/src/components/app-home-content.tsx b/src/components/app-home-content.tsx
+index e582b62..c32de96 100644
+--- a/src/components/app-home-content.tsx
++++ b/src/components/app-home-content.tsx
+@@ -15,6 +15,7 @@ import { ensureWalletSession } from "@/lib/wallet/auth-client";
+ import { GLOSSARY } from "@/lib/terminology";
+ import { requireWallet } from "@/lib/wallet/require-wallet";
+ import { WalletProviders } from "@/lib/wallet/provider";
++import { useEntering } from "@/lib/use-entering";
+ import type { Guard } from "@/lib/domain";
+ 
+ export function AppHomeWithWallet() {
+@@ -60,9 +61,11 @@ function AppHomeContent() {
+     };
+   }, [address, connector, q.data?.guards, queryClient]);
+ 
++  const entering = useEntering();
++
+   return (
+-    <>
+-      <div className="max-w-4xl">
++    <div className={entering ? "enter-on" : undefined}>
++      <div className="max-w-4xl rise">
+         <p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">Verification workspace</p>
+         <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
+           <div>
+@@ -74,18 +77,18 @@ function AppHomeContent() {
+       </div>
+ 
+       {!address || !connector ? (
+-        <StateCard className="mt-9 max-w-3xl" kind="empty" title="Connect a wallet to open your workspace." minHeight="9rem" action={<Button onClick={() => connect()}>Connect wallet</Button>}>
++        <StateCard className="rise d1 mt-9 max-w-3xl" kind="empty" title="Connect a wallet to open your workspace." minHeight="9rem" action={<Button onClick={() => connect()}>Connect wallet</Button>}>
+           Your Guards and Runs are private to the wallet that created them. Public verification receipts remain readable without a wallet.
+         </StateCard>
+       ) : q.isLoading ? (
+-        <StateCard className="mt-9 max-w-3xl" kind="loading" title="Loading your cases…" minHeight="9rem">Checking your wallet session. This takes a moment.</StateCard>
++        <StateCard className="rise d1 mt-9 max-w-3xl" kind="loading" title="Loading your cases…" minHeight="9rem">Checking your wallet session. This takes a moment.</StateCard>
+       ) : q.isError ? (
+-        <StateCard className="mt-9 max-w-3xl" kind="error" title="We couldn’t load your cases right now." minHeight="9rem" action={<Button variant="outline" onClick={() => void q.refetch()}>Try again</Button>}>
++        <StateCard className="rise d1 mt-9 max-w-3xl" kind="error" title="We couldn’t load your cases right now." minHeight="9rem" action={<Button variant="outline" onClick={() => void q.refetch()}>Try again</Button>}>
+           Your saved cases were not deleted. Confirm the wallet signature, then try again.
+         </StateCard>
+       ) : (
+         <>
+-          <section className="mt-9" aria-labelledby="history-title">
++          <section className="rise d1 mt-9" aria-labelledby="history-title">
+             <div className="flex flex-wrap items-end justify-between gap-3">
+               <div><p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">Your history</p><h2 id="history-title" className="mt-1 font-display text-2xl">What has been verified.</h2></div>
+               <p className="text-xs text-graphite">Finalized evaluations only · not a trust score</p>
+@@ -101,11 +104,11 @@ function AppHomeContent() {
+             </div>
+           </section>
+           {guards.length === 0 ? (
+-            <StateCard className="mt-12 max-w-3xl" kind="empty" title="No Guards yet." action={<Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link>}>
++            <StateCard className="rise d2 mt-12 max-w-3xl" kind="empty" title="No Guards yet." action={<Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link>}>
+               {GLOSSARY.guard}
+             </StateCard>
+           ) : (
+-            <section className="mt-12" aria-labelledby="cases-title">
++            <section className="rise d2 mt-12" aria-labelledby="cases-title">
+               <div className="flex items-center justify-between gap-3"><h2 id="cases-title" className="font-display text-2xl">Your Guards</h2><span className="font-mono text-xs text-graphite">{guards.length} case{guards.length === 1 ? "" : "s"}</span></div>
+               <ul className="mt-4 divide-y divide-rule border-y border-rule">
+                 {guards.map((guard) => <GuardRow key={guard.id} guard={guard} />)}
+@@ -114,7 +117,7 @@ function AppHomeContent() {
+           )}
+         </>
+       )}
+-    </>
++    </div>
+   );
+ }
+ 
+@@ -160,7 +163,7 @@ export function AppHomeFallback() {
+   return (
+     <>
+       <div className="max-w-4xl"><p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-graphite">Verification workspace</p><div className="mt-1 flex flex-wrap items-end justify-between gap-4"><div><h1 className="font-display text-4xl tracking-tight">Cases</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">Define what the agent should achieve, capture what happened, and let GenLayer verify the difference.</p></div><Link to="/app/guards/new"><Button>Create a Motive Guard<ArrowRight className="size-4" /></Button></Link></div></div>
+-      <StateCard className="mt-9 max-w-3xl" kind="loading" title="Opening your workspace…" minHeight="9rem">Your Guards and Runs are private to the wallet that created them.</StateCard>
++      <StateCard className="rise d1 mt-9 max-w-3xl" kind="loading" title="Opening your workspace…" minHeight="9rem">Your Guards and Runs are private to the wallet that created them.</StateCard>
+     </>
+   );
+ }
+diff --git a/src/routes/app/guards/new.tsx b/src/routes/app/guards/new.tsx
+index c62613e..a94634e 100644
+--- a/src/routes/app/guards/new.tsx
++++ b/src/routes/app/guards/new.tsx
+@@ -1,7 +1,8 @@
+ import { useMutation, useQuery } from "@tanstack/react-query";
+ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+ import { ArrowRight, Check, Pencil } from "lucide-react";
+-import { useEffect, useMemo, useRef, useState } from "react";
++import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
++import { useEntering } from "@/lib/use-entering";
+ import { useAccount } from "wagmi";
+ import { AppShell } from "@/components/app-shell";
+ import { CreateAndLock } from "@/components/chain-actions";
+@@ -115,6 +116,12 @@ function NewGuard() {
+   );
+ }
+ 
++// Keyed by step by the caller, so each step remounts and re-arms its own entrance.
++function StepPanel({ children }: { children: ReactNode }) {
++  const entering = useEntering();
++  return <div className={`mt-8 max-w-3xl${entering ? " enter-on" : ""}`}>{children}</div>;
++}
++
+ function NewGuardContent() {
+   const navigate = useNavigate();
+   const search = Route.useSearch();
+@@ -369,8 +376,8 @@ function NewGuardContent() {
+         <>
+         <Stepper kind="builder" current={step} className="mt-7" />
+ 
+-        <div className="mt-8 max-w-3xl stagger-in" key={step}>
+-          <p className="mb-4 font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">
++        <StepPanel key={step}>
++          <p className="rise mb-4 font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">
+             Step {reminder.n} of 3 · {reminder.title} · {reminder.cost.split(":")[0]}
+           </p>
+           {step === 0 ? (
+@@ -378,10 +385,10 @@ function NewGuardContent() {
+               <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
+                 Start with intent
+               </p>
+-              <h2 id="define-title" className="mt-2 font-display text-3xl tracking-tight">
++              <h2 id="define-title" className="rise d1 mt-2 font-display text-3xl tracking-tight">
+                 What should the agent actually achieve?
+               </h2>
+-              <div className="mt-7 grid gap-6 md:grid-cols-2">
++              <div className="rise d2 mt-7 grid gap-6 md:grid-cols-2">
+                 <fieldset>
+                   <Label htmlFor="motive">Motive</Label>
+                   <p className="mb-2 text-sm text-graphite">
+@@ -444,7 +451,7 @@ function NewGuardContent() {
+               <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
+                 Protect the outcome
+               </p>
+-              <h2 id="protect-title" className="mt-2 font-display text-3xl tracking-tight">
++              <h2 id="protect-title" className="rise d1 mt-2 font-display text-3xl tracking-tight">
+                 What must not be sacrificed?
+               </h2>
+               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
+@@ -452,7 +459,7 @@ function NewGuardContent() {
+                 adds an editable Guardrail row you can change or remove before saving.
+               </p>
+ 
+-              <div className="mt-7">
++              <div className="rise d2 mt-7">
+                 <p className="font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-graphite">
+                   Suggested guardrails
+                 </p>
+@@ -629,7 +636,7 @@ function NewGuardContent() {
+                   <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
+                     Review before locking
+                   </p>
+-                  <h2 id="review-title" className="mt-2 font-display text-3xl tracking-tight">
++                  <h2 id="review-title" className="rise d1 mt-2 font-display text-3xl tracking-tight">
+                     Does the definition say what you mean?
+                   </h2>
+                 </div>
+@@ -781,7 +788,7 @@ function NewGuardContent() {
+               <p className="font-mono text-xs uppercase tracking-[0.14em] text-brand-text">
+                 Make the objective durable
+               </p>
+-              <h2 id="publish-title" className="mt-2 font-display text-3xl tracking-tight">
++              <h2 id="publish-title" className="rise d1 mt-2 font-display text-3xl tracking-tight">
+                 Publish the Guard
+               </h2>
+               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graphite">
+@@ -889,7 +896,7 @@ function NewGuardContent() {
+               </Button>
+             </div>
+           ) : null}
+-        </div>
++        </StepPanel>
+         </>
+         )}
+       </div>

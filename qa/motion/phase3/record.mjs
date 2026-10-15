@@ -6,7 +6,7 @@ const require = createRequire("/root/mm-release-v2/node_modules/playwright");
 const { chromium } = require("playwright");
 const [label, BASE, OUT] = process.argv.slice(2);
 const b = await chromium.launch();
-for (const [name, path] of [["landing", "/"], ["demo", "/demo"]]) {
+for (const [name, path] of (process.argv[5] ? process.argv[5].split(",").map((x) => [x.split(":")[0], x.split(":")[1]]) : [["landing", "/"], ["demo", "/demo"]])) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, recordVideo: { dir: OUT, size: { width: 390, height: 844 } } });
   const p = await ctx.newPage();
   await p.goto(BASE + path, { waitUntil: "load", timeout: 120000 });

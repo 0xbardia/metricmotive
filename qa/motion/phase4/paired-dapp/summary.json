@@ -1,0 +1,230 @@
+{
+ "A": {
+  "label": "base",
+  "url": "http://127.0.0.1:8096"
+ },
+ "B": {
+  "label": "motion",
+  "url": "http://127.0.0.1:8095"
+ },
+ "meta": [
+  {
+   "label": "base",
+   "run": 1,
+   "loadBefore": 11.63,
+   "ok": true
+  },
+  {
+   "label": "motion",
+   "run": 1,
+   "loadBefore": 11.02,
+   "ok": true
+  },
+  {
+   "label": "motion",
+   "run": 2,
+   "loadBefore": 11.93,
+   "ok": true
+  },
+  {
+   "label": "base",
+   "run": 2,
+   "loadBefore": 11.86,
+   "ok": true
+  },
+  {
+   "label": "base",
+   "run": 3,
+   "loadBefore": 11.98,
+   "ok": true
+  },
+  {
+   "label": "motion",
+   "run": 3,
+   "loadBefore": 11.9,
+   "ok": true
+  },
+  {
+   "label": "motion",
+   "run": 4,
+   "loadBefore": 11.61,
+   "ok": true
+  },
+  {
+   "label": "base",
+   "run": 4,
+   "loadBefore": 11.74,
+   "ok": true
+  },
+  {
+   "label": "base",
+   "run": 5,
+   "loadBefore": 11.19,
+   "ok": true
+  },
+  {
+   "label": "motion",
+   "run": 5,
+   "loadBefore": 11.47,
+   "ok": true
+  }
+ ],
+ "summary": {
+  "app": {
+   "base": {
+    "n": 5,
+    "loadMedian": 11.74,
+    "tbt": {
+     "median": 625,
+     "range": "614–1041"
+    },
+    "rank": [
+     {
+      "median": 392,
+      "range": "344–451"
+     },
+     {
+      "median": 222,
+      "range": "131–319"
+     },
+     {
+      "median": 112,
+      "range": "89–288"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 8,
+     "range": "5–12"
+    },
+    "scrollP95": {
+     "median": 17,
+     "range": "17–17"
+    },
+    "scrollFrames": {
+     "median": 250,
+     "range": "245–254"
+    }
+   },
+   "motion": {
+    "n": 5,
+    "loadMedian": 11.61,
+    "tbt": {
+     "median": 960,
+     "range": "867–1019"
+    },
+    "rank": [
+     {
+      "median": 434,
+      "range": "301–493"
+     },
+     {
+      "median": 272,
+      "range": "219–389"
+     },
+     {
+      "median": 182,
+      "range": "151–262"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 11,
+     "range": "8–14"
+    },
+    "scrollP95": {
+     "median": 17,
+     "range": "17–33"
+    },
+    "scrollFrames": {
+     "median": 242,
+     "range": "237–248"
+    }
+   }
+  },
+  "wizard": {
+   "base": {
+    "n": 5,
+    "loadMedian": 11.74,
+    "tbt": {
+     "median": 1620,
+     "range": "38–2556"
+    },
+    "rank": [
+     {
+      "median": 560,
+      "range": "87–1501"
+     },
+     {
+      "median": 465,
+      "range": "51–523"
+     },
+     {
+      "median": 396,
+      "range": "0–506"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 7,
+     "range": "4–27"
+    },
+    "scrollP95": {
+     "median": 17,
+     "range": "17–50"
+    },
+    "scrollFrames": {
+     "median": 246,
+     "range": "231–248"
+    }
+   },
+   "motion": {
+    "n": 5,
+    "loadMedian": 11.61,
+    "tbt": {
+     "median": 1431,
+     "range": "1128–2106"
+    },
+    "rank": [
+     {
+      "median": 581,
+      "range": "491–1016"
+     },
+     {
+      "median": 455,
+      "range": "322–554"
+     },
+     {
+      "median": 274,
+      "range": "131–433"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 12,
+     "range": "5–21"
+    },
+    "scrollP95": {
+     "median": 17,
+     "range": "17–33"
+    },
+    "scrollFrames": {
+     "median": 243,
+     "range": "233–246"
+    }
+   }
+  }
+ }
+}
