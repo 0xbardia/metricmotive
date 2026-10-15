@@ -116,3 +116,30 @@ To prevent repeating failed experiments, the following candidates were rigorousl
 4. **Dialog Entry Animation**:
    - `[role="dialog"]`, `[role="alertdialog"]`: `dialog-enter` scale and translate animation.
    - Only triggered upon explicit user action (e.g. confirming empty evidence submission); 0ms cost on route load.
+
+---
+
+## 5. Deployment and Receipt LCP (v2.1.0-rc1, deployed 2026-10-15)
+
+`v2.1.0-rc1` (`483cf2c`) went live on 2026-10-15. Deploy 22:25:55 to 22:26:08 UTC (13 s, `mm-deploy-v21.sh`); PM2 restart counter 0 to 1, exactly one restart; `/api/v1/ready` chain 61997, contract `0x4105…8703`; `cutover-verify` PASS on the live domain. No rollback.
+
+Pre-deploy checks on the freshly built output (Node 22.23.3, `nodejs22.x`, like production's rc6 output): `tests/e2e` 14/14, `cutover-verify` PASS on a local preview, reduced-motion gate unchanged (0 running motion on 10 page/viewport cases).
+
+### Open: receipt LCP is higher than rc6
+Lighthouse mobile, `/verify/rct_14804bf62424284e`, seeded Postgres container, interleaved:
+
+| Round (load, 6 cores) | Build | Score | FCP ms | TBT ms | LCP ms | CLS |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 (4.2 to 7.2), n=5 | rc6 | 74 [71–81] | n/a | 1219 [649–1555] | 2236 [1856–2331] | 0 |
+| 1 | rc1 | 78 [60–87] | n/a | 753 [153–2081] | 2456 [2336–3051] | 0 |
+| 2 (9.4 to 12.0), rc6 n=4 (one run skipped at load 16.3) | rc6 | 69 [48–72] | 2062 [1627–3260] | 1592 [1373–4294] | 2325 [2189–4560] | 0 |
+| 2, rc1 n=5 | rc1 | 66 [57–72] | 2575 [1782–2986] | 1618 [1136–2754] | 2633 [2271–3085] | 0 |
+
+rc1's LCP median is +220 ms (round 1) and +308 ms (round 2) over rc6. Direction is consistent, size is within rc6's own spread in round 2. **Cause not found; nothing changed.**
+
+What was ruled out: the LCP element is the same in both builds (the first list item's paragraph, text only, no resource); its font is preloaded and loaded in both (rc1 Instrument Sans, rc6 Source Sans 3); no entrance or opacity rule hides it; CLS is 0. Size: rc1's HTML is 106,214 B against 101,275 B and its inline CSS 63,765 B against 58,937 B (+5 KB each, uncompressed on the preview), and its font payload for the page is about 4 KB smaller. In both rounds rc1's LCP lands later after its FCP (median gap about 560 ms against 160 ms in round 1).
+
+Next: a Lighthouse trace comparison on a quiet machine (load below 1.0 per core), then PageSpeed on the real domain (`scripts/pagespeed-post.md`), where the HTML is gzipped.
+
+### Provenance
+Commits up to `d3ae839` carry the Haiku 5.5 trailer, from the earlier model; commits from `f37719f` on carry Sonnet 5.5 (see `qa/motion/phase4/PHASE4.md`).

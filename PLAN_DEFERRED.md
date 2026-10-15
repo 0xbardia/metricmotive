@@ -2,6 +2,8 @@
 
 This document tracks items deferred from the v2.1 performance and motion sprint, the empirical reasons they were deferred, and the exact preconditions required before re-attempting them.
 
+**Status (2026-10-15):** v2.1.0-rc1 is deployed. The items below are unchanged by the deploy and stay deferred. Item 3 is new.
+
 ---
 
 ## 1. Landing View-Timeline Reveals & dApp Entrance Animations
@@ -40,3 +42,22 @@ Deferred. Current implementation uses `IntersectionObserver` with a 300px root m
 1. **Interaction-Triggered Mounting**: Mount off-screen sections only on user scroll initiation (e.g. `scroll` or `wheel` event listener with `passive: true`), bypassing the 5s TBT window entirely for stationary users.
 2. **Post-5s Idle Queue**: Schedule `requestIdleCallback` with a minimum delay of 5000 ms so that initial vitals measurement completes before background section rendering begins.
 3. **DOM Simplification**: Reduce the initial DOM node count of `#case` and `#how-it-works` by lazy-rendering inner technical tabs or code pre-blocks.
+
+---
+
+## 3. Receipt LCP: rc1 higher than rc6 (open, cause unknown)
+
+### Status
+Open. Deployed anyway after the operator confirmed the site; the difference is about 0.2 to 0.3 s on throttled mobile, with CLS 0.
+
+### Empirical Context
+- Lighthouse mobile on `/verify/rct_14804bf62424284e`, two interleaved rounds: LCP median 2236 ms [1856–2331] (rc6) against 2456 ms [2336–3051] (rc1) at load 4.2–7.2; 2325 ms [2189–4560, n=4] against 2633 ms [2271–3085] at load 9.4–12.0. Tables in `docs/MOTION.md` section 5.
+- Same LCP element in both builds (text paragraph), fonts preloaded in both, no hiding rule. rc1 HTML +5 KB, inline CSS +4.8 KB.
+
+### Preconditions for Re-evaluation
+1. Quiet window, load below 1.0 per core; paired n=10.
+2. Compare Lighthouse traces (FCP to LCP gap, main-thread work before first paint) for rc1 and rc6.
+3. Real-domain PageSpeed medians for the receipt (HTML gzipped), 3 runs per strategy.
+
+### Retry of item 1 (landing reveals, dApp and receipt entrance)
+Same quiet-window gate as item 1; run it together with this item so one quiet window covers both. The patches are in `qa/motion/phase4/`.
