@@ -22,7 +22,7 @@ test("the entrance animation is only on the class added after mount, and reduced
   const on = rulesFor(".route-enter-on");
   assert.ok(on.some((b) => /animation:\s*route-enter\b/.test(b)), "route-enter-on carries the animation");
   assert.ok(rulesFor(".route-enter-on").every((b) => !/opacity/.test(b)));
-  assert.match(css, /\.route-enter-on,\s*\.mobile-nav\s*\{\s*animation:\s*none/);
+  assert.match(css, /\.route-enter-on,\s*\.hero-on \.hero-rise,\s*\.mobile-nav\s*\{\s*animation:\s*none/);
 });
 
 test("the route-enter keyframes move only; they never fade from opacity 0", () => {

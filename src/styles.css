@@ -315,6 +315,15 @@
   }
 }
 
+@keyframes hero-rise {
+  from {
+    transform: translateY(var(--motion-y-medium));
+  }
+  to {
+    transform: none;
+  }
+}
+
 @keyframes mobile-nav-in {
   from {
     opacity: 0;
@@ -768,6 +777,23 @@
     animation: route-enter var(--motion-fast) var(--ease-out-soft) both;
   }
 
+  /* Hero entrance, after mount (LandingHero adds .hero-on). Transform only: the h1 is the LCP element. */
+  .hero-on .hero-rise {
+    animation: hero-rise var(--motion-emphasis) var(--ease-out-soft) both;
+  }
+
+  .hero-on .hero-rise.d1 {
+    animation-delay: 80ms;
+  }
+
+  .hero-on .hero-rise.d2 {
+    animation-delay: 160ms;
+  }
+
+  .hero-on .hero-rise.d3 {
+    animation-delay: 220ms;
+  }
+
   .nav-link {
     position: relative;
   }
@@ -816,6 +842,7 @@
     }
 
     .route-enter-on,
+    .hero-on .hero-rise,
     .mobile-nav {
       animation: none;
     }
