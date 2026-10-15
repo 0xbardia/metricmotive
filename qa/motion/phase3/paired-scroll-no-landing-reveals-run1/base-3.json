@@ -1,0 +1,148 @@
+{
+ "base": "http://127.0.0.1:8096",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 477,
+   "longTasksMedian": 5,
+   "top3Median": [
+    248,
+    242,
+    94
+   ],
+   "top3StartMedian": [
+    2122,
+    328,
+    139
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 7,
+   "frames4sP95Median": 17,
+   "scrollOver33Median": 41,
+   "scrollP95Median": 583,
+   "scrollHeightMedian": 7043
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 7663,
+   "longTasksMedian": 2,
+   "top3Median": [
+    7627,
+    136,
+    0
+   ],
+   "top3StartMedian": [
+    2457,
+    2320,
+    0
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 0,
+   "frames4sP95Median": null,
+   "scrollOver33Median": 27,
+   "scrollP95Median": 133,
+   "scrollHeightMedian": 2097
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [
+     [
+      139,
+      94
+     ],
+     [
+      328,
+      242
+     ],
+     [
+      2122,
+      248
+     ],
+     [
+      2384,
+      92
+     ],
+     [
+      2640,
+      51
+     ]
+    ],
+    "tbt": 477,
+    "cls": 0,
+    "win": {
+     "frames": 185,
+     "over33": 7,
+     "over50": 3,
+     "p95": 17
+    },
+    "top3": [
+     [
+      2122,
+      248
+     ],
+     [
+      328,
+      242
+     ],
+     [
+      139,
+      94
+     ]
+    ],
+    "scroll": {
+     "frames": 184,
+     "over33": 41,
+     "over50": 31,
+     "p95": 583
+    },
+    "scrollHeight": 7043
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      2320,
+      136
+     ],
+     [
+      2457,
+      7627
+     ]
+    ],
+    "tbt": 7663,
+    "cls": 0,
+    "win": {
+     "frames": 0,
+     "over33": 0,
+     "over50": 0,
+     "p95": null
+    },
+    "top3": [
+     [
+      2457,
+      7627
+     ],
+     [
+      2320,
+      136
+     ]
+    ],
+    "scroll": {
+     "frames": 207,
+     "over33": 27,
+     "over50": 21,
+     "p95": 133
+    },
+    "scrollHeight": 2097
+   }
+  ]
+ }
+}

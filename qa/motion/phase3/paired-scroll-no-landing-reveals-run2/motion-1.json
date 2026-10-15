@@ -1,0 +1,138 @@
+{
+ "base": "http://127.0.0.1:8095",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 0,
+   "longTasksMedian": 0,
+   "top3Median": [
+    0,
+    0,
+    0
+   ],
+   "top3StartMedian": [
+    0,
+    0,
+    0
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 0,
+   "frames4sP95Median": null,
+   "scrollOver33Median": 35,
+   "scrollP95Median": 500,
+   "scrollHeightMedian": 7043
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 694,
+   "longTasksMedian": 7,
+   "top3Median": [
+    369,
+    239,
+    151
+   ],
+   "top3StartMedian": [
+    2423,
+    441,
+    223
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 9,
+   "frames4sP95Median": 33,
+   "scrollOver33Median": 1,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 2097
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [],
+    "tbt": 0,
+    "cls": 0,
+    "win": {
+     "frames": 0,
+     "over33": 0,
+     "over50": 0,
+     "p95": null
+    },
+    "top3": [],
+    "scroll": {
+     "frames": 219,
+     "over33": 35,
+     "over50": 29,
+     "p95": 500
+    },
+    "scrollHeight": 7043
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      223,
+      151
+     ],
+     [
+      441,
+      239
+     ],
+     [
+      689,
+      53
+     ],
+     [
+      2423,
+      369
+     ],
+     [
+      2821,
+      89
+     ],
+     [
+      3032,
+      93
+     ],
+     [
+      3229,
+      50
+     ]
+    ],
+    "tbt": 694,
+    "cls": 0,
+    "win": {
+     "frames": 164,
+     "over33": 9,
+     "over50": 5,
+     "p95": 33
+    },
+    "top3": [
+     [
+      2423,
+      369
+     ],
+     [
+      441,
+      239
+     ],
+     [
+      223,
+      151
+     ]
+    ],
+    "scroll": {
+     "frames": 246,
+     "over33": 1,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 2097
+   }
+  ]
+ }
+}

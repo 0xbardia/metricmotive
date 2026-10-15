@@ -1,0 +1,220 @@
+{
+ "A": {
+  "label": "rc6",
+  "url": "http://127.0.0.1:8097"
+ },
+ "B": {
+  "label": "head",
+  "url": "http://127.0.0.1:8095"
+ },
+ "meta": [
+  {
+   "label": "rc6",
+   "run": 1,
+   "loadBefore": 5.25
+  },
+  {
+   "label": "head",
+   "run": 1,
+   "loadBefore": 6.66
+  },
+  {
+   "label": "head",
+   "run": 2,
+   "loadBefore": 6.47
+  },
+  {
+   "label": "rc6",
+   "run": 2,
+   "loadBefore": 8.11
+  },
+  {
+   "label": "rc6",
+   "run": 3,
+   "loadBefore": 8.33
+  },
+  {
+   "label": "head",
+   "run": 3,
+   "loadBefore": 8.64
+  },
+  {
+   "label": "head",
+   "run": 4,
+   "loadBefore": 8.55
+  },
+  {
+   "label": "rc6",
+   "run": 4,
+   "loadBefore": 8.64
+  },
+  {
+   "label": "rc6",
+   "run": 5,
+   "loadBefore": 8.61
+  },
+  {
+   "label": "head",
+   "run": 5,
+   "loadBefore": 9.04
+  }
+ ],
+ "summary": {
+  "landing": {
+   "rc6": {
+    "n": 5,
+    "loadMedian": 8.33,
+    "tbt": {
+     "median": 1172,
+     "range": "985–1742"
+    },
+    "rank": [
+     {
+      "median": 394,
+      "range": "355–446"
+     },
+     {
+      "median": 323,
+      "range": "206–439"
+     },
+     {
+      "median": 212,
+      "range": "185–331"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 26,
+     "range": "13–40"
+    },
+    "scrollP95": {
+     "median": 33,
+     "range": "33–50"
+    },
+    "scrollFrames": {
+     "median": 234,
+     "range": "216–244"
+    }
+   },
+   "head": {
+    "n": 5,
+    "loadMedian": 8.55,
+    "tbt": {
+     "median": 655,
+     "range": "566–860"
+    },
+    "rank": [
+     {
+      "median": 366,
+      "range": "351–459"
+     },
+     {
+      "median": 252,
+      "range": "137–340"
+     },
+     {
+      "median": 101,
+      "range": "78–150"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 16,
+     "range": "8–38"
+    },
+    "scrollP95": {
+     "median": 33,
+     "range": "17–67"
+    },
+    "scrollFrames": {
+     "median": 233,
+     "range": "210–242"
+    }
+   }
+  },
+  "demo": {
+   "rc6": {
+    "n": 5,
+    "loadMedian": 8.33,
+    "tbt": {
+     "median": 717,
+     "range": "601–1035"
+    },
+    "rank": [
+     {
+      "median": 337,
+      "range": "305–530"
+     },
+     {
+      "median": 293,
+      "range": "118–436"
+     },
+     {
+      "median": 133,
+      "range": "108–188"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 2,
+     "range": "1–5"
+    },
+    "scrollP95": {
+     "median": 17,
+     "range": "17–17"
+    },
+    "scrollFrames": {
+     "median": 249,
+     "range": "242–250"
+    }
+   },
+   "head": {
+    "n": 5,
+    "loadMedian": 8.55,
+    "tbt": {
+     "median": 1059,
+     "range": "592–1148"
+    },
+    "rank": [
+     {
+      "median": 456,
+      "range": "331–530"
+     },
+     {
+      "median": 340,
+      "range": "202–430"
+     },
+     {
+      "median": 150,
+      "range": "112–212"
+     }
+    ],
+    "cls": {
+     "median": 0,
+     "range": "0–0"
+    },
+    "scrollOver33": {
+     "median": 1,
+     "range": "1–3"
+    },
+    "scrollP95": {
+     "median": 17,
+     "range": "17–17"
+    },
+    "scrollFrames": {
+     "median": 248,
+     "range": "246–249"
+    }
+   }
+  }
+ }
+}

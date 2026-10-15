@@ -1,0 +1,196 @@
+{
+ "base": "http://127.0.0.1:8097",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 1172,
+   "longTasksMedian": 11,
+   "top3Median": [
+    411,
+    367,
+    185
+   ],
+   "top3StartMedian": [
+    421,
+    2540,
+    4043
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 14,
+   "frames4sP95Median": 50,
+   "scrollOver33Median": 13,
+   "scrollP95Median": 33,
+   "scrollHeightMedian": 7371
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 717,
+   "longTasksMedian": 7,
+   "top3Median": [
+    359,
+    289,
+    133
+   ],
+   "top3StartMedian": [
+    2392,
+    440,
+    266
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 9,
+   "frames4sP95Median": 33,
+   "scrollOver33Median": 2,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 2097
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [
+     [
+      232,
+      159
+     ],
+     [
+      421,
+      411
+     ],
+     [
+      868,
+      137
+     ],
+     [
+      1025,
+      50
+     ],
+     [
+      2540,
+      367
+     ],
+     [
+      2933,
+      92
+     ],
+     [
+      3479,
+      54
+     ],
+     [
+      4043,
+      185
+     ],
+     [
+      4249,
+      132
+     ],
+     [
+      4438,
+      68
+     ],
+     [
+      4555,
+      67
+     ]
+    ],
+    "tbt": 1172,
+    "cls": 0,
+    "win": {
+     "frames": 141,
+     "over33": 14,
+     "over50": 6,
+     "p95": 50
+    },
+    "top3": [
+     [
+      421,
+      411
+     ],
+     [
+      2540,
+      367
+     ],
+     [
+      4043,
+      185
+     ]
+    ],
+    "scroll": {
+     "frames": 243,
+     "over33": 13,
+     "over50": 1,
+     "p95": 33
+    },
+    "scrollHeight": 7371
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      266,
+      133
+     ],
+     [
+      440,
+      289
+     ],
+     [
+      732,
+      68
+     ],
+     [
+      2392,
+      359
+     ],
+     [
+      2776,
+      101
+     ],
+     [
+      2942,
+      67
+     ],
+     [
+      3115,
+      50
+     ]
+    ],
+    "tbt": 717,
+    "cls": 0,
+    "win": {
+     "frames": 163,
+     "over33": 9,
+     "over50": 4,
+     "p95": 33
+    },
+    "top3": [
+     [
+      2392,
+      359
+     ],
+     [
+      440,
+      289
+     ],
+     [
+      266,
+      133
+     ]
+    ],
+    "scroll": {
+     "frames": 247,
+     "over33": 2,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 2097
+   }
+  ]
+ }
+}

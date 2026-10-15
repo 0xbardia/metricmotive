@@ -1,0 +1,176 @@
+{
+ "base": "http://127.0.0.1:8096",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 670,
+   "longTasksMedian": 7,
+   "top3Median": [
+    363,
+    342,
+    90
+   ],
+   "top3StartMedian": [
+    2226,
+    294,
+    2629
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 9,
+   "frames4sP95Median": 33,
+   "scrollOver33Median": 10,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 7043
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 555,
+   "longTasksMedian": 6,
+   "top3Median": [
+    349,
+    230,
+    89
+   ],
+   "top3StartMedian": [
+    2121,
+    337,
+    2500
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 10,
+   "frames4sP95Median": 33,
+   "scrollOver33Median": 1,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 2097
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [
+     [
+      135,
+      53
+     ],
+     [
+      226,
+      62
+     ],
+     [
+      294,
+      342
+     ],
+     [
+      2226,
+      363
+     ],
+     [
+      2629,
+      90
+     ],
+     [
+      2884,
+      54
+     ],
+     [
+      2949,
+      56
+     ]
+    ],
+    "tbt": 670,
+    "cls": 0,
+    "win": {
+     "frames": 172,
+     "over33": 9,
+     "over50": 3,
+     "p95": 33
+    },
+    "top3": [
+     [
+      2226,
+      363
+     ],
+     [
+      294,
+      342
+     ],
+     [
+      2629,
+      90
+     ]
+    ],
+    "scroll": {
+     "frames": 241,
+     "over33": 10,
+     "over50": 4,
+     "p95": 17
+    },
+    "scrollHeight": 7043
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      259,
+      56
+     ],
+     [
+      337,
+      230
+     ],
+     [
+      2121,
+      349
+     ],
+     [
+      2500,
+      89
+     ],
+     [
+      2700,
+      76
+     ],
+     [
+      3237,
+      55
+     ]
+    ],
+    "tbt": 555,
+    "cls": 0,
+    "win": {
+     "frames": 174,
+     "over33": 10,
+     "over50": 4,
+     "p95": 33
+    },
+    "top3": [
+     [
+      2121,
+      349
+     ],
+     [
+      337,
+      230
+     ],
+     [
+      2500,
+      89
+     ]
+    ],
+    "scroll": {
+     "frames": 246,
+     "over33": 1,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 2097
+   }
+  ]
+ }
+}

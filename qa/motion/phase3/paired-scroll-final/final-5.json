@@ -1,0 +1,130 @@
+{
+ "base": "http://127.0.0.1:8095",
+ "runs": 1,
+ "summary": {
+  "landing": {
+   "runs": "1/1",
+   "tbtMedian": 0,
+   "longTasksMedian": 0,
+   "top3Median": [
+    0,
+    0,
+    0
+   ],
+   "top3StartMedian": [
+    0,
+    0,
+    0
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 0,
+   "frames4sP95Median": null,
+   "scrollOver33Median": 23,
+   "scrollP95Median": 83,
+   "scrollHeightMedian": 7043
+  },
+  "demo": {
+   "runs": "1/1",
+   "tbtMedian": 518,
+   "longTasksMedian": 5,
+   "top3Median": [
+    357,
+    137,
+    118
+   ],
+   "top3StartMedian": [
+    1997,
+    355,
+    220
+   ],
+   "clsMedian": 0,
+   "frames4sOver33Median": 7,
+   "frames4sP95Median": 17,
+   "scrollOver33Median": 0,
+   "scrollP95Median": 17,
+   "scrollHeightMedian": 2097
+  }
+ },
+ "results": {
+  "landing": [
+   {
+    "path": "/",
+    "status": 200,
+    "lt": [],
+    "tbt": 0,
+    "cls": 0,
+    "win": {
+     "frames": 0,
+     "over33": 0,
+     "over50": 0,
+     "p95": null
+    },
+    "top3": [],
+    "scroll": {
+     "frames": 221,
+     "over33": 23,
+     "over50": 14,
+     "p95": 83
+    },
+    "scrollHeight": 7043
+   }
+  ],
+  "demo": [
+   {
+    "path": "/demo",
+    "status": 200,
+    "lt": [
+     [
+      220,
+      118
+     ],
+     [
+      355,
+      137
+     ],
+     [
+      1997,
+      357
+     ],
+     [
+      2383,
+      81
+     ],
+     [
+      2508,
+      75
+     ]
+    ],
+    "tbt": 518,
+    "cls": 0,
+    "win": {
+     "frames": 182,
+     "over33": 7,
+     "over50": 5,
+     "p95": 17
+    },
+    "top3": [
+     [
+      1997,
+      357
+     ],
+     [
+      355,
+      137
+     ],
+     [
+      220,
+      118
+     ]
+    ],
+    "scroll": {
+     "frames": 247,
+     "over33": 0,
+     "over50": 0,
+     "p95": 17
+    },
+    "scrollHeight": 2097
+   }
+  ]
+ }
+}
