@@ -2,7 +2,7 @@
 
 ## Source
 
-Authoritative source: /root/MetricMotive
+Authoritative source: $APP_DIR
 
 Initial public Git history: YES
 
@@ -108,7 +108,7 @@ Writes during OSS publication: 0
 
 METRICMOTIVE V1.0.0 — CODE + TAG PUBLISHED / GITHUB RELEASE AUTH BLOCKED
 
-The source code is publicly available in the local Git repository at /root/MetricMotive with commit e1d76a6 and annotated tag v1.0.0. The initial public history is established. GitHub remote push and GitHub Release creation are blocked by external authentication limitations — this is not a code or certification issue, but a runtime environment constraint.
+The source code is publicly available in the local Git repository at $APP_DIR with commit e1d76a6 and annotated tag v1.0.0. The initial public history is established. GitHub remote push and GitHub Release creation are blocked by external authentication limitations — this is not a code or certification issue, but a runtime environment constraint.
 
 However: GitHub authentication is unavailable in this session. The local repository is properly initialized with the first public commit e1d76a6 and annotated tag v1.0.0 pointing to it. All release-critical checks (typecheck, lint, tests) pass. The .env file remains properly gitignored. No secrets, DB dumps, or unsafe artifacts are tracked.
 

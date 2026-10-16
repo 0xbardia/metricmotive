@@ -6,7 +6,7 @@ Commits in this phase: `a26a9c4` (route-enter gate; the pre-motion baseline for 
 ## 1. Commit attribution (reported, not rewritten)
 
 - `Co-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>` comes from the attribution instruction in this session's
-  system context (it says to end commit messages with that line). It is not in git config: `/root/.gitconfig` has only
+  system context (it says to end commit messages with that line). It is not in git config: `$HOME/.gitconfig` has only
   `user.name 0xbardia` and `user.email`, and there is no trailer config. I did not run `/model`.
 - Author and committer of every commit is `0xbardia`, from git config. The trailer is the only model attribution.
 - Authorship: every commit from this session was written by the main session, on the session model (Haiku 5.5, as the

@@ -1,7 +1,7 @@
 # Phase 2 report (v2.1), 390 px, 4x CPU unless stated
 
 Machine load was 10 to 22 on 6 cores during the measurements (the other tenants on this box). Paired runs
-interleave rc6 (`/root/mm-release-v2`, :8097) and v2.1 (this worktree, :8095). Lighthouse is not part of this gate.
+interleave rc6 (`$RELEASE_DIR`, :8097) and v2.1 (this worktree, :8095). Lighthouse is not part of this gate.
 
 ## Header (opacity-only)
 

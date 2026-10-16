@@ -19,6 +19,8 @@ It is not a generic AI judge, escrow, reputation system, or chat wrapper. It is 
 
 Studio Dev is a development network, not mainnet. It does not carry permanent state guarantees.
 
+Contract 2.0.0 is proposed but not deployed. Its proposal branch is not published in this repository, and the active deployment above is unchanged.
+
 Historical Studionet (61999) receipts preserve their original chain and contract provenance.
 
 ## Architecture

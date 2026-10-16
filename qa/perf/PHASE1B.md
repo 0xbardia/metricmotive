@@ -1,6 +1,6 @@
 # Phase 1b results (V2.1), 2026-10-14
 
-Builds compared: **rc6** = the live app code (`v2.0.0-rc6`, served locally from `/root/mm-release-v2` on :8097, and live at metricmotive.xyz for the traces); **v2.1** = branch `v2.1` head (served from this worktree on :8095). Same machine, same time, interleaved. Machine load during runs was 6 to 8 on 6 cores, so absolute Lighthouse scores are depressed; the comparison is what counts.
+Builds compared: **rc6** = the live app code (`v2.0.0-rc6`, served locally from `$RELEASE_DIR` on :8097, and live at metricmotive.xyz for the traces); **v2.1** = branch `v2.1` head (served from this worktree on :8095). Same machine, same time, interleaved. Machine load during runs was 6 to 8 on 6 cores, so absolute Lighthouse scores are depressed; the comparison is what counts.
 
 ## (a) Profile (rc6, 390 px, CPU 4x, 5 s window): see `PROFILE.md`
 

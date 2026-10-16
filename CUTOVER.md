@@ -9,6 +9,15 @@ The live site (`metricmotive.xyz`, PM2 process `metricmotive-web` on `127.0.0.1:
 release directory**, then copy the output in. Every command that touches production data or the process is marked
 **[PROD]** and needs your explicit approval at that step.
 
+## Placeholders
+Paths in this runbook use these variables. Set them in your shell before running a command, or substitute the absolute paths. `\copy` lines are psql meta-commands, which do not expand shell variables: substitute those by hand.
+- `$APP_DIR`: the production checkout that PM2 runs from (`deployment/start-production.sh`).
+- `$RELEASE_DIR`: a separate worktree where the release is built.
+- `$BACKUP_DIR`: dumps, output copies and the `last-ts` markers (keep it mode 700).
+- `$REPORT_DIR`: operator notes and reports, kept outside the repository.
+- `$WORK_DIR`: validator outputs such as `p0-output.txt`.
+- `$NVM_DIR`: the nvm install (`~/.nvm` by default). `$HOME` is the home directory.
+
 ## What the rehearsal found wrong in the first draft (fixed below)
 1. `npm run db:migrate` from the production tree is a no-op: that tree is still V1 code and has no 0011-0013 files. Migrate from the release directory.
 2. Three migrations are pending (0011, 0012, 0013), not one. Verify and rollback SQL now cover all three.
@@ -29,19 +38,19 @@ Each step has the exact command, the expected output, an abort condition (stop a
 **Order:** P0 → P0a → P1 → 1 → 2 → 3 → 4 → 5. Steps 5 and 6 are the only restarts. Neither runs until P0a is done and P1 reads PASS.
 
 ### P0. Read-only facts  [PROD, read-only]
-Prep (no production effect; creates only the release directory, step 1 builds in it): `cd /root/MetricMotive && git worktree add --detach /root/mm-release-v2 v2.0.0-rc6 && git -C /root/mm-release-v2 describe --tags` (expect `v2.0.0-rc6`).
+Prep (no production effect; creates only the release directory, step 1 builds in it): `cd $APP_DIR && git worktree add --detach $RELEASE_DIR v2.0.0-rc6 && git -C $RELEASE_DIR describe --tags` (expect `v2.0.0-rc6`).
 ```sh
-cd /root/MetricMotive && set -a; . ./.env; set +a
-{ PGOPTIONS='-c default_transaction_read_only=on' psql "$DATABASE_URL" -X -f /root/mm-release-v2/docs/cutover-db-facts.sql; pg_dump --version; } 2>&1 | tee /root/p0-output.txt
+cd $APP_DIR && set -a; . ./.env; set +a
+{ PGOPTIONS='-c default_transaction_read_only=on' psql "$DATABASE_URL" -X -f $RELEASE_DIR/docs/cutover-db-facts.sql; pg_dump --version; } 2>&1 | tee $WORK_DIR/p0-output.txt
 ```
-Paste `/root/p0-output.txt` (it contains no secrets).
+Paste `$WORK_DIR/p0-output.txt` (it contains no secrets).
 Expect: `server_version`, a database size, five tables with row counts and sizes, `0010_run_evidence_snapshot.sql` as the newest migration.
 Abort if: the newest migration is not `0010_run_evidence_snapshot.sql` (production is not at V1 schema: stop and tell me), or any of the five tables is missing.
-Validate: `node /root/mm-release-v2/scripts/check-p0-output.mjs /root/p0-output.txt`: PASS/ABORT; abort also if database size > free disk / 3 or `long_running` is not 0.
+Validate: `node $RELEASE_DIR/scripts/check-p0-output.mjs $WORK_DIR/p0-output.txt`: PASS/ABORT; abort also if database size > free disk / 3 or `long_running` is not 0.
 Rollback: none (read-only).
 **pg_dump must be the same major version as the server or newer.** The host has pg_dump 18. If the server major is greater than 18, use the matching client image instead (needs `docker pull postgres:<major>-alpine` first):
 ```sh
-docker run --rm --network host -e DATABASE_URL -v /root/metricmotive-backups:/backups postgres:<major>-alpine \
+docker run --rm --network host -e DATABASE_URL -v $BACKUP_DIR:/backups postgres:<major>-alpine \
   sh -c 'pg_dump --format=custom --no-owner --file=/backups/metricmotive-'"$ts"'.dump "$DATABASE_URL" && pg_restore --list /backups/metricmotive-'"$ts"'.dump | grep -c "TABLE DATA"'
 ```
 
@@ -50,11 +59,11 @@ Why: `.env` still holds the historical Studionet pair (chain 61999, `0xe39e59f8�
 
 Backup (before any edit; `.env` is mode 600, the backup keeps that):
 ```sh
-cd /root/MetricMotive && mkdir -p /root/metricmotive-backups && ts=$(date -u +%Y%m%dT%H%M%SZ) && install -m 600 .env "/root/metricmotive-backups/env-pre-align-$ts" && cmp .env "/root/metricmotive-backups/env-pre-align-$ts" && echo "$ts" > /root/metricmotive-backups/env-pre-align-last && echo "backup $ts"
+cd $APP_DIR && mkdir -p $BACKUP_DIR && ts=$(date -u +%Y%m%dT%H%M%SZ) && install -m 600 .env "$BACKUP_DIR/env-pre-align-$ts" && cmp .env "$BACKUP_DIR/env-pre-align-$ts" && echo "$ts" > $BACKUP_DIR/env-pre-align-last && echo "backup $ts"
 ```
 Set the four lines (removes any existing `GENLAYER_CONTRACT_ADDRESS`, `GENLAYER_CHAIN_ID`, `GENLAYER_NETWORK`, `GENLAYER_RPC_URL` lines; all other lines stay):
 ```sh
-cd /root/MetricMotive && sed -i '/^GENLAYER_\(CONTRACT_ADDRESS\|CHAIN_ID\|NETWORK\|RPC_URL\)=/d' .env && cat >> .env <<'EOF'
+cd $APP_DIR && sed -i '/^GENLAYER_\(CONTRACT_ADDRESS\|CHAIN_ID\|NETWORK\|RPC_URL\)=/d' .env && cat >> .env <<'EOF'
 GENLAYER_CONTRACT_ADDRESS=0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703
 GENLAYER_CHAIN_ID=61997
 GENLAYER_NETWORK="GenLayer Studio Dev"
@@ -63,16 +72,16 @@ EOF
 ```
 The quotes on `GENLAYER_NETWORK` are required. Unquoted, `. ./.env` fails with `Studio: not found` (exit 127) and `start-production.sh` stops before the gate.
 
-Validate: run the P1 command below again. Expect four `match` lines and exit 0, then `node scripts/check-cutover-output.mjs p1 /root/p1-output.txt` prints PASS. P1=PASS is the only validator for this step.
+Validate: run the P1 command below again. Expect four `match` lines and exit 0, then `node scripts/check-cutover-output.mjs p1 $WORK_DIR/p1-output.txt` prints PASS. P1=PASS is the only validator for this step.
 Abort if: the backup command fails, P1 is not PASS, or `.env` has a second line for any of the four names.
 Rollback: restore the backup. `.env` is read only when the process starts, so neither the edit nor the restore changes the running process before the next restart.
 ```sh
-cd /root/MetricMotive && B="/root/metricmotive-backups/env-pre-align-$(cat /root/metricmotive-backups/env-pre-align-last)" && install -m 600 "$B" .env && cmp .env "$B" && echo restored
+cd $APP_DIR && B="$BACKUP_DIR/env-pre-align-$(cat $BACKUP_DIR/env-pre-align-last)" && install -m 600 "$B" .env && cmp .env "$B" && echo restored
 ```
 
 Check (read-only, code): the wallet-write path never reads the old `.env` values.
 ```sh
-cd /root/mm-release-v2 && git grep -n -E 'GENLAYER_(CONTRACT_ADDRESS|CHAIN_ID|NETWORK|RPC_URL)' -- src packages server vite.config.ts; echo "exit $?"
+cd $RELEASE_DIR && git grep -n -E 'GENLAYER_(CONTRACT_ADDRESS|CHAIN_ID|NETWORK|RPC_URL)' -- src packages server vite.config.ts; echo "exit $?"
 ```
 Expect: no lines and `exit 1`. `git grep` reads tracked files only, so it never reads `.env`.
 The wallet-write path takes chain, address and RPC from `packages/sdk/src/deployment.ts` (`studio-dev-v1`) instead:
@@ -84,34 +93,34 @@ Only the start gate and P1 read the four variables. `scripts/studio-verify.mjs` 
 
 ### P1. Environment matches the registry  [PROD, read-only; prints names only]
 ```sh
-cd /root/mm-release-v2 && (set -a; . /root/MetricMotive/.env; set +a; node --experimental-strip-types scripts/compare-env-registry.mjs) 2>&1 | tee /root/p1-output.txt
+cd $RELEASE_DIR && (set -a; . $APP_DIR/.env; set +a; node --experimental-strip-types scripts/compare-env-registry.mjs) 2>&1 | tee $WORK_DIR/p1-output.txt
 ```
 Expect: each of the four `GENLAYER_*` lines says `match`, then `registry active deployment: studio-dev-v1`, exit 0.
 Abort if: any line says `MISMATCH` (the process would refuse to start: `scripts/check-deployment.mjs` runs on every start), or any line says `unset` (not a PASS; needs the operator's explicit OK).
-Validate: `node scripts/check-cutover-output.mjs p1 /root/p1-output.txt`; PASS only if all four lines read `match`.
+Validate: `node scripts/check-cutover-output.mjs p1 $WORK_DIR/p1-output.txt`; PASS only if all four lines read `match`.
 Rollback: none.
 
 ### 1. Release directory (not production)
 ```sh
-cd /root/mm-release-v2 && git switch --detach v2.0.0-rc6 && git describe --tags   # the P0 prep created the directory at rc4; expect v2.0.0-rc6
+cd $RELEASE_DIR && git switch --detach v2.0.0-rc6 && git describe --tags   # the P0 prep created the directory at rc4; expect v2.0.0-rc6
 env -u DATABASE_URL npm ci --no-audit --no-fund && env -u DATABASE_URL npm run build
 ls .vercel/output/functions/__server.func/_libs | grep pglite
 ```
 Expect: `added 894 packages`; the build ends with `[migrate] DATABASE_URL not set - skipping` and `[seed] DATABASE_URL not set - skipping official examples.`; the `ls` lists `pglite.data` and `pglite.wasm`.
 Abort if: `npm ci` or the build exits non-zero, or the pglite files are missing.
 Validate: `node scripts/check-cutover-output.mjs 1 <file>` (paste the whole command output).
-Rollback: `git -C /root/MetricMotive worktree remove --force /root/mm-release-v2` (production untouched).
+Rollback: `git -C $APP_DIR worktree remove --force $RELEASE_DIR` (production untouched).
 Free disk first: this needs about 1.3 GB.
 
 ### 2. Back up production  [PROD, read-only]
 ```sh
-cd /root/MetricMotive && set -a; . ./.env; set +a
-ts=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p /root/metricmotive-backups; echo "$ts" > /root/metricmotive-backups/last-ts
-git rev-parse HEAD > /root/metricmotive-backups/start-commit
-pg_dump --format=custom --no-owner --file="/root/metricmotive-backups/metricmotive-$ts.dump" "$DATABASE_URL"
-pg_restore --list "/root/metricmotive-backups/metricmotive-$ts.dump" | grep -c 'TABLE DATA'
-cp -a .vercel/output "/root/metricmotive-backups/vercel-output-$ts"
-cat /root/metricmotive-backups/start-commit
+cd $APP_DIR && set -a; . ./.env; set +a
+ts=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p $BACKUP_DIR; echo "$ts" > $BACKUP_DIR/last-ts
+git rev-parse HEAD > $BACKUP_DIR/start-commit
+pg_dump --format=custom --no-owner --file="$BACKUP_DIR/metricmotive-$ts.dump" "$DATABASE_URL"
+pg_restore --list "$BACKUP_DIR/metricmotive-$ts.dump" | grep -c 'TABLE DATA'
+cp -a .vercel/output "$BACKUP_DIR/vercel-output-$ts"
+cat $BACKUP_DIR/start-commit
 ```
 Expect: `pg_dump` prints nothing; the count is at least 11 (11 in the rehearsal); the last line is `c2ffa2e...` (the full hash).
 Abort if: `pg_dump` errors or warns about a version mismatch, the count is below 11, the dump is under a few KB, or the commit is not `c2ffa2e`.
@@ -121,7 +130,7 @@ Rollback: none (read-only); delete the files if you abort.
 ### 3. Migrate  [PROD, writes schema]
 Pre-check (read-only, immediately before): `psql "$DATABASE_URL" -Atc "select pid, state, now()-query_start, left(query,60) from pg_stat_activity where state <> 'idle' and pid <> pg_backend_pid()"`. Expect no rows. Abort if any query has been running more than a few seconds: it can queue the `ACCESS EXCLUSIVE` locks behind it (wait, then re-check; do not kill sessions without telling me). P0's `long_running` is the same check.
 ```sh
-cd /root/mm-release-v2 && set -a; . /root/MetricMotive/.env; set +a && npm run db:migrate
+cd $RELEASE_DIR && set -a; . $APP_DIR/.env; set +a && npm run db:migrate
 ```
 Expect exactly: `[migrate] applied 0011_failed_tx_supersede.sql`, `applied 0012_tx_run_id.sql`, `applied 0013_chain_resolved_at.sql`, `[migrate] done - 3 migration(s) applied.`
 Abort if: anything else (an error, a different count, or `up to date` meaning someone already migrated: tell me).
@@ -131,7 +140,7 @@ Locks: see "Migration safety" below; all statements are metadata-only or create 
 
 ### 4. Verify the schema  [PROD, read-only]
 ```sh
-psql "$DATABASE_URL" -At -f /root/mm-release-v2/docs/cutover-verify.sql
+psql "$DATABASE_URL" -At -f $RELEASE_DIR/docs/cutover-verify.sql
 ```
 Expect (in order): `0013_chain_resolved_at.sql`, `0012_tx_run_id.sql`, `0011_failed_tx_supersede.sql`, `0010_run_evidence_snapshot.sql`; then eight lines `create_guard_intents.failed_at`, `...failure_kind`, `...failure_reason`, `guard_transactions.failed_at`, `...failure_kind`, `...failure_reason`, `...run_id`, `guards.chain_resolved_at`; then `t|t`; then `0`, `0`, `0`, `0`.
 Abort if: any line differs. Existing rows must not have failures or reservations yet.
@@ -141,38 +150,38 @@ Rollback: section 7.
 ### 5. Deploy  [PROD, restarts the live process]
 Use a fresh shell (not the one that sourced `.env`), see "What `pm2 restart metricmotive-web` does with the environment".
 ```sh
-cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
+cd $APP_DIR && ts=$(cat $BACKUP_DIR/last-ts)
 git switch --detach v2.0.0-rc6
 test -f node_modules/.nitro/last-build.json || echo '{"outputDir":"../../../.vercel/output"}' > node_modules/.nitro/last-build.json
-mv .vercel/output ".vercel/output.v1-$ts" && cp -a /root/mm-release-v2/.vercel/output .vercel/output
-cp -a ".vercel/output.v1-$ts" /root/MetricMotive-v2-recon/archived-builds/v1-live-output
-PM2=/root/.nvm/versions/node/v20.20.2/bin/pm2   # pm2 is not on the PATH of a clean shell: always use this absolute path
+mv .vercel/output ".vercel/output.v1-$ts" && cp -a $RELEASE_DIR/.vercel/output .vercel/output
+cp -a ".vercel/output.v1-$ts" $REPORT_DIR/archived-builds/v1-live-output
+PM2=$NVM_DIR/versions/node/v20.20.2/bin/pm2   # pm2 is not on the PATH of a clean shell: always use this absolute path
 $PM2 status metricmotive-web                    # record the restart counter (↺) before the restart
 $PM2 restart metricmotive-web || echo "RESTART FAILED: new assets are live under the old process, see the restart check below"
 for i in $(seq 1 15); do curl -fsS --max-time 5 https://metricmotive.xyz/api/v1/ready && break; sleep 2; done; echo
 $PM2 status metricmotive-web
 ```
-Restart check (must pass before step 6 or any other step): `pm2 status metricmotive-web` shows `online` and the restart counter up by one from the value recorded above. A restart that fails silently is not a no-op: the swap is already on disk, so the old process serves the new output and the site returns 404 for the new `/assets/*.js` names (in the cut-over, about one minute and 14 of 15 assets). If the counter has not moved, retry the restart with the absolute path; if it still fails, roll back (step 6). After the checks pass, remove the temporary V1 copy: `rm -rf ".vercel/output.v1-$ts"`. The archived copies are `/root/MetricMotive-v2-recon/archived-builds/v1-live-output` and `/root/metricmotive-backups/vercel-output-$ts`.
+Restart check (must pass before step 6 or any other step): `pm2 status metricmotive-web` shows `online` and the restart counter up by one from the value recorded above. A restart that fails silently is not a no-op: the swap is already on disk, so the old process serves the new output and the site returns 404 for the new `/assets/*.js` names (in the cut-over, about one minute and 14 of 15 assets). If the counter has not moved, retry the restart with the absolute path; if it still fails, roll back (step 6). After the checks pass, remove the temporary V1 copy: `rm -rf ".vercel/output.v1-$ts"`. The archived copies are `$REPORT_DIR/archived-builds/v1-live-output` and `$BACKUP_DIR/vercel-output-$ts`.
 Expect: `{"status":"ready",...,"db":true,"contractConfigured":true,"chainId":61997,"network":"GenLayer Studio Dev","contractAddress":"0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703"}`; pm2 shows `online` with the restart counter up by one.
 Then: `/`, `/demo`, `/docs`, `/contract`, `/roadmap`, `/verify/rct_14804bf62424284e`, `/app`, `/app/guards/new` return 200; every `/assets/*.js` referenced by `/` returns 200 (use `grep -a`); `pm2 logs metricmotive-web --lines 50 --nostream` shows no errors.
 Abort and roll back if: ready is not 200 within 30 s, pm2 is not `online` or is restarting, the contract address or chain differs, any of the eight routes is not 200, or any asset is not 200.
-Validate: `node scripts/check-cutover-output.mjs 5 <file>` for the ready JSON and `pm2 status`; then `node scripts/cutover-verify.mjs --base https://metricmotive.xyz --release-dir /root/mm-release-v2` (read-only; routes, every asset 200 and byte-identical to the release build, chain 61997 and contract `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`, hydration without console errors on `/` and `/app`, Connect opens the modal without connecting). Run it from the release directory.
+Validate: `node scripts/check-cutover-output.mjs 5 <file>` for the ready JSON and `pm2 status`; then `node scripts/cutover-verify.mjs --base https://metricmotive.xyz --release-dir $RELEASE_DIR` (read-only; routes, every asset 200 and byte-identical to the release build, chain 61997 and contract `0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703`, hydration without console errors on `/` and `/app`, Connect opens the modal without connecting). Run it from the release directory.
 Rollback: section 6 (about 5 s).
 
 **Scripted deploy for a later release without schema changes.** `scripts/deploy-release.sh` runs the swap, the restart, the readiness and restart-counter checks, and the step 6 rollback on any failure, in one go. It is self-contained (copy it from any checkout; it reads no other repo file) and refuses to run if `DATABASE_URL` is set, so use a fresh shell, after step 2's backup and the operator's approval:
 ```sh
-bash scripts/deploy-release.sh <release-dir> <tag> --prod /root/MetricMotive --backups /root/metricmotive-backups \
-  --pm2 /root/.nvm/versions/node/v20.20.2/bin/pm2 --ready-url https://metricmotive.xyz/api/v1/ready \
+bash scripts/deploy-release.sh <release-dir> <tag> --prod $APP_DIR --backups $BACKUP_DIR \
+  --pm2 $NVM_DIR/versions/node/v20.20.2/bin/pm2 --ready-url https://metricmotive.xyz/api/v1/ready \
   --chain 61997 --contract 0x4105A7ccAef5072eb5A3A3C9142CD28F52c38703
 ```
 Exit 0: deployed (the previous output stays in `.vercel/output.prev-<ts>` until the operator says to remove it). Exit 1: failed and rolled back once; stop and report. Exit 2: the rollback itself failed; stop at once. Exit 3: preflight refused, nothing changed. Then run the `cutover-verify` command above. `scripts/deploy-release.test.mjs` covers success, four failure paths, a failing rollback and the preflight (it runs in `npm test`, on dummy trees only).
 
 ### 6. Roll back the app  [PROD]
 ```sh
-cd /root/MetricMotive && ts=$(cat /root/metricmotive-backups/last-ts)
-rm -rf .vercel/output && cp -a "/root/metricmotive-backups/vercel-output-$ts" .vercel/output
-git switch --detach "$(cat /root/metricmotive-backups/start-commit)"
-PM2=/root/.nvm/versions/node/v20.20.2/bin/pm2
+cd $APP_DIR && ts=$(cat $BACKUP_DIR/last-ts)
+rm -rf .vercel/output && cp -a "$BACKUP_DIR/vercel-output-$ts" .vercel/output
+git switch --detach "$(cat $BACKUP_DIR/start-commit)"
+PM2=$NVM_DIR/versions/node/v20.20.2/bin/pm2
 $PM2 status metricmotive-web                    # record the restart counter (↺) before the restart
 $PM2 restart metricmotive-web || echo "RESTART FAILED: the old output is in place but the process did not restart; check pm2 status and retry"
 for i in $(seq 1 15); do curl -fsS --max-time 5 https://metricmotive.xyz/api/v1/ready && break; sleep 2; done; echo
@@ -185,15 +194,15 @@ Abort condition: none; if it is not ready, stop and paste the output (the dump a
 ### 7. Roll back the schema  [PROD, only if required]
 It deletes the superseded-transaction history, live reservations and the stored chain times; export them first:
 ```sql
-\copy guard_transaction_history to '/root/metricmotive-backups/guard_transaction_history.csv' csv header
-\copy (select guard_id, operation, tx_hash, failure_kind, failure_reason, failed_at, run_id from guard_transactions where failure_kind is not null or run_id is not null) to '/root/metricmotive-backups/guard_transactions_extra.csv' csv header
-\copy (select id, chain_resolved_at from guards where chain_resolved_at is not null) to '/root/metricmotive-backups/guards_chain_resolved_at.csv' csv header
+\copy guard_transaction_history to '$BACKUP_DIR/guard_transaction_history.csv' csv header
+\copy (select guard_id, operation, tx_hash, failure_kind, failure_reason, failed_at, run_id from guard_transactions where failure_kind is not null or run_id is not null) to '$BACKUP_DIR/guard_transactions_extra.csv' csv header
+\copy (select id, chain_resolved_at from guards where chain_resolved_at is not null) to '$BACKUP_DIR/guards_chain_resolved_at.csv' csv header
 ```
-then `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f /root/mm-release-v2/docs/cutover-rollback.sql`. Run the same long-running-query pre-check as step 3 first.
+then `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f $RELEASE_DIR/docs/cutover-rollback.sql`. Run the same long-running-query pre-check as step 3 first.
 Expect: `BEGIN`, `ALTER TABLE`/`DROP TABLE`/`DROP INDEX` lines, `DELETE 3`, `COMMIT`. Run `psql "$DATABASE_URL" -Atc "select count(*) from _migrations"` afterwards: the count equals the count before step 3.
 Validate: `node scripts/check-cutover-output.mjs 7 <file>`.
 Abort if: any error (the whole script is one transaction and rolls back).
-Full restore alternative: `pg_restore --clean --if-exists --no-owner -d "$DATABASE_URL" /root/metricmotive-backups/metricmotive-$ts.dump`.
+Full restore alternative: `pg_restore --clean --if-exists --no-owner -d "$DATABASE_URL" $BACKUP_DIR/metricmotive-$ts.dump`.
 
 ## Migration safety (0011-0013, read from the files and rehearsed)
 | Migration | Statements | Additive | Locks | Expected duration |
@@ -204,7 +213,7 @@ Full restore alternative: `pg_restore --clean --if-exists --no-owner -d "$DATABA
 No statement rewrites a table, backfills, or takes a long lock. The runner applies each file in one transaction. Worst case is waiting behind a long-running query on the same table (the `ACCESS EXCLUSIVE` request queues): check `select pid, state, now()-query_start from pg_stat_activity where state <> 'idle'` first if the migrate step ever seems to hang. V1 keeps working between steps 3 and 5: V1 maps rows field by field, so extra columns are ignored (rehearsed: V1 build served `/`, `/app`, `/docs`, receipts, with extra columns populated, 0 console errors, 0 server errors).
 
 ## What `pm2 restart metricmotive-web` does with the environment
-PM2 restarts the registered script, `deployment/start-production.sh`. That script runs `set -a; . ./.env` itself and then `node scripts/check-deployment.mjs` and `exec npm run preview ...`, so **every variable defined in `/root/MetricMotive/.env` is re-read from the file on each restart**. The deploy and the rollback therefore use a plain `pm2 restart metricmotive-web`, without `--update-env`: `--update-env` copies the calling shell's environment into PM2's stored environment, and a shell that sourced `.env` for the backup would put the database URL and secrets there (visible in `pm2 env`/dump). Run both from a fresh shell, with the absolute `pm2` path from step 5.
+PM2 restarts the registered script, `deployment/start-production.sh`. That script runs `set -a; . ./.env` itself and then `node scripts/check-deployment.mjs` and `exec npm run preview ...`, so **every variable defined in `$APP_DIR/.env` is re-read from the file on each restart**. The deploy and the rollback therefore use a plain `pm2 restart metricmotive-web`, without `--update-env`: `--update-env` copies the calling shell's environment into PM2's stored environment, and a shell that sourced `.env` for the backup would put the database URL and secrets there (visible in `pm2 env`/dump). Run both from a fresh shell, with the absolute `pm2` path from step 5.
 
 ## Rehearsal timings (disposable database, small data)
 | Step | Time |

@@ -2,7 +2,7 @@
 // Compares the GENLAYER_* variables in the CURRENT environment with the deployment registry
 // (packages/sdk/src/deployment.ts, active row). Prints only the variable NAME and match / mismatch / unset,
 // never a value. Exit 1 on any mismatch.
-//   (set -a; . /root/MetricMotive/.env; set +a; node scripts/compare-env-registry.mjs)
+//   (set -a; . $APP_DIR/.env; set +a; node scripts/compare-env-registry.mjs)
 import { getActiveDeployment } from "../packages/sdk/src/deployment.ts";
 
 const a = getActiveDeployment();

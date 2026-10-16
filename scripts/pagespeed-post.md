@@ -22,7 +22,7 @@ a deploy or restart: a cold or restarting process gives slow, misleading numbers
 - Accessibility, Best Practices, SEO: 100. CLS: 0.
 - **Target: landing >= 90 on real hardware** (the rehearsal ran under CPU load, so real runs should score higher).
 
-## Record in /root/MetricMotive-v2-recon/FINAL_REPORT.md
+## Record in $REPORT_DIR/FINAL_REPORT.md
 A table per URL: strategy, run 1-3, median performance, accessibility, best practices, SEO, CLS, plus the date/time.
 State pass/fail against the target (landing mobile median >= 90; a11y/BP/SEO stay 100; CLS stays 0) and link or quote
 any audit that regressed (LCP, TBT, unused JS).

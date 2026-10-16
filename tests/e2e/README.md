@@ -2,10 +2,10 @@
 
 Run everything (build, serve on :4291, mock RPC on :4292, tests, teardown):
 
-    tests/e2e/run.sh            # E2E_APP_DIR defaults to /root/mm-v2-e2e; E2E_SKIP_BUILD=1 reuses the build
+    tests/e2e/run.sh            # E2E_APP_DIR selects the built app (default in tests/e2e/harness.mjs); E2E_SKIP_BUILD=1 reuses the build
 
 Tests alone (app + mock already up): `node --test tests/e2e/*.e2e.test.mjs`.
-Failure screenshots: /root/MetricMotive-v2-recon/qa/e2e/ (override E2E_SHOT_DIR).
+Failure screenshots: $REPORT_DIR/qa/e2e/ (override E2E_SHOT_DIR).
 
 - `mock-rpc.mjs`: JSON-RPC mock + `/__control/*` scenario endpoints (outcomes: OK, PENDING, ACCEPTED, REVERT, CANCELED, UNDETERMINED, NO_EXEC, MISMATCH; rateLimit -> HTTP 429).
 - `server-fetch-shim.mjs`: `--import`ed into the app server so its RPC calls hit the mock.
